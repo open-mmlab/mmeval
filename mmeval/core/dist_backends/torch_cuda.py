@@ -1,8 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-import pickle
-
 import numpy as np
+import pickle
 import torch
 import torch.distributed as torch_dist
 

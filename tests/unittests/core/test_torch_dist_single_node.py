@@ -6,8 +6,7 @@ import torch.distributed as torch_dist
 import torch.multiprocessing as mp
 
 from mmeval.core.dist_backends.torch_cpu import TorchCPUDistributed
-from mmeval.core.dist_backends.torch_cuda import TorchCUDADistributed 
-
+from mmeval.core.dist_backends.torch_cuda import TorchCUDADistributed
 
 DIST_COMM_BACKENDS = {
     'gloo': TorchCPUDistributed,
@@ -18,11 +17,10 @@ DIST_COMM_BACKENDS = {
 
 def _init_torch_dist(rank_id, world_size, comm_backend, port):
     torch_dist.init_process_group(
-        backend=comm_backend, 
-        init_method=f'tcp://127.0.0.1:{port}', 
-        world_size=world_size, 
-        rank=rank_id
-    )
+        backend=comm_backend,
+        init_method=f'tcp://127.0.0.1:{port}',
+        world_size=world_size,
+        rank=rank_id)
 
     if comm_backend == 'nccl':
         num_gpus = torch.cuda.device_count()
@@ -57,19 +55,13 @@ def _torch_dist_all_gather_fn(rank_id, world_size, comm_backend, port):
 
 @pytest.mark.parametrize(
     argnames=['process_num', 'comm_backend', 'comm_port'],
-    argvalues=[
-        [8, 'gloo', 2345],
-        [1, 'gloo', 2345],
-        [1, 'nccl', 2345],
-        [2, 'nccl', 2345]
-    ]
-)
+    argvalues=[[8, 'gloo', 2345], [1, 'gloo', 2345], [1, 'nccl', 2345],
+               [2, 'nccl', 2345]])
 def test_all_gather_object(process_num, comm_backend, comm_port):
     mp.spawn(
-        _torch_dist_all_gather_fn, 
-        nprocs=process_num, 
-        args=(process_num, comm_backend, comm_port)
-    )
+        _torch_dist_all_gather_fn,
+        nprocs=process_num,
+        args=(process_num, comm_backend, comm_port))
 
 
 def _torch_dist_broadcast_fn(rank_id, world_size, comm_backend, port):
@@ -98,15 +90,13 @@ def _torch_dist_broadcast_fn(rank_id, world_size, comm_backend, port):
         [1, 'gloo', 2346],
         [1, 'nccl', 2346],
         [2, 'nccl', 2346],
-    ]
-)
+    ])
 def test_broadcast_object(process_num, comm_backend, comm_port):
     mp.spawn(
-        _torch_dist_broadcast_fn, 
-        nprocs=process_num, 
-        args=(process_num, comm_backend, comm_port)
-    )
+        _torch_dist_broadcast_fn,
+        nprocs=process_num,
+        args=(process_num, comm_backend, comm_port))
 
 
-if __name__=="__main__":
+if __name__ == '__main__':
     pytest.main(['--capture=no'])

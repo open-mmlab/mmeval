@@ -1,8 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-import pickle
-
 import numpy as np
+import pickle
 import torch
 import torch.distributed as torch_dist
 
@@ -35,7 +34,8 @@ class TorchCPUDistributed(TensorBaseDistributed):
 
     def _all_gather(self, tensor):
         global_tensor_list = [
-            torch.empty_like(tensor) for _ in range(self.world_size())]
+            torch.empty_like(tensor) for _ in range(self.world_size())
+        ]
         torch_dist.all_gather(global_tensor_list, tensor, group=None)
         return global_tensor_list
 
