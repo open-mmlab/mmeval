@@ -30,13 +30,13 @@ class TorchCUDADistributed(TensorBaseDistributed):
 
     def _pad_tensor(self, tensor, max_size):
         padding = torch.ones(max_size - tensor.size()[0], dtype=tensor.dtype)
-        padding.to(tensor.device)
+        padding = padding.to(tensor.device)
         padded_tensor = torch.cat([tensor, padding], axis=0)
         return padded_tensor
 
     def _all_gather(self, tensor):
         global_tensor_list = [
-            torch.empty_like(tensor).to(tensor.deice)
+            torch.empty_like(tensor).to(tensor.device)
             for _ in range(self.world_size())
         ]
         torch_dist.all_gather(global_tensor_list, tensor, group=None)
