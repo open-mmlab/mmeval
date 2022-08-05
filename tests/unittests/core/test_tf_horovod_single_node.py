@@ -64,5 +64,4 @@ def test_horovod_tf_broadcast_fn():
 
 
 if __name__ == '__main__':
-    # mpirun -np 2 pytest -v --capture=no --with-mpi test
     pytest.main(['--capture=no', '--with-mpi'])

@@ -60,6 +60,5 @@ def test_mpi4py_broadcast_fn():
 
 
 if __name__ == '__main__':
-    # mpirun -n 2 pytest -v --capture=no --with-mpi tests
     pytest.main(
         ['--capture=no', '--with-mpi', '--continue-on-collection-errors'])

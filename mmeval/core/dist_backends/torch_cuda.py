@@ -1,48 +1,42 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-import numpy as np
-import pickle
 import torch
-import torch.distributed as torch_dist
+from typing import Any, Tuple, TypeVar, Union
 
-from mmeval.core.dist_backends.base_dist import TensorBaseDistributed
+from mmeval.core.dist_backends.torch_cpu import TorchCPUDistributed
+
+Tensor = TypeVar('Tensor', bound=torch.Tensor)
 
 
-class TorchCUDADistributed(TensorBaseDistributed):
+class TorchCUDADistributed(TorchCPUDistributed):
+    """A cuda distributed communication backend for torch.distributed."""
 
-    @property
-    def rank_id(self) -> int:
-        return torch_dist.get_rank()
+    def _object_to_tensor(self, obj: Any) -> Tuple[Tensor, Tensor]:
+        """Convert the given object to a cuda tensor via `pickle.dumps`.
 
-    @property
-    def world_size(self) -> int:
-        return torch_dist.get_world_size()
+        Args:
+            obj (any): Any pickle-able python object.
 
-    def _object_to_tensor(self, obj):
-        buffer = pickle.dumps(obj)
-        obj_tensor = torch.tensor(np.frombuffer(buffer, dtype=np.int8)).cuda()
-        obj_size_tensor = torch.tensor(len(buffer), dtype=torch.long).cuda()
-        return obj_tensor, obj_size_tensor
+        Returns:
+            Tuple: A tuple of the tensor converted from given object and the
+                tensor size.
+        """
+        # Add type annotation make mypy happy
+        obj_tensor: Tensor
+        obj_size_tensor: Tensor
+        obj_tensor, obj_size_tensor = super()._object_to_tensor(obj)
+        return obj_tensor.cuda(), obj_size_tensor.cuda()
 
-    def _tensor_to_object(self, tensor, tensor_size):
-        buffer = tensor.detach().cpu().numpy().tobytes()[:tensor_size]
-        obj = pickle.loads(buffer)
-        return obj
+    def _tensor_to_object(self, tensor: Tensor,
+                          tensor_size: Union[int, Tensor]) -> Any:
+        """Convert the given cuda tensor to a object via `pickle.loads`.
 
-    def _pad_tensor(self, tensor, max_size):
-        padding = torch.ones(max_size - tensor.size()[0], dtype=tensor.dtype)
-        padding = padding.to(tensor.device)
-        padded_tensor = torch.cat([tensor, padding], axis=0)
-        return padded_tensor
+        Args:
+            tenosr (Tensor): A cuda tensor.
+            tensor_size (int or Tensor): The tensor size of the given Tensor to
+                be convert object.
 
-    def _all_gather(self, tensor):
-        global_tensor_list = [
-            torch.empty_like(tensor).to(tensor.device)
-            for _ in range(self.world_size)
-        ]
-        torch_dist.all_gather(global_tensor_list, tensor, group=None)
-        return global_tensor_list
-
-    def _broadcast(self, tensor, src):
-        torch_dist.broadcast(tensor, src=src, group=None)
-        return tensor
+        Returns:
+            Any: The object converted from the given cuda tensor.
+        """
+        return super()._tensor_to_object(tensor.detach().cpu(), tensor_size)
