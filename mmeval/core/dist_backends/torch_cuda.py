@@ -10,9 +10,11 @@ from mmeval.core.dist_backends.base_dist import TensorBaseDistributed
 
 class TorchCUDADistributed(TensorBaseDistributed):
 
+    @property
     def rank_id(self) -> int:
         return torch_dist.get_rank()
-
+    
+    @property
     def world_size(self) -> int:
         return torch_dist.get_world_size()
 
@@ -36,7 +38,7 @@ class TorchCUDADistributed(TensorBaseDistributed):
     def _all_gather(self, tensor):
         global_tensor_list = [
             torch.empty_like(tensor).to(tensor.device)
-            for _ in range(self.world_size())
+            for _ in range(self.world_size)
         ]
         torch_dist.all_gather(global_tensor_list, tensor, group=None)
         return global_tensor_list

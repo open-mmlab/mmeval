@@ -18,7 +18,7 @@ class BaseDistributed(metaclass=ABCMeta):
         ...
 
     @abstractmethod
-    def broadcast_object(self, obj):
+    def broadcast_object(self, obj, src):
         ...
 
 
