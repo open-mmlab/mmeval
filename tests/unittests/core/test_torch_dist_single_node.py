@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 import os
-
 import pytest
 
 # check if current process is launch via mpirun
@@ -86,8 +85,7 @@ def _torch_dist_broadcast_fn(rank_id, world_size, comm_backend, port):
 
 
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port'],
-    argvalues=[(1, 2345), [4, 2345]])
+    argnames=['process_num', 'comm_port'], argvalues=[(1, 2345), [4, 2345]])
 def test_gloo_all_gather_object(process_num, comm_port):
     comm_backend = 'gloo'
     mp.spawn(
@@ -97,12 +95,9 @@ def test_gloo_all_gather_object(process_num, comm_port):
 
 
 @pytest.mark.skipif(
-    not torch_dist.is_mpi_available(), 
-    reason="MPI backend is not available."
-)
+    not torch_dist.is_mpi_available(), reason='MPI backend is not available.')
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port'],
-    argvalues=[(1, 2345), [4, 2345]])
+    argnames=['process_num', 'comm_port'], argvalues=[(1, 2345), [4, 2345]])
 def test_mpi_all_gather_object(process_num, comm_port):
     comm_backend = 'mpi'
     mp.spawn(
@@ -112,16 +107,13 @@ def test_mpi_all_gather_object(process_num, comm_port):
 
 
 @pytest.mark.skipif(
-    not torch_dist.is_nccl_available(), 
-    reason="NCCL backend is not available."
-)
+    not torch_dist.is_nccl_available(),
+    reason='NCCL backend is not available.')
 @pytest.mark.skipif(
-    torch.cuda.device_count() < 2, 
-    reason="CUDA device count must greater than 2."
-)
+    torch.cuda.device_count() < 2,
+    reason='CUDA device count must greater than 2.')
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port'],
-    argvalues=[(1, 2345), [2, 2347]])
+    argnames=['process_num', 'comm_port'], argvalues=[(1, 2345), [2, 2347]])
 def test_nccl_all_gather_object(process_num, comm_port):
     comm_backend = 'nccl'
     mp.spawn(
@@ -131,8 +123,7 @@ def test_nccl_all_gather_object(process_num, comm_port):
 
 
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port'],
-    argvalues=[(1, 2345), [4, 2348]])
+    argnames=['process_num', 'comm_port'], argvalues=[(1, 2345), [4, 2348]])
 def test_gloo_broadcast_object(process_num, comm_port):
     comm_backend = 'gloo'
     mp.spawn(
@@ -142,12 +133,9 @@ def test_gloo_broadcast_object(process_num, comm_port):
 
 
 @pytest.mark.skipif(
-    not torch_dist.is_mpi_available(), 
-    reason="MPI backend is not available."
-)
+    not torch_dist.is_mpi_available(), reason='MPI backend is not available.')
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port'],
-    argvalues=[(1, 2345), [4, 2349]])
+    argnames=['process_num', 'comm_port'], argvalues=[(1, 2345), [4, 2349]])
 def test_mpi_broadcast_object(process_num, comm_port):
     comm_backend = 'mpi'
     mp.spawn(
@@ -157,16 +145,13 @@ def test_mpi_broadcast_object(process_num, comm_port):
 
 
 @pytest.mark.skipif(
-    not torch_dist.is_nccl_available(), 
-    reason="NCCL backend is not available."
-)
+    not torch_dist.is_nccl_available(),
+    reason='NCCL backend is not available.')
 @pytest.mark.skipif(
-    torch.cuda.device_count() < 2, 
-    reason="CUDA device count must greater than 2."
-)
+    torch.cuda.device_count() < 2,
+    reason='CUDA device count must greater than 2.')
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port'],
-    argvalues=[(1, 2345), [2, 2350]])
+    argnames=['process_num', 'comm_port'], argvalues=[(1, 2345), [2, 2350]])
 def test_nccl_broadcast_object(process_num, comm_port):
     comm_backend = 'nccl'
     mp.spawn(

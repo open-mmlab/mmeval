@@ -10,11 +10,11 @@ class TFHorovodDistributed(BaseDistributed):
     @property
     def rank_id(self) -> int:
         return hvd.rank()
-    
+
     @property
     def world_size(self) -> int:
         return hvd.size()
-    
+
     def all_gather_object(self, obj):
         return hvd.allgather_object(obj)
 

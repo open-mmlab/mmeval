@@ -11,12 +11,12 @@ class MPI4PyDistributed(BaseDistributed):
     def rank_id(self) -> int:
         comm = MPI.COMM_WORLD
         return comm.Get_rank()
-    
+
     @property
     def world_size(self) -> int:
         comm = MPI.COMM_WORLD
         return comm.Get_size()
-    
+
     def all_gather_object(self, obj):
         comm = MPI.COMM_WORLD
         return comm.allgather(obj)

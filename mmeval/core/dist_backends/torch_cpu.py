@@ -13,7 +13,7 @@ class TorchCPUDistributed(TensorBaseDistributed):
     @property
     def rank_id(self) -> int:
         return torch_dist.get_rank()
-    
+
     @property
     def world_size(self) -> int:
         return torch_dist.get_world_size()

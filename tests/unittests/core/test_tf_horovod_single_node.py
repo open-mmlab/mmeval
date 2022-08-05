@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 import os
-
 import pytest
 
 # check if current process is launch via mpirun

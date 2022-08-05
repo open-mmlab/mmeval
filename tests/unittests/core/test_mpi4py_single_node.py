@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 import os
-
 import pytest
 
 # check if current process is launch via mpirun
@@ -45,7 +44,7 @@ def test_mpi4py_broadcast_fn():
 
     dist_comm = MPI4PyDistributed()
     rank_id = dist_comm.rank_id
-    
+
     rank_0_obj = {'rank_id': 0}
 
     if rank_id == 0:
@@ -62,4 +61,5 @@ def test_mpi4py_broadcast_fn():
 
 if __name__ == '__main__':
     # mpirun -n 2 pytest -v --capture=no --with-mpi tests
-    pytest.main(['--capture=no', '--with-mpi', '--continue-on-collection-errors'])
+    pytest.main(
+        ['--capture=no', '--with-mpi', '--continue-on-collection-errors'])
