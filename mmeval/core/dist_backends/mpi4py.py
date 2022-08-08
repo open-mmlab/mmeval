@@ -13,13 +13,12 @@ class MPI4PyDistributed(BaseDistributed):
     @property
     def is_dist_initialized(self) -> bool:
         """Returns True if the distributed environment has been initialized.
-        
+
         Returns:
-            bool: Returns True if the distributed environment has been 
+            bool: Returns True if the distributed environment has been
                 initialized, else False.
         """
         return 'OMPI_COMM_WORLD_SIZE' in os.environ
-
 
     @property
     def rank_id(self) -> int:

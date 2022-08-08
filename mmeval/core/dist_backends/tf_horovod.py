@@ -12,16 +12,16 @@ class TFHorovodDistributed(BaseDistributed):
     @property
     def is_dist_initialized(self) -> bool:
         """Returns True if the distributed environment has been initialized.
-        
+
         Returns:
-            bool: Returns True if the distributed environment has been 
+            bool: Returns True if the distributed environment has been
                 initialized, else False.
         """
         try:
             hvd.size()
             is_init = True
         except ValueError:
-            is_init = False 
+            is_init = False
         return is_init
 
     @property

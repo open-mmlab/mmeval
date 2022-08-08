@@ -17,9 +17,9 @@ class TorchCPUDistributed(TensorBaseDistributed):
     @property
     def is_dist_initialized(self) -> bool:
         """Returns True if the distributed environment has been initialized.
-        
+
         Returns:
-            bool: Returns True if the distributed environment has been 
+            bool: Returns True if the distributed environment has been
                 initialized, else False.
         """
         return torch_dist.is_available() and torch_dist.is_initialized()

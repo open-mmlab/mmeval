@@ -12,9 +12,9 @@ class BaseDistributed(metaclass=ABCMeta):
     @abstractproperty
     def is_dist_initialized(self) -> bool:
         """Returns True if the distributed environment has been initialized.
-        
+
         Returns:
-            bool: Returns True if the distributed environment has been 
+            bool: Returns True if the distributed environment has been
                 initialized, else False.
         """
 
