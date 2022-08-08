@@ -10,6 +10,15 @@ class BaseDistributed(metaclass=ABCMeta):
     """The base class of distributed communication used by mmeval Metric."""
 
     @abstractproperty
+    def is_dist_initialized(self) -> bool:
+        """Returns True if the distributed environment has been initialized.
+        
+        Returns:
+            bool: Returns True if the distributed environment has been 
+                initialized, else False.
+        """
+
+    @abstractproperty
     def rank_id(self) -> int:
         """Returns the rank index of the current process group.
 

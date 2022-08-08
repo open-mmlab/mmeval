@@ -26,6 +26,8 @@ def _create_global_obj_list(world_size):
 def test_mpi4py_all_gather_fn():
 
     dist_comm = MPI4PyDistributed()
+    assert dist_comm.is_dist_initialized
+
     rank_id = dist_comm.rank_id
     world_size = dist_comm.world_size
 
@@ -43,6 +45,8 @@ def test_mpi4py_all_gather_fn():
 def test_mpi4py_broadcast_fn():
 
     dist_comm = MPI4PyDistributed()
+    assert dist_comm.is_dist_initialized
+
     rank_id = dist_comm.rank_id
 
     rank_0_obj = {'rank_id': 0}

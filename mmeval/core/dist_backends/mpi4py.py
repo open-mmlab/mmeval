@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
+import os
 from mpi4py import MPI
 from typing import Any, List
 
@@ -8,6 +9,17 @@ from mmeval.core.dist_backends.base_dist import BaseDistributed
 
 class MPI4PyDistributed(BaseDistributed):
     """A distributed communication backend for mpi4py."""
+
+    @property
+    def is_dist_initialized(self) -> bool:
+        """Returns True if the distributed environment has been initialized.
+        
+        Returns:
+            bool: Returns True if the distributed environment has been 
+                initialized, else False.
+        """
+        return 'OMPI_COMM_WORLD_SIZE' in os.environ
+
 
     @property
     def rank_id(self) -> int:

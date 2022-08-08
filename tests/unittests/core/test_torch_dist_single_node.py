@@ -49,6 +49,7 @@ def _torch_dist_all_gather_fn(rank_id, world_size, comm_backend, port):
     dist_comm_cls = DIST_COMM_BACKENDS[comm_backend]
     dist_comm = dist_comm_cls()
 
+    assert dist_comm.is_dist_initialized
     assert dist_comm.rank_id == rank_id
     assert dist_comm.world_size == world_size
 
@@ -67,6 +68,7 @@ def _torch_dist_broadcast_fn(rank_id, world_size, comm_backend, port):
     dist_comm_cls = DIST_COMM_BACKENDS[comm_backend]
     dist_comm = dist_comm_cls()
 
+    assert dist_comm.is_dist_initialized
     assert dist_comm.rank_id == rank_id
     assert dist_comm.world_size == world_size
 

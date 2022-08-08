@@ -10,6 +10,21 @@ class TFHorovodDistributed(BaseDistributed):
     """A distributed communication backend for horovod.tensorflow."""
 
     @property
+    def is_dist_initialized(self) -> bool:
+        """Returns True if the distributed environment has been initialized.
+        
+        Returns:
+            bool: Returns True if the distributed environment has been 
+                initialized, else False.
+        """
+        try:
+            hvd.size()
+            is_init = True
+        except ValueError:
+            is_init = False 
+        return is_init
+
+    @property
     def rank_id(self) -> int:
         """Returns the rank index of the current process group."""
         return hvd.rank()

@@ -29,6 +29,8 @@ def test_horovod_tf_all_gather_fn():
     hvd.init()
 
     dist_comm = TFHorovodDistributed()
+    assert dist_comm.is_dist_initialized
+
     rank_id = dist_comm.rank_id
     world_size = dist_comm.world_size
 
@@ -47,6 +49,8 @@ def test_horovod_tf_broadcast_fn():
     hvd.init()
 
     dist_comm = TFHorovodDistributed()
+    assert dist_comm.is_dist_initialized
+
     rank_id = dist_comm.rank_id
 
     rank_0_obj = {'rank_id': 0}
