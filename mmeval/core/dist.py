@@ -2,19 +2,19 @@
 
 from typing import List, Optional, no_type_check
 
-from mmeval.core.dist_backends.base_dist import BaseDistributed
-from mmeval.core.dist_backends.mpi4py import MPI4PyDistributed
-from mmeval.core.dist_backends.non_dist import NonDistributed
-from mmeval.core.dist_backends.tf_horovod import TFHorovodDistributed
-from mmeval.core.dist_backends.torch_cpu import TorchCPUDistributed
-from mmeval.core.dist_backends.torch_cuda import TorchCUDADistributed
+from mmeval.core.dist_backends.base_backend import BaseDistBackend
+from mmeval.core.dist_backends.mpi4py import MPI4PyDist
+from mmeval.core.dist_backends.non_dist import NonDist
+from mmeval.core.dist_backends.tf_horovod import TFHorovodDist
+from mmeval.core.dist_backends.torch_cpu import TorchCPUDist
+from mmeval.core.dist_backends.torch_cuda import TorchCUDADist
 
 DIST_BACKENDS = {
-    'non_dist': NonDistributed,
-    'mpi4py': MPI4PyDistributed,
-    'tf_horovod': TFHorovodDistributed,
-    'torch_cpu': TorchCPUDistributed,
-    'torch_cuda': TorchCUDADistributed,
+    'non_dist': NonDist,
+    'mpi4py': MPI4PyDist,
+    'tf_horovod': TFHorovodDist,
+    'torch_cpu': TorchCPUDist,
+    'torch_cuda': TorchCUDADist,
 }
 
 DEFAULT_BACKEND = 'non_dist'
@@ -41,7 +41,7 @@ def set_default_dist_backend(dist_backend: str) -> None:
 
 
 @no_type_check
-def get_dist_backend(dist_backend: Optional[str] = None) -> BaseDistributed:
+def get_dist_backend(dist_backend: Optional[str] = None) -> BaseDistBackend:
     """Returns distributed backend by the given distributed backend name.
 
     Args:
@@ -49,7 +49,7 @@ def get_dist_backend(dist_backend: Optional[str] = None) -> BaseDistributed:
             if None, return the default distributed backend.
 
     Returns:
-        :obj:`BaseDistributed`: The distributed backend instance.
+        :obj:`BaseDistBackend`: The distributed backend instance.
     """
     if dist_backend is None:
         dist_backend = DEFAULT_BACKEND

@@ -4,7 +4,7 @@ import importlib
 import pytest
 
 import mmeval.core.dist as dist
-from mmeval.core.dist_backends.non_dist import NonDistributed
+from mmeval.core.dist_backends.non_dist import NonDist
 
 
 @pytest.mark.parametrize(
@@ -22,8 +22,8 @@ def test_set_default_dist_backend(dist_backend_name, is_valid):
 
 def test_get_dist_backend():
     importlib.reload(dist)
-    assert type(dist.get_dist_backend()) is NonDistributed
-    assert type(dist.get_dist_backend('non_dist')) is NonDistributed
+    assert type(dist.get_dist_backend()) is NonDist
+    assert type(dist.get_dist_backend('non_dist')) is NonDist
 
     with pytest.raises(AssertionError):
         dist.get_dist_backend('xxx')

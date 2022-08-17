@@ -7,14 +7,14 @@ import pytest
 if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') != '0':
     pytest.skip(allow_module_level=True)
 
-from mmeval.core.dist_backends.non_dist import NonDistributed
+from mmeval.core.dist_backends.non_dist import NonDist
 
 
 def test_non_distributed():
-    dist_comm = NonDistributed()
-    assert not dist_comm.is_dist_initialized
+    dist_comm = NonDist()
+    assert not dist_comm.is_initialized
 
-    assert dist_comm.rank_id == 0
+    assert dist_comm.rank == 0
     assert dist_comm.world_size == 1
 
     test_obj = {'test': 1}

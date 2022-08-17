@@ -3,7 +3,7 @@
 import os
 from typing import Any, List
 
-from mmeval.core.dist_backends.base_dist import BaseDistributed
+from mmeval.core.dist_backends.base_backend import BaseDistBackend
 
 try:
     from mpi4py import MPI
@@ -11,7 +11,7 @@ except ImportError:
     MPI = None
 
 
-class MPI4PyDistributed(BaseDistributed):
+class MPI4PyDist(BaseDistBackend):
     """A distributed communication backend for mpi4py."""
 
     def __init__(self) -> None:
@@ -21,17 +21,17 @@ class MPI4PyDistributed(BaseDistributed):
             ' please install mpi4py first.'
 
     @property
-    def is_dist_initialized(self) -> bool:
+    def is_initialized(self) -> bool:
         """Returns True if the distributed environment has been initialized.
 
         Returns:
             bool: Returns True if the distributed environment has been
-                initialized, else False.
+                initialized, otherwise returns False.
         """
         return 'OMPI_COMM_WORLD_SIZE' in os.environ
 
     @property
-    def rank_id(self) -> int:
+    def rank(self) -> int:
         """Returns the rank index of the current process group."""
         comm = MPI.COMM_WORLD
         return comm.Get_rank()
@@ -44,7 +44,7 @@ class MPI4PyDistributed(BaseDistributed):
 
     def all_gather_object(self, obj: Any) -> List[Any]:
         """All gather the given object from the current process group and
-        return as a list.
+        returns a list consisting gathered object of each process..
 
         Args:
             obj (any): Any pickle-able python object for all gather.

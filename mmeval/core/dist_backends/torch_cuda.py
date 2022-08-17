@@ -2,7 +2,7 @@
 
 from typing import Any, Tuple, TypeVar, Union
 
-from mmeval.core.dist_backends.torch_cpu import TorchCPUDistributed
+from mmeval.core.dist_backends.torch_cpu import TorchCPUDist
 
 try:
     import torch
@@ -12,7 +12,7 @@ except ImportError:
 Tensor = TypeVar('Tensor', bound='torch.Tensor')
 
 
-class TorchCUDADistributed(TorchCPUDistributed):
+class TorchCUDADist(TorchCPUDist):
     """A cuda distributed communication backend for torch.distributed."""
 
     def __init__(self) -> None:

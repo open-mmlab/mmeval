@@ -10,14 +10,14 @@ if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') == '0':
 
 import horovod.tensorflow as hvd
 
-from mmeval.core.dist_backends.tf_horovod import TFHorovodDistributed
+from mmeval.core.dist_backends.tf_horovod import TFHorovodDist
 
 
 def _create_global_obj_list(world_size):
     global_obj_list = []
     for idx in range(world_size):
         obj = dict()
-        obj['rank_id'] = idx
+        obj['rank'] = idx
         obj['world_size'] = world_size
         obj['data'] = [i for i in range(idx)]
         global_obj_list.append(obj)
@@ -28,18 +28,18 @@ def _create_global_obj_list(world_size):
 def test_horovod_tf_all_gather_fn():
     hvd.init()
 
-    dist_comm = TFHorovodDistributed()
-    assert dist_comm.is_dist_initialized
+    dist_comm = TFHorovodDist()
+    assert dist_comm.is_initialized
 
-    rank_id = dist_comm.rank_id
+    rank = dist_comm.rank
     world_size = dist_comm.world_size
 
     global_obj_list = _create_global_obj_list(world_size)
-    local_obj = global_obj_list[rank_id]
-    print(f'rank {rank_id}, local_obj {local_obj}')
+    local_obj = global_obj_list[rank]
+    print(f'rank {rank}, local_obj {local_obj}')
 
     gather_obj_list = dist_comm.all_gather_object(local_obj)
-    print(f'rank {rank_id}, gather_obj_list {gather_obj_list}')
+    print(f'rank {rank}, gather_obj_list {gather_obj_list}')
 
     assert gather_obj_list == global_obj_list
 
@@ -48,21 +48,21 @@ def test_horovod_tf_all_gather_fn():
 def test_horovod_tf_broadcast_fn():
     hvd.init()
 
-    dist_comm = TFHorovodDistributed()
-    assert dist_comm.is_dist_initialized
+    dist_comm = TFHorovodDist()
+    assert dist_comm.is_initialized
 
-    rank_id = dist_comm.rank_id
+    rank = dist_comm.rank
 
-    rank_0_obj = {'rank_id': 0}
+    rank_0_obj = {'rank': 0}
 
-    if rank_id == 0:
+    if rank == 0:
         obj = rank_0_obj
     else:
         obj = None
 
-    print(f'rank {rank_id}, obj {obj}')
+    print(f'rank {rank}, obj {obj}')
     broadcast_obj = dist_comm.broadcast_object(obj, src=0)
-    print(f'rank {rank_id}, broadcast_obj {broadcast_obj}')
+    print(f'rank {rank}, broadcast_obj {broadcast_obj}')
 
     assert broadcast_obj == rank_0_obj
 

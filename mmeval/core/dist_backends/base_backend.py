@@ -6,20 +6,20 @@ from typing import Any, List, Tuple, TypeVar, Union
 Tensor = TypeVar('Tensor')
 
 
-class BaseDistributed(metaclass=ABCMeta):
-    """The base class of distributed communication used by mmeval Metric."""
+class BaseDistBackend(metaclass=ABCMeta):
+    """The base backend of distributed communication used by mmeval Metric."""
 
     @abstractproperty
-    def is_dist_initialized(self) -> bool:
+    def is_initialized(self) -> bool:
         """Returns True if the distributed environment has been initialized.
 
         Returns:
             bool: Returns True if the distributed environment has been
-                initialized, else False.
+                initialized, otherwise returns False.
         """
 
     @abstractproperty
-    def rank_id(self) -> int:
+    def rank(self) -> int:
         """Returns the rank index of the current process group.
 
         Returns:
@@ -39,7 +39,7 @@ class BaseDistributed(metaclass=ABCMeta):
     @abstractmethod
     def all_gather_object(self, obj: Any) -> List[Any]:
         """All gather the given object from the current process group and
-        return as a list.
+        returns a list consisting gathered object of each process..
 
         Args:
             obj (any): Any pickle-able python object for all gather.
@@ -62,8 +62,8 @@ class BaseDistributed(metaclass=ABCMeta):
         """
 
 
-class TensorBaseDistributed(BaseDistributed):
-    """A base class of Tensor base distributed communication like PyTorch."""
+class TensorBaseDistBackend(BaseDistBackend):
+    """A base backend of Tensor base distributed communication like PyTorch."""
 
     @abstractmethod
     def _object_to_tensor(self, obj: Any) -> Tuple[Tensor, Tensor]:
@@ -73,8 +73,8 @@ class TensorBaseDistributed(BaseDistributed):
             obj (any): Any pickle-able python object.
 
         Returns:
-            Tuple: A tuple of the tensor converted from given object and the
-                tensor size.
+            Tuple: A tuple of the tensor converted from the given object and
+                the tensor size.
         """
 
     @abstractmethod
@@ -130,7 +130,7 @@ class TensorBaseDistributed(BaseDistributed):
 
     def all_gather_object(self, obj):
         """All gather the given object from the current process group and
-        return as a list.
+        returns a list consisting gathered object of each process..
 
         There are 3 steps to all gather a python object use Tensor distributed
         communication:
@@ -185,7 +185,7 @@ class TensorBaseDistributed(BaseDistributed):
 
         broadcast_obj_size_tensor = self._broadcast(obj_size_tensor, src)
 
-        if self.rank_id != src:
+        if self.rank != src:
             obj_tensor = self._pad_tensor(obj_tensor,
                                           broadcast_obj_size_tensor)
 

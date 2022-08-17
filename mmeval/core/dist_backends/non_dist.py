@@ -2,20 +2,20 @@
 
 from typing import Any, List
 
-from mmeval.core.dist_backends.base_dist import BaseDistributed
+from mmeval.core.dist_backends.base_backend import BaseDistBackend
 
 
-class NonDistributed(BaseDistributed):
+class NonDist(BaseDistBackend):
     """A dummy distributed communication for non-distributed environment."""
 
     @property
-    def is_dist_initialized(self) -> bool:
+    def is_initialized(self) -> bool:
         """Returns False directly in a non-distributed environment."""
         return False
 
     @property
-    def rank_id(self) -> int:
-        """Returns 0 as the rank_id in a non-distributed environment."""
+    def rank(self) -> int:
+        """Returns 0 as the rank index in a non-distributed environment."""
         return 0
 
     @property

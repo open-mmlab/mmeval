@@ -3,7 +3,7 @@
 import pickle
 from typing import Any, List, Tuple, TypeVar, Union
 
-from mmeval.core.dist_backends.base_dist import TensorBaseDistributed
+from mmeval.core.dist_backends.base_backend import TensorBaseDistBackend
 
 try:
     import torch
@@ -15,7 +15,7 @@ except ImportError:
 Tensor = TypeVar('Tensor', bound='torch.Tensor')
 
 
-class TorchCPUDistributed(TensorBaseDistributed):
+class TorchCPUDist(TensorBaseDistBackend):
     """A cpu distributed communication backend for torch.distributed."""
 
     def __init__(self) -> None:
@@ -28,17 +28,17 @@ class TorchCPUDistributed(TensorBaseDistributed):
             'make sure torch.distributed is available.'
 
     @property
-    def is_dist_initialized(self) -> bool:
+    def is_initialized(self) -> bool:
         """Returns True if the distributed environment has been initialized.
 
         Returns:
             bool: Returns True if the distributed environment has been
-                initialized, else False.
+                initialized, otherwise returns False.
         """
         return torch_dist.is_initialized()
 
     @property
-    def rank_id(self) -> int:
+    def rank(self) -> int:
         """Returns the rank index of the current process group."""
         return torch_dist.get_rank()
 
