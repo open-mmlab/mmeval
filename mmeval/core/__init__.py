@@ -6,5 +6,5 @@ from mmeval.core.dist import (get_dist_backend, list_all_backends,
 
 __all__ = [
     'dist_backends', 'get_dist_backend', 'set_default_dist_backend',
-    'list_all_backends', 'BaseMetric'
+    'list_all_backends'
 ]
