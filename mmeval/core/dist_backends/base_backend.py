@@ -92,8 +92,8 @@ class TensorBaseDistBackend(BaseDistBackend):
         """
 
     @abstractmethod
-    def _pad_tensor(self, tensor: Tensor, max_size: Union[int,
-                                                          Tensor]) -> Tensor:
+    def _pad_tensor(self, tensor: Tensor,
+                    max_size: Union[int, Tensor]) -> Tensor:  # yapf: disable
         """Padding the given tensor to the given size with 0.
 
         Args:
@@ -128,12 +128,12 @@ class TensorBaseDistBackend(BaseDistBackend):
             Tensor: The broadcast tensor.
         """
 
-    def all_gather_object(self, obj):
+    def all_gather_object(self, obj: Any) -> List[Any]:
         """All gather the given object from the current process group and
         returns a list consisting gathered object of each process..
 
-        There are 3 steps to all gather a python object using Tensor distributed
-        communication:
+        There are 3 steps to all gather a python object using Tensor
+        distributed communication:
 
         1. Serialize picklable python object to tensor.
         2. All gather the tensor size and padding the tensor with
@@ -147,7 +147,7 @@ class TensorBaseDistBackend(BaseDistBackend):
         Returns:
             list: A list of the all gathered object.
         """
-        obj_tensor, obj_size_tensor = self._object_to_tensor(obj)
+        obj_tensor, obj_size_tensor = self._object_to_tensor(obj)  # type: ignore # noqa: E501 # yapf: disable
 
         global_obj_size_tensor = self._all_gather(obj_size_tensor)
         max_obj_size = max(global_obj_size_tensor)
@@ -162,7 +162,7 @@ class TensorBaseDistBackend(BaseDistBackend):
             global_obj_list.append(obj)
         return global_obj_list
 
-    def broadcast_object(self, obj, src):
+    def broadcast_object(self, obj: Any, src: int) -> Any:
         """Broadcast the given object from source process to the current
         process group.
 
@@ -181,7 +181,7 @@ class TensorBaseDistBackend(BaseDistBackend):
         Returns:
             any: The broadcast object.
         """
-        obj_tensor, obj_size_tensor = self._object_to_tensor(obj)
+        obj_tensor, obj_size_tensor = self._object_to_tensor(obj)  # type: ignore # noqa: E501 # yapf: disable
 
         broadcast_obj_size_tensor = self._broadcast(obj_size_tensor, src)
 
