@@ -2,12 +2,8 @@
 
 from typing import List, Optional, no_type_check
 
-from mmeval.core.dist_backends.base_backend import BaseDistBackend
-from mmeval.core.dist_backends.mpi4py import MPI4PyDist
-from mmeval.core.dist_backends.non_dist import NonDist
-from mmeval.core.dist_backends.tf_horovod import TFHorovodDist
-from mmeval.core.dist_backends.torch_cpu import TorchCPUDist
-from mmeval.core.dist_backends.torch_cuda import TorchCUDADist
+from .dist_backends import (BaseDistBackend, MPI4PyDist, NonDist,
+                            TFHorovodDist, TorchCPUDist, TorchCUDADist)
 
 DIST_BACKENDS = {
     'non_dist': NonDist,

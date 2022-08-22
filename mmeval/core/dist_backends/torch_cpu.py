@@ -3,7 +3,7 @@
 import pickle
 from typing import Any, List, Tuple, TypeVar, Union
 
-from mmeval.core.dist_backends.base_backend import TensorBaseDistBackend
+from .base_backend import TensorBaseDistBackend
 
 try:
     import torch

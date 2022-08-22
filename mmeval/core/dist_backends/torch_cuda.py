@@ -2,7 +2,7 @@
 
 from typing import Any, Tuple, TypeVar, Union
 
-from mmeval.core.dist_backends.torch_cpu import TorchCPUDist
+from .torch_cpu import TorchCPUDist
 
 try:
     import torch

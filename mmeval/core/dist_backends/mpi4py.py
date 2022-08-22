@@ -3,7 +3,7 @@
 import os
 from typing import Any, List
 
-from mmeval.core.dist_backends.base_backend import BaseDistBackend
+from .base_backend import BaseDistBackend
 
 try:
     from mpi4py import MPI
