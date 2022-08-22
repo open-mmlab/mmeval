@@ -17,12 +17,13 @@ class TorchCUDADist(TorchCPUDist):
 
     def __init__(self) -> None:
         super().__init__()
-        assert torch is not None, \
-            f'For availability of {self.__class__.__name__},' \
-            'please install pytorch first.'
-        assert torch.distributed.is_nccl_available(), \
-            f'For availability of {self.__class__.__name__},' \
-            'make sure torch.distributed.is_nccl_available().'
+        if torch is None:
+            raise ImportError(f'For availability of {self.__class__.__name__},'
+                              ' please install pytorch first.')
+        if not torch.distributed.is_nccl_available():
+            raise ImportError(
+                f'For availability of {self.__class__.__name__},'
+                ' make sure torch.distributed.is_nccl_available().')
 
     def _object_to_tensor(self, obj: Any) -> Tuple[Tensor, Tensor]:
         """Convert the given object to a cuda tensor via `pickle.dumps`.

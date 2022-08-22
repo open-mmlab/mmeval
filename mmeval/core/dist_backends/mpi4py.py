@@ -16,9 +16,9 @@ class MPI4PyDist(BaseDistBackend):
 
     def __init__(self) -> None:
         super().__init__()
-        assert MPI is not None, \
-            f'For availability of {self.__class__.__name__},' \
-            ' please install mpi4py first.'
+        if MPI is None:
+            raise ImportError(f'For availability of {self.__class__.__name__},'
+                              ' please install mpi4py first.')
 
     @property
     def is_initialized(self) -> bool:

@@ -15,9 +15,9 @@ class TFHorovodDist(BaseDistBackend):
 
     def __init__(self) -> None:
         super().__init__()
-        assert hvd is not None, \
-            f'For availability of {self.__class__.__name__},' \
-            'please install horovod with tensorflow first.'
+        if hvd is None:
+            raise ImportError(f'For availability of {self.__class__.__name__},'
+                              ' please install horovod with tensorflow first.')
 
     @property
     def is_initialized(self) -> bool:
