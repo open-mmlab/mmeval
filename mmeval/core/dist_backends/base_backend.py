@@ -132,7 +132,7 @@ class TensorBaseDistBackend(BaseDistBackend):
         """All gather the given object from the current process group and
         returns a list consisting gathered object of each process..
 
-        There are 3 steps to all gather a python object use Tensor distributed
+        There are 3 steps to all gather a python object using Tensor distributed
         communication:
 
         1. Serialize picklable python object to tensor.
