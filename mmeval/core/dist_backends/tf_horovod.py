@@ -25,7 +25,7 @@ class TFHorovodDist(BaseDistBackend):
 
         Returns:
             bool: Returns True if the distributed environment has been
-                initialized, otherwise returns False.
+            initialized, otherwise returns False.
         """
         try:
             hvd.size()

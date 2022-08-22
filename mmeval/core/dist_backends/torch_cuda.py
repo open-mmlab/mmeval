@@ -32,7 +32,7 @@ class TorchCUDADist(TorchCPUDist):
 
         Returns:
             tuple: A tuple of the tensor converted from given object and the
-                tensor size.
+            tensor size.
         """
         # Add type annotation make mypy happy
         obj_tensor: Tensor
@@ -47,7 +47,7 @@ class TorchCUDADist(TorchCPUDist):
         Args:
             tenosr (Tensor): A cuda tensor.
             tensor_size (int or Tensor): The tensor size of the given Tensor to
-                be convert object.
+            be convert object.
 
         Returns:
             Any: The object converted from the given cuda tensor.

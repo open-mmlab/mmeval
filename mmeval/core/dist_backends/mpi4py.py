@@ -26,7 +26,7 @@ class MPI4PyDist(BaseDistBackend):
 
         Returns:
             bool: Returns True if the distributed environment has been
-                initialized, otherwise returns False.
+            initialized, otherwise returns False.
         """
         return 'OMPI_COMM_WORLD_SIZE' in os.environ
 

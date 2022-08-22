@@ -15,7 +15,7 @@ class BaseDistBackend(metaclass=ABCMeta):
 
         Returns:
             bool: Returns True if the distributed environment has been
-                initialized, otherwise returns False.
+            initialized, otherwise returns False.
         """
 
     @abstractproperty
@@ -74,7 +74,7 @@ class TensorBaseDistBackend(BaseDistBackend):
 
         Returns:
             Tuple: A tuple of the tensor converted from the given object and
-                the tensor size.
+            the tensor size.
         """
 
     @abstractmethod

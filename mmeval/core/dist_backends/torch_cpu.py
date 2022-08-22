@@ -33,7 +33,7 @@ class TorchCPUDist(TensorBaseDistBackend):
 
         Returns:
             bool: Returns True if the distributed environment has been
-                initialized, otherwise returns False.
+            initialized, otherwise returns False.
         """
         return torch_dist.is_initialized()
 
@@ -55,7 +55,7 @@ class TorchCPUDist(TensorBaseDistBackend):
 
         Returns:
             Tuple: A tuple of the tensor converted from given object and the
-                tensor size.
+            tensor size.
         """
         buffer = pickle.dumps(obj)
         byte_storage = torch.ByteStorage.from_buffer(buffer)
