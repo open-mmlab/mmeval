@@ -104,12 +104,12 @@ class TorchCPUDist(TensorBaseDistBackend):
         Returns:
             list: A list of the gathered tensor.
         """
-        global_tensor_list = [
+        tensor_list = [
             torch.empty_like(tensor).to(tensor.device)
             for _ in range(self.world_size)
         ]
-        torch_dist.all_gather(global_tensor_list, tensor)
-        return global_tensor_list
+        torch_dist.all_gather(tensor_list, tensor)
+        return tensor_list
 
     def _broadcast(self, tensor: Tensor, src: int) -> Tensor:
         """Broadcast the given object from the source rank.

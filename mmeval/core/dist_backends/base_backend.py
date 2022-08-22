@@ -149,18 +149,18 @@ class TensorBaseDistBackend(BaseDistBackend):
         """
         obj_tensor, obj_size_tensor = self._object_to_tensor(obj)  # type: ignore # noqa: E501 # yapf: disable
 
-        global_obj_size_tensor = self._all_gather(obj_size_tensor)
-        max_obj_size = max(global_obj_size_tensor)
+        obj_size_list = self._all_gather(obj_size_tensor)
+        max_obj_size = max(obj_size_list)
 
         padded_obj_tensor = self._pad_tensor(obj_tensor, max_obj_size)
-        global_padded_obj_tensor = self._all_gather(padded_obj_tensor)
+        padded_obj_tensor_list = self._all_gather(padded_obj_tensor)
 
-        global_obj_list = []
-        for padded_obj_tensor, obj_size_tensor in zip(global_padded_obj_tensor,
-                                                      global_obj_size_tensor):
+        obj_list = []
+        for padded_obj_tensor, obj_size_tensor in zip(padded_obj_tensor_list,
+                                                      obj_size_list):
             obj = self._tensor_to_object(padded_obj_tensor, obj_size_tensor)
-            global_obj_list.append(obj)
-        return global_obj_list
+            obj_list.append(obj)
+        return obj_list
 
     def broadcast_object(self, obj: Any, src: int) -> Any:
         """Broadcast the given object from source process to the current
