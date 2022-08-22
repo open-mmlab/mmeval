@@ -91,7 +91,7 @@ class TorchCPUDist(TensorBaseDistBackend):
         Returns:
             Tensor: The padded tensor.
         """
-        padding = torch.ones(max_size - tensor.size()[0], dtype=tensor.dtype)
+        padding = torch.zeros(max_size - tensor.size()[0], dtype=tensor.dtype)
         padding = padding.to(tensor.device)
         padded_tensor = torch.cat([tensor, padding], axis=0)
         return padded_tensor
