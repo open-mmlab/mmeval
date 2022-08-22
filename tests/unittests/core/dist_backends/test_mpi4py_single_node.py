@@ -12,14 +12,14 @@ from mmeval.core.dist_backends.mpi4py import MPI4PyDist
 
 
 def _create_obj_list(world_size):
-    global_obj_list = []
+    obj_list = []
     for idx in range(world_size):
         obj = dict()
         obj['rank'] = idx
         obj['world_size'] = world_size
         obj['data'] = [i for i in range(idx)]
-        global_obj_list.append(obj)
-    return global_obj_list
+        obj_list.append(obj)
+    return obj_list
 
 
 @pytest.mark.mpi
@@ -31,14 +31,14 @@ def test_mpi4py_all_gather_fn():
     rank = dist_comm.rank
     world_size = dist_comm.world_size
 
-    global_obj_list = _create_obj_list(world_size)
-    local_obj = global_obj_list[rank]
+    obj_list = _create_obj_list(world_size)
+    local_obj = obj_list[rank]
     print(f'rank {rank}, local_obj {local_obj}')
 
     gather_obj_list = dist_comm.all_gather_object(local_obj)
     print(f'rank {rank}, gather_obj_list {gather_obj_list}')
 
-    assert gather_obj_list == global_obj_list
+    assert gather_obj_list == obj_list
 
 
 @pytest.mark.mpi
