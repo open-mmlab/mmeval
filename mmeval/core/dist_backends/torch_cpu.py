@@ -79,9 +79,9 @@ class TorchCPUDist(TensorBaseDistBackend):
         obj = pickle.loads(buffer)
         return obj
 
-    def _pad_tensor(self, tensor: Tensor, max_size: Union[int,
-                                                          Tensor]) -> Tensor:
-        """Padding the given tensor to the given size with 0.
+    def _pad_tensor(self, tensor: Tensor,
+                    max_size: Union[int, Tensor]) -> Tensor:  # yapf: disable
+        """Padding the given tensor to the given size.
 
         Args:
             tensor (Tensor): A tensor-like data to be padded.
@@ -91,10 +91,9 @@ class TorchCPUDist(TensorBaseDistBackend):
         Returns:
             Tensor: The padded tensor.
         """
-        padding = torch.zeros(max_size - tensor.size()[0], dtype=tensor.dtype)
-        padding = padding.to(tensor.device)
-        padded_tensor = torch.cat([tensor, padding], axis=0)
-        return padded_tensor
+        # We use the `resize_` to pad tensor just like
+        # `torch.distributed.all_gather_object`.
+        return tensor.resize_(int(max_size))
 
     def _all_gather(self, tensor: Tensor) -> List[Tensor]:
         """All gather the given tensor.
