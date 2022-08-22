@@ -11,7 +11,7 @@ if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') == '0':
 from mmeval.core.dist_backends.mpi4py import MPI4PyDist
 
 
-def _create_global_obj_list(world_size):
+def _create_obj_list(world_size):
     global_obj_list = []
     for idx in range(world_size):
         obj = dict()
@@ -31,7 +31,7 @@ def test_mpi4py_all_gather_fn():
     rank = dist_comm.rank
     world_size = dist_comm.world_size
 
-    global_obj_list = _create_global_obj_list(world_size)
+    global_obj_list = _create_obj_list(world_size)
     local_obj = global_obj_list[rank]
     print(f'rank {rank}, local_obj {local_obj}')
 

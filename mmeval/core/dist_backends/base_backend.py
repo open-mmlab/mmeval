@@ -162,7 +162,7 @@ class TensorBaseDistBackend(BaseDistBackend):
             obj_list.append(obj)
         return obj_list
 
-    def broadcast_object(self, obj: Any, src: int) -> Any:
+    def broadcast_object(self, obj: Any, src: int = 0) -> Any:
         """Broadcast the given object from source process to the current
         process group.
 

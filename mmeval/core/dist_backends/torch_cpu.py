@@ -24,8 +24,9 @@ class TorchCPUDist(TensorBaseDistBackend):
             raise ImportError(f'For availability of {self.__class__.__name__},'
                               ' please install pytorch first.')
         if not torch_dist.is_available():
-            raise ImportError(f'For availability of {self.__class__.__name__},'
-                              ' make sure torch.distributed is available.')
+            raise RuntimeError(
+                f'For availability of {self.__class__.__name__},'
+                ' make sure torch.distributed is available.')
 
     @property
     def is_initialized(self) -> bool:
@@ -111,7 +112,7 @@ class TorchCPUDist(TensorBaseDistBackend):
         torch_dist.all_gather(tensor_list, tensor)
         return tensor_list
 
-    def _broadcast(self, tensor: Tensor, src: int) -> Tensor:
+    def _broadcast(self, tensor: Tensor, src: int = 0) -> Tensor:
         """Broadcast the given object from the source rank.
 
         Args:

@@ -33,7 +33,7 @@ def _init_torch_dist(rank, world_size, comm_backend, port):
         torch.cuda.set_device(rank % num_gpus)
 
 
-def _create_global_obj_list(world_size):
+def _create_obj_list(world_size):
     global_obj_list = []
     for idx in range(world_size):
         obj = dict()
@@ -53,7 +53,7 @@ def _torch_dist_all_gather_fn(rank, world_size, comm_backend, port):
     assert dist_comm.rank == rank
     assert dist_comm.world_size == world_size
 
-    global_obj_list = _create_global_obj_list(world_size)
+    global_obj_list = _create_obj_list(world_size)
     local_obj = global_obj_list[rank]
     print(f'rank {rank}, local_obj {local_obj}')
 
