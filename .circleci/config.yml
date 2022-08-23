@@ -41,7 +41,7 @@ jobs:
       - run:
           name: Install mmeval and dependencies
           command: |
-            pip install -r requirements/tests.txt -r requirements/runtime.txt
+            pip install -r requirements/tests.txt
             pip install -e .
       - run:
           name: Run unittests
@@ -76,7 +76,7 @@ jobs:
       - run:
           name: Install mmeval dependencies and install mmeval
           command: |
-            pip install -r requirements/tests.txt -r requirements/runtime.txt
+            pip install -r requirements/tests.txt
             pip install -e .
       - run:
           name: Run dist_backends unittests with mpi
@@ -99,7 +99,7 @@ jobs:
       - run:
           name: Install mmeval and dependencies
           command: |
-            pip install -r requirements/tests.txt -r requirements/runtime.txt
+            pip install -r requirements/tests.txt
             pip install -e .
       - run:
           name: Run unittests
