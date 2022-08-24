@@ -146,14 +146,31 @@ def test_mpi_broadcast_object(process_num, comm_port):
         args=(process_num, comm_backend, comm_port))
 
 
+try:
+    nccl_version = torch.cuda.nccl.version()
+except AttributeError:
+    nccl_version = 0
+
+
 @pytest.mark.skipif(
     not torch_dist.is_nccl_available(),
     reason='NCCL backend is not available.')
-@pytest.mark.skipif(
-    torch.cuda.device_count() < 0,
-    reason='CUDA device count must greater than 0.')
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port'], argvalues=[(1, 2350), (2, 2350)])
+    argnames=['process_num', 'comm_port'],
+    argvalues=[
+        pytest.param(
+            1,
+            2350,
+            marks=pytest.mark.skipif(
+                torch.cuda.device_count() < 0,
+                reason='CUDA device count must greater than 0.')),
+        pytest.param(
+            2,
+            2350,
+            marks=pytest.mark.skipif(
+                torch.cuda.device_count() < 1 and nccl_version >= 2500,
+                reason='Multi ranks in one GPU is not allowed since NCCL 2.5'))
+    ])
 def test_nccl_broadcast_object(process_num, comm_port):
     comm_backend = 'nccl'
     mp.spawn(
