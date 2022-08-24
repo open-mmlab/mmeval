@@ -4,7 +4,7 @@ import os
 import pytest
 
 # check if current process is launch via mpirun
-# eg. `mpirun -np 2 pytest -v --capture=no --with-mpi tests/unittests/core/dist_backends`  # noqa: E501
+# eg. `mpirun -np 2 pytest -v --capture=no --with-mpi tests/test_core/dist_backends`  # noqa: E501
 if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') == '0':
     pytest.skip(allow_module_level=True)
 
