@@ -14,7 +14,7 @@ from mmeval.core.dist_backends.non_dist import NonDist
 def test_set_default_dist_backend(dist_backend_name, is_valid):
     if is_valid:
         dist.set_default_dist_backend(dist_backend_name)
-        assert dist.DEFAULT_BACKEND == dist_backend_name
+        assert dist._DEFAULT_BACKEND == dist_backend_name
     else:
         with pytest.raises(AssertionError):
             dist.set_default_dist_backend(dist_backend_name)
@@ -31,11 +31,11 @@ def test_get_dist_backend():
 
 def test_default_dist_backend():
     importlib.reload(dist)
-    assert dist.DEFAULT_BACKEND == 'non_dist'
+    assert dist._DEFAULT_BACKEND == 'non_dist'
 
 
 def test_list_all_backend():
-    assert dist.list_all_backends() == list(dist.DIST_BACKENDS.keys())
+    assert dist.list_all_backends() == list(dist._DIST_BACKENDS.keys())
 
 
 if __name__ == '__main__':

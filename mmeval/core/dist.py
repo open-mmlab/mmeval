@@ -5,7 +5,7 @@ from typing import List, Optional, no_type_check
 from .dist_backends import (BaseDistBackend, MPI4PyDist, NonDist,
                             TFHorovodDist, TorchCPUDist, TorchCUDADist)
 
-DIST_BACKENDS = {
+_DIST_BACKENDS = {
     'non_dist': NonDist,
     'mpi4py': MPI4PyDist,
     'tf_horovod': TFHorovodDist,
@@ -13,10 +13,10 @@ DIST_BACKENDS = {
     'torch_cuda': TorchCUDADist,
 }
 
-DEFAULT_BACKEND = 'non_dist'
+_DEFAULT_BACKEND = 'non_dist'
 
 # Caching created dist backend instances
-DIST_BACKEND_INSTANCES: dict = {}
+_DIST_BACKEND_INSTANCES: dict = {}
 
 
 def list_all_backends() -> List[str]:
@@ -25,7 +25,7 @@ def list_all_backends() -> List[str]:
     Returns:
         List[str]: A list of all distributed backend names.
     """
-    return list(DIST_BACKENDS.keys())
+    return list(_DIST_BACKENDS.keys())
 
 
 def set_default_dist_backend(dist_backend: str) -> None:
@@ -34,9 +34,9 @@ def set_default_dist_backend(dist_backend: str) -> None:
     Args:
         dist_backend (str): The distribute backend name to set.
     """
-    assert dist_backend in DIST_BACKENDS
-    global DEFAULT_BACKEND
-    DEFAULT_BACKEND = dist_backend
+    assert dist_backend in _DIST_BACKENDS
+    global _DEFAULT_BACKEND
+    _DEFAULT_BACKEND = dist_backend
 
 
 @no_type_check
@@ -51,9 +51,9 @@ def get_dist_backend(dist_backend: Optional[str] = None) -> BaseDistBackend:
         :obj:`BaseDistBackend`: The distributed backend instance.
     """
     if dist_backend is None:
-        dist_backend = DEFAULT_BACKEND
-    assert dist_backend in DIST_BACKENDS
-    if dist_backend not in DIST_BACKEND_INSTANCES:
-        dist_backend_cls = DIST_BACKENDS[dist_backend]
-        DIST_BACKEND_INSTANCES[dist_backend] = dist_backend_cls()
-    return DIST_BACKEND_INSTANCES[dist_backend]
+        dist_backend = _DEFAULT_BACKEND
+    assert dist_backend in _DIST_BACKENDS
+    if dist_backend not in _DIST_BACKEND_INSTANCES:
+        dist_backend_cls = _DIST_BACKENDS[dist_backend]
+        _DIST_BACKEND_INSTANCES[dist_backend] = dist_backend_cls()
+    return _DIST_BACKEND_INSTANCES[dist_backend]
