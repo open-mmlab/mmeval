@@ -1,6 +1,7 @@
 version: 2.1
 
 jobs:
+
   lint:
     docker:
       - image: cimg/python:3.7.4
@@ -17,7 +18,146 @@ jobs:
             pip install interrogate
             interrogate -v --ignore-init-method --ignore-module --ignore-nested-functions --ignore-regex "__repr__" --fail-under 80 mmeval
 
+  build_torch_cpu:
+    parameters:
+      # The python version must match available image tags in
+      # https://circleci.com/developer/images/image/cimg/python
+      python:
+        type: string
+        default: "3.7.4"
+      torch:
+        type: string
+    docker:
+      - image: cimg/python:<< parameters.python >>
+    resource_class: large
+    steps:
+      - checkout
+      - run:
+          name: Install PyTorch via pip
+          command: |
+            python -V
+            pip install --upgrade pip
+            pip install torch==<< parameters.torch >>+cpu -f https://download.pytorch.org/whl/torch_stable.html
+      - run:
+          name: Install mmeval and dependencies
+          command: |
+            pip install -r requirements/tests.txt
+            pip install -e .
+      - run:
+          name: Run unittests
+          command: |
+            coverage run --branch --source mmeval -m pytest -v tests/
+            coverage xml
+            coverage report -m
+
+  build_mpirun_and_tf:
+    parameters:
+      tensorflow:
+        type: string
+    docker:
+      - image: cimg/python:3.7.4
+    resource_class: large
+    steps:
+      - checkout
+      - run:
+          name: Install Libraries
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y libopenmpi-dev
+      - run:
+          name: Install TensorFlow and Horovod via pip
+          command: |
+            python -V
+            pip install --upgrade pip
+            pip install mpi4py
+            pip install tensorflow==<< parameters.tensorflow >>
+            HOROVOD_WITH_TENSORFLOW=1 pip install horovod[tensorflow]
+            horovodrun --check-build
+      - run:
+          name: Install mmeval dependencies and install mmeval
+          command: |
+            pip install -r requirements/tests.txt
+            pip install -e .
+      - run:
+          name: Run dist_backends unittests with mpi
+          command: |
+            mpirun -np 2 pytest -v --capture=no --with-mpi tests/test_core/test_dist_backends
+
+  build_torch_cu101:
+    machine:
+      image: ubuntu-1604-cuda-10.1:201909-23
+    resource_class: gpu.nvidia.small
+    steps:
+      - checkout
+      - run:
+          name: Install PyTorch via pip
+          command: |
+            pyenv global 3.7.0
+            pip install --upgrade pip
+            python -V
+            pip install torch==1.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
+      - run:
+          name: Install mmeval and dependencies
+          command: |
+            pip install -r requirements/tests.txt
+            pip install -e .
+      - run:
+          name: Run unittests
+          command: |
+            pytest -v tests/
+
+
 workflows:
   unit_tests:
     jobs:
       - lint
+      - build_torch_cpu:
+          name: build_torch_cpu_1.6
+          torch: 1.6.0
+          requires:
+            - lint
+      - build_torch_cpu:
+          name: build_torch_cpu_1.7
+          torch: 1.7.0
+          requires:
+            - lint
+      - build_torch_cpu:
+          name: build_torch_cpu_1.8_py3.9
+          torch: 1.8.0
+          python: "3.9.0"
+          requires:
+            - lint
+      - build_torch_cpu:
+          name: build_torch_cpu_1.9_py3.8
+          torch: 1.9.0
+          python: "3.8.12"
+          requires:
+            - lint
+      - build_torch_cpu:
+          name: build_torch_cpu_1.9_py3.9
+          torch: 1.9.0
+          python: "3.9.0"
+          requires:
+            - lint
+      - build_mpirun_and_tf:
+          name: build_mpirun_and_tf_2.4
+          tensorflow: "2.4"
+          requires:
+            - build_torch_cpu_1.6
+            - build_torch_cpu_1.7
+            - build_torch_cpu_1.8_py3.9
+            - build_torch_cpu_1.9_py3.8
+            - build_torch_cpu_1.9_py3.9
+      - build_mpirun_and_tf:
+          name: build_mpirun_and_tf_2.7
+          tensorflow: "2.7"
+          requires:
+            - build_torch_cpu_1.6
+            - build_torch_cpu_1.7
+            - build_torch_cpu_1.8_py3.9
+            - build_torch_cpu_1.9_py3.8
+            - build_torch_cpu_1.9_py3.9
+      - build_torch_cu101:
+          requires:
+            - build_mpirun_and_tf_2.4
+            - build_mpirun_and_tf_2.7
