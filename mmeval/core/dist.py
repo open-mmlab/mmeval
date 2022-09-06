@@ -15,6 +15,9 @@ DIST_BACKENDS = {
 
 DEFAULT_BACKEND = 'non_dist'
 
+# Caching created dist backend instances
+DIST_BACKEND_INSTANCES: dict = {}
+
 
 def list_all_backends() -> List[str]:
     """Returns a list of all distributed backend names.
@@ -50,5 +53,7 @@ def get_dist_backend(dist_backend: Optional[str] = None) -> BaseDistBackend:
     if dist_backend is None:
         dist_backend = DEFAULT_BACKEND
     assert dist_backend in DIST_BACKENDS
-    dist_backend_cls = DIST_BACKENDS[dist_backend]
-    return dist_backend_cls()
+    if dist_backend not in DIST_BACKEND_INSTANCES:
+        dist_backend_cls = DIST_BACKENDS[dist_backend]
+        DIST_BACKEND_INSTANCES[dist_backend] = dist_backend_cls()
+    return DIST_BACKEND_INSTANCES[dist_backend]

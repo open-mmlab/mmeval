@@ -81,7 +81,7 @@ jobs:
       - run:
           name: Run dist_backends unittests with mpi
           command: |
-            mpirun -np 2 pytest -v --capture=no --with-mpi tests/test_core/dist_backends
+            mpirun -np 2 pytest -v --capture=no --with-mpi tests/test_core/test_dist_backends
 
   build_torch_cu101:
     machine:
