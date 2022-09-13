@@ -8,7 +8,7 @@ and NumPy.
 In order to deal with the dispatch issue of different calculation methods, we
 adopt a dynamic multiple dispatch mechanism based on type hints.
 
-A simple example of multiple dispatch based on type hints is as follows:
+A simple example of multiple dispatch based on type hints is as below:
 
 Example:
 
@@ -27,7 +27,7 @@ Example:
     >>> compute('1', '1')
     this is str
 
-Currently, we employ plum (a multiple dispatch library) to implement multiple
+Currently, we use plum (a multiple dispatch library) to implement multiple
 dispatch mechanism in mmeval.
 
 In this module, we optimized the execution speed of plum through the following
