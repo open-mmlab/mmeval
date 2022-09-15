@@ -5,7 +5,8 @@ import numpy as np
 from typing import Dict, List, Optional, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
-from .utils.bbox import calculate_bboxes_area, calculate_overlaps
+from mmeval.detection.utils.bbox import (calculate_bboxes_area,
+                                         calculate_overlaps)
 
 
 class VOCMeanAP(BaseMetric):
@@ -32,7 +33,7 @@ class VOCMeanAP(BaseMetric):
 
     def __init__(self,
                  iou_thrs: Union[float, Tuple[float]] = 0.5,
-                 scale_ranges: Optional[List[tuple]] = None,
+                 scale_ranges: Optional[List[Tuple]] = None,
                  eval_mode: str = '11points',
                  use_legacy_coordinate: bool = False,
                  nproc: int = 4,
@@ -113,93 +114,96 @@ class VOCMeanAP(BaseMetric):
 
         return ap
 
+    def _filter_by_bboxes_area(self, bboxes: np.ndarray,
+                               min_area: Optional[float],
+                               max_area: Optional[float]) -> np.ndarray:
+        """Filter the bboxes area."""
+        bboxes_area = calculate_bboxes_area(bboxes, self.use_legacy_coordinate)
+        area_mask = np.ones_like(bboxes_area, dtype=bool)
+        if min_area is not None:
+            area_mask &= (bboxes_area >= min_area)
+        if max_area is not None:
+            area_mask &= (bboxes_area < max_area)
+        return area_mask
+
     def _calculate_tpfp(
-            self, pred_bboxes: np.ndarray, gt_bboxes: np.ndarray,
-            ignore_gt_bboxes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
+            self, pred_bboxes: np.ndarray,
+            gt_bboxes: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
         """Check if detected bboxes are true positive or false positive.
 
         Args:
             pred_bboxes (numpy.ndarray): Detected bboxes of this image, of
                 shape (m, 5).
-            gt_bboxes (ndarray): GT bboxes of this image, of shape (n, 4).
-            gt_bboxes_ignore (ndarray): Ignored gt bboxes of this image,
-                of shape (k, 4). Defaults to None
+            gt_bboxes (ndarray): GT bboxes of this image, of shape (n, 5).
 
         Returns:
             tuple[np.ndarray]: (tp, fp) whose elements are 0 and 1. The shape
             of each array is (num_ious, num_scales, m).
         """
-        # an indicator of ignored gts
-        gt_ignore_indices = np.concatenate(
-            (np.zeros(gt_bboxes.shape[0], dtype=bool),
-             np.ones(ignore_gt_bboxes.shape[0], dtype=bool)))
-        # stack gt_bboxes and gt_bboxes_ignore for convenience
-        gt_bboxes = np.vstack((gt_bboxes, ignore_gt_bboxes))
-
+        # Step 1. Initialize the `tp` and `fp` arrays.
         num_preds = pred_bboxes.shape[0]
-        num_gts = gt_bboxes.shape[0]
         num_iou_thrs = len(self.iou_thrs)
         num_scales = len(self.scale_ranges)
-
         tp = np.zeros((num_iou_thrs, num_scales, num_preds), dtype=np.float32)
         fp = np.zeros((num_iou_thrs, num_scales, num_preds), dtype=np.float32)
 
-        # if there is no gt bboxes in this image, then all det bboxes
-        # within area range are false positives
-        if num_gts == 0:
-            if self._area_ranges == [(None, None)]:
-                fp[...] = 1
-            else:
-                pred_areas = calculate_bboxes_area(pred_bboxes[..., :4])
-                for scale_idx, (min_area,
-                                max_area) in enumerate(self._area_ranges):
-                    mask = (pred_areas >= min_area) & (pred_areas < max_area)
-                    fp[:, scale_idx, mask] = 1
+        # Step 2. If there is no gt bboxes in this image, then all pred bboxes
+        # within area range are false positives.
+        if gt_bboxes.shape[0] == 0:
+            for idx, (min_area, max_area) in enumerate(self._area_ranges):
+                area_mask = self._filter_by_bboxes_area(
+                    pred_bboxes[:, :4], min_area, max_area)
+                fp[:, idx, area_mask] = 1
             return tp, fp
 
+        # Step 3. Calculate the IoUs between the predicted bboxes and the
+        # ground truth bboxes.
         ious = calculate_overlaps(
-            pred_bboxes,
-            gt_bboxes,
+            pred_bboxes[:, :4],
+            gt_bboxes[:, :4],
             mode='iou',
             use_legacy_coordinate=self.use_legacy_coordinate)
-        # for each det, the max iou with all gts
+        # For each pred bbox, the max iou with all gts.
         ious_max = ious.max(axis=1)
-        # for each det, which gt overlaps most with it
+        # For each pred bbox, which gt overlaps most with it.
         ious_argmax = ious.argmax(axis=1)
-        # sort all dets in descending order by scores
+        # Sort all pred bbox in descending order by scores.
         sorted_indices = np.argsort(-pred_bboxes[:, -1])
 
+        # Step 4. Count the `tp` and `fp` of each iou threshold and area range.
         for iou_thr_idx, iou_thr in enumerate(self.iou_thrs):
             for area_idx, (min_area, max_area) in enumerate(self._area_ranges):
-                gt_covered = np.zeros(num_gts, dtype=bool)
-                if min_area is None:
-                    gt_area_ignore = np.zeros_like(
-                        gt_ignore_indices, dtype=bool)
-                else:
-                    gt_areas = calculate_bboxes_area(
-                        gt_bboxes, self.use_legacy_coordinate)
-                    gt_area_ignore = (gt_areas < min_area) | (
-                        gt_areas >= max_area)
+                # The flags that gt bboxes have been matched.
+                gt_covered_flags = np.zeros(gt_bboxes.shape[0], dtype=bool)
+                # The flags that gt bboxes should be ignored.
+                ignore_gt_flags = gt_bboxes[:, -1].astype(bool)
+                # The flags that gt bboxes out of area range.
+                gt_area_mask = self._filter_by_bboxes_area(
+                    gt_bboxes, min_area, max_area)
+                ignore_gt_area_flags = ~gt_area_mask
 
+                # Count the prediction bboxes in order of decreasing score.
                 for pred_bbox_idx in sorted_indices:
                     if ious_max[pred_bbox_idx] >= iou_thr:
-                        matched_gt = ious_argmax[pred_bbox_idx]
-                        if not (gt_ignore_indices[matched_gt]
-                                or gt_area_ignore[matched_gt]):
-                            if not gt_covered[matched_gt]:
-                                gt_covered[matched_gt] = True
-                                tp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
-                            else:
-                                fp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
-                        # otherwise ignore this detected bbox, tp = 0, fp = 0
-                    elif min_area is None:
-                        fp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
-                    else:
-                        area = calculate_bboxes_area(
-                            pred_bboxes[pred_bbox_idx, :4],
-                            self.use_legacy_coordinate)
-                        if area >= min_area and area < max_area:
+                        matched_gt_idx = ious_argmax[pred_bbox_idx]
+                        # Ignore the pred bbox that match an ignored gt bbox.
+                        if ignore_gt_flags[matched_gt_idx]:
+                            continue
+                        # Ignore the pred bbox that is out of area range.
+                        if ignore_gt_area_flags[matched_gt_idx]:
+                            continue
+                        if not gt_covered_flags[matched_gt_idx]:
+                            tp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
+                            gt_covered_flags[matched_gt_idx] = True
+                        else:
+                            # This gt bbox has been matched and counted as fp.
                             fp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
+                    else:
+                        area_mask = self._filter_by_bboxes_area(
+                            pred_bboxes[pred_bbox_idx, :4], min_area, max_area)
+                        if area_mask:
+                            fp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
+
         return tp, fp
 
     def get_class_results(self, predictions: List[dict],
@@ -212,31 +216,37 @@ class VOCMeanAP(BaseMetric):
             class_index (int): Index of a specific class.
 
         Returns:
-            tuple[list[np.ndarray]]: predictions bboxes, gt bboxes,
-                ignored gt bboxes.
+            tuple[list[np.ndarray]]: predictions bboxes, gt bboxes.
         """
         class_preds = []
         class_gts = []
-        class_ignore_gts = []
 
         for pred, gt in zip(predictions, groundtruths):
             pred_indices = (pred['labels'] == class_index)
-            bboxes_with_scores = np.hstack([
+            pred_bboxes_info = np.hstack([
                 pred['bboxes'][pred_indices, :],
                 pred['scores'][pred_indices].reshape((-1, 1))
             ])
-            class_preds.append(bboxes_with_scores)
+            class_preds.append(pred_bboxes_info)
 
             gt_indices = (gt['labels'] == class_index)
-            class_gts.append(gt['bboxes'][gt_indices, :])
+            gt_bboxes = gt['bboxes'][gt_indices, :]
+            gt_bboxes_info = np.hstack(
+                [gt_bboxes, np.zeros((gt_bboxes.shape[0], 1))])
 
             if gt.get('labels_ignore', None) is not None:
                 ignore_gt_indices = (gt['labels_ignore'] == class_index)
-                class_ignore_gts.append(
-                    gt['bboxes_ignore'][ignore_gt_indices, :])
-            else:
-                class_ignore_gts.append(np.empty((0, 4), dtype=np.float32))
-        return class_preds, class_gts, class_ignore_gts
+                ignore_gt_bboxes = gt['bboxes_ignore'][ignore_gt_indices, :]
+                ignore_gt_bboxes_info = np.hstack([
+                    ignore_gt_bboxes,
+                    np.ones((ignore_gt_bboxes.shape[0], 1))
+                ])
+                gt_bboxes_info = np.vstack(
+                    (gt_bboxes_info, ignore_gt_bboxes_info))
+
+            class_gts.append(gt_bboxes_info)
+
+        return class_preds, class_gts
 
     def compute_metric(self, results: list) -> dict:
         """Compute the VOCMeanAP metric.
@@ -260,17 +270,15 @@ class VOCMeanAP(BaseMetric):
 
         results_per_class = []
         for class_index in range(len(class_names)):
-            class_preds, class_gts, class_ignore_gts = self.get_class_results(
+            class_preds, class_gts = self.get_class_results(
                 predictions, groundtruths, class_index)
 
             if pool is not None:
-                tpfp_list = pool.starmap(
-                    self._calculate_tpfp,
-                    zip(class_preds, class_gts, class_ignore_gts))
+                tpfp_list = pool.starmap(self._calculate_tpfp,
+                                         zip(class_preds, class_gts))
             else:
                 tpfp_list = [
-                    self._calculate_tpfp(class_preds[i], class_gts[i],
-                                         class_ignore_gts[i])
+                    self._calculate_tpfp(class_preds[i], class_gts[i])
                     for i in range(num_images)
                 ]
 
@@ -280,15 +288,10 @@ class VOCMeanAP(BaseMetric):
                                dtype=int)
 
             for image_idx in range(num_images):
-                if self._area_ranges == [(None, None)]:
-                    num_gts[:, 0] += class_gts[image_idx].shape[0]
-                else:
-                    gt_areas = calculate_bboxes_area(
-                        class_gts[image_idx], self.use_legacy_coordinate)
-                    for k, (min_area,
-                            max_area) in enumerate(self._area_ranges):
-                        num_gts[:, k] += np.sum((gt_areas >= min_area)
-                                                & (gt_areas < max_area))
+                for idx, (min_area, max_area) in enumerate(self._area_ranges):
+                    area_mask = self._filter_by_bboxes_area(
+                        class_gts[image_idx], min_area, max_area)
+                    num_gts[:, idx] = np.sum(area_mask)
 
             sorted_indices = np.argsort(-np.vstack(class_preds)[:, -1])
 
@@ -319,15 +322,11 @@ class VOCMeanAP(BaseMetric):
         eval_results = {}
 
         for i, iou_thr in enumerate(self.iou_thrs):
-            if self.scale_ranges == [
-                (None, None),
-            ]:
-                aps = [res['ap'][i][0] for res in results_per_class]
-                eval_results[f'mAP@{iou_thr}'] = sum(aps) / len(aps)
-            else:
-                for j, scale in enumerate(self.scale_ranges):
-                    aps = [res['ap'][i][j] for res in results_per_class]
-                    eval_results[f'mAP@{iou_thr}@{scale}'] = sum(aps) / len(
-                        aps)
-
+            for j, area_range in enumerate(self._area_ranges):
+                aps = [res['ap'][i][j] for res in results_per_class]
+                if area_range == (None, None):
+                    key = f'mAP@{iou_thr}'
+                else:
+                    key = f'mAP@{iou_thr}@{area_range}'
+                eval_results[key] = sum(aps) / len(aps)
         return eval_results

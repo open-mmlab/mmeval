@@ -66,12 +66,13 @@ def calculate_overlaps(bboxes1,
 
     if bboxes1.shape[0] > bboxes2.shape[0]:
         # Swap bboxes for faster calculation.
-        return calculate_overlaps(
+        overlaps = calculate_overlaps(
             bboxes2,
             bboxes1,
             mode=mode,
             eps=eps,
             use_legacy_coordinate=use_legacy_coordinate)
+        return overlaps.T
 
     area1 = calculate_bboxes_area(bboxes1, use_legacy_coordinate)
     area2 = calculate_bboxes_area(bboxes2, use_legacy_coordinate)
