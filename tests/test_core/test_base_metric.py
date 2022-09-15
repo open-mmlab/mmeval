@@ -72,13 +72,13 @@ def _init_torch_dist(rank, world_size, comm_backend, port):
         torch.cuda.set_device(rank % num_gpus)
 
 
-def _test_metric_compute(rank, world_size, port, dist_merge_method):
+def _test_metric_compute(rank, world_size, port, dist_collect_mode):
     _init_torch_dist(rank, world_size, comm_backend='gloo', port=port)
 
     metric = Mertic(
-        dist_backend='torch_cpu', dist_merge_method=dist_merge_method)
+        dist_backend='torch_cpu', dist_collect_mode=dist_collect_mode)
 
-    if dist_merge_method == 'unzip':
+    if dist_collect_mode == 'unzip':
         data_slice = range(rank, 10 * world_size, world_size)
     else:
         data_slice = range(rank * 10, (rank + 1) * 10)
@@ -92,7 +92,7 @@ def _test_metric_compute(rank, world_size, port, dist_merge_method):
     if world_size == 1:
         return
 
-    if dist_merge_method == 'unzip':
+    if dist_collect_mode == 'unzip':
         results = metric.compute(size=(10 * world_size - 1))
         assert results == {'results': [i for i in range(10 * world_size - 1)]}
     else:
@@ -105,13 +105,13 @@ def _test_metric_compute(rank, world_size, port, dist_merge_method):
     not torch.distributed.is_available(),
     reason='torch.distributed is not available!')
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port', 'dist_merge_method'],
+    argnames=['process_num', 'comm_port', 'dist_collect_mode'],
     argvalues=[(1, 2346, 'unzip'), (4, 2346, 'unzip'), (4, 2346, 'cat')])
-def test_metric_compute_dist(process_num, comm_port, dist_merge_method):
+def test_metric_compute_dist(process_num, comm_port, dist_collect_mode):
     torch.multiprocessing.spawn(
         _test_metric_compute,
         nprocs=process_num,
-        args=(process_num, comm_port, dist_merge_method))
+        args=(process_num, comm_port, dist_collect_mode))
 
 
 if __name__ == '__main__':
