@@ -9,22 +9,24 @@ from mmeval.core.dist import get_dist_backend
 class BaseMetric(metaclass=ABCMeta):
     """Base class for metric.
 
-    To implement a metric, you should subclass ``BaseMetric`` and then
-    implement the ``add`` and ``compute_metric`` methods. ``BaseMetric`` will
-    automatically complete distributed synchronization between processes.
+    To implement a metric, you should implement a subclass of ``BaseMetric``
+    that overrides the ``add`` and ``compute_metric`` methods. ``BaseMetric``
+    will automatically complete the distributed synchronization between
+    processes.
 
-    Each metric will maintain a list named ``self._results`` to store
-    intermediate results. When computing the final metric result, the
-    ``self._results`` will be synchronized between processes.
+    In the evaluation process, each metric will update ``self._results` to
+    store intermediate results after each call of ``add``. When computing the
+    final metric result, the ``self._results`` will be synchronized between
+    processes.
 
     Args:
         dataset_meta (dict, optional): Meta information of the dataset, this is
             required for some metrics that require dataset information.
             Defaults to None.
-        dist_merge_method (str, optional): The method of concatenating the
+        dist_collect_mode (str, optional): The method of concatenating the
             collected synchronization results. This depends on how the
             distributed data is split. Currently only 'unzip' and 'cat' are
-            available. For PyTorch's `DistributedSampler`, 'unzip' should
+            supported. For PyTorch's ``DistributedSampler``, 'unzip' should
             be used. Defaults to 'unzip'.
         dist_backend (str, optional): The name of the distributed communication
             backend, you can get all the backend names through
@@ -63,11 +65,11 @@ class BaseMetric(metaclass=ABCMeta):
 
     def __init__(self,
                  dataset_meta: Optional[Dict] = None,
-                 dist_merge_method: str = 'unzip',
+                 dist_collect_mode: str = 'unzip',
                  dist_backend: Optional[str] = None):
         self.dataset_meta = dataset_meta
-        assert dist_merge_method in ('cat', 'unzip')
-        self.dist_merge_method = dist_merge_method
+        assert dist_collect_mode in ('cat', 'unzip')
+        self.dist_collect_mode = dist_collect_mode
         self.dist_comm = get_dist_backend(dist_backend)
         self._results: List[Any] = []
 
@@ -126,7 +128,7 @@ class BaseMetric(metaclass=ABCMeta):
         global_results = self.dist_comm.all_gather_object(self._results)
 
         collected_results: List[Any]
-        if self.dist_merge_method == 'cat':
+        if self.dist_collect_mode == 'cat':
             # use `sum` to concatenate list
             # e.g. sum([[1, 3], [2, 4]], []) = [1, 3, 2, 4]
             collected_results = sum(global_results, [])
@@ -135,10 +137,10 @@ class BaseMetric(metaclass=ABCMeta):
             for partial_result in zip(*global_results):
                 collected_results.extend(list(partial_result))
 
-        # NOTE: Needs discussion or investigation @yancong at 9/13/2022, 4:20:48 PM  # noqa: E501
-        # If the intermediate results stored in ``self._results`` are not
-        # correspond one-to-one with samples (e.g. a total confusion matrix),
-        # the size here may not work anymore.
+        # NOTE: We use the given `size` to remove samples padded during
+        # distributed evaluation. This requires that the size and order of
+        # intermediate results stored in `self._results` should be consistent
+        # with the evaluation samples.
         if size is not None:
             collected_results = collected_results[:size]
 
@@ -159,7 +161,7 @@ class BaseMetric(metaclass=ABCMeta):
         Note:
             For performance issues, what you add to the ``self._results``
             should be as simple as possible. But be aware that the intermediate
-            result stored in ``self._results`` should correspond one-to-one
+            results stored in ``self._results`` should correspond one-to-one
             with the samples, in that we need to remove the padded samples for
             the most accurate result.
         """
