@@ -33,21 +33,32 @@ class BaseMetric(metaclass=ABCMeta):
 
     Example to implement an accuracy metric:
 
+        >>> import numpy as np
         >>> from mmeval.core import BaseMetric
-
+        >>>
         >>> class Accuracy(BaseMetric):
         ...     def add(self, predictions, labels):
         ...         self._results.append((predictions, labels))
-        ...     def compute_metrcis(self, results):
+        ...     def compute_metric(self, results):
         ...         predictions = np.concatenate([res[0] for res in results])
         ...         labels = np.concatenate([res[1] for res in results])
         ...         correct = (predictions == labels)
         ...         accuracy = sum(correct) / len(predictions)
         ...         return {'accuracy': accuracy}
 
+    Stateless call of metric:
+
         >>> accuracy = Accuracy()
         >>> accuracy(predictions=[1, 2, 3, 4], labels=[1, 2, 3, 1])
         {'accuracy': 0.75}
+
+    Accumulate batch:
+
+        >>> for i in range(10):
+        >>>     predicts = np.random.randint(0, 4, size=(10,))
+        >>>     labels = predicts = np.random.randint(0, 4, size=(10,))
+        >>>     accuracy.add(predicts, labels)
+        >>> accuracy.compute()  # doctest: +SKIP
     """
 
     def __init__(self,
