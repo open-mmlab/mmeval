@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
+from typing import Optional
 import numpy as np
 
 
@@ -8,7 +9,8 @@ def calculate_bboxes_area(bboxes: np.ndarray,
     """Calculate area of bounding boxes.
 
     Args:
-        bboxes (numpy.ndarray): The bboxes with shape (..., 4) in 'xyxy' format.  # noqa: E501
+        bboxes (numpy.ndarray): The bboxes with shape (n, 4) or (4, ) in 'xyxy'
+            format.
         use_legacy_coordinate (bool): Whether to use coordinate system in
             mmdet v1.x. which means width, height should be
             calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
@@ -30,6 +32,20 @@ def calculate_bboxes_area(bboxes: np.ndarray,
     return areas
 
 
+def filter_by_bboxes_area(bboxes: np.ndarray,
+                         min_area: Optional[float],
+                         max_area: Optional[float],
+                         use_legacy_coordinate=False) -> np.ndarray:
+    """Filter the bboxes area."""
+    bboxes_area = calculate_bboxes_area(bboxes, use_legacy_coordinate)
+    area_mask = np.ones_like(bboxes_area, dtype=bool)
+    if min_area is not None:
+        area_mask &= (bboxes_area >= min_area)
+    if max_area is not None:
+        area_mask &= (bboxes_area < max_area)
+    return area_mask
+
+
 def calculate_overlaps(bboxes1,
                        bboxes2,
                        mode='iou',
@@ -38,11 +54,11 @@ def calculate_overlaps(bboxes1,
     """Calculate the overlap between each bbox of bboxes1 and bboxes2.
 
     Args:
-        bboxes1 (ndarray): Shape (n, 4)
-        bboxes2 (ndarray): Shape (k, 4)
+        bboxes1 (ndarray): The bboxes with shape (n, 4) in 'xyxy' format.
+        bboxes2 (ndarray): The bboxes with shape (k, 4) in 'xyxy' format.
         mode (str): 'iou' (intersection over union) or 'iof' (intersection
-            over foreground)
-        eps (float): The epsilon value.
+            over foreground). Defaults to 'iou'.
+        eps (float): The epsilon value. Defaults to 1e-6.
         use_legacy_coordinate (bool): Whether to use coordinate system in
             mmdet v1.x. which means width, height should be
             calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
@@ -66,14 +82,13 @@ def calculate_overlaps(bboxes1,
 
     if bboxes1.shape[0] > bboxes2.shape[0]:
         # Swap bboxes for faster calculation.
-        overlaps = calculate_overlaps(
-            bboxes2,
-            bboxes1,
-            mode=mode,
-            eps=eps,
-            use_legacy_coordinate=use_legacy_coordinate)
-        return overlaps.T
+        bboxes1, bboxes2 = bboxes2, bboxes1
+        overlaps = np.zeros((cols, rows), dtype=np.float32)
+        exchange = True
+    else:
+        exchange = False
 
+    # Caculate the bboxes area.
     area1 = calculate_bboxes_area(bboxes1, use_legacy_coordinate)
     area2 = calculate_bboxes_area(bboxes2, use_legacy_coordinate)
 
@@ -94,8 +109,8 @@ def calculate_overlaps(bboxes1,
         if mode == 'iou':
             union = area1[i] + area2 - overlap
         else:
-            union = area1[i]
+            union = area1[i] if not exchange else area2
 
         union = np.maximum(union, eps)
         overlaps[i, :] = overlap / union
-    return overlaps
+    return overlaps if not exchange else overlaps.T
