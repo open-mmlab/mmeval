@@ -323,23 +323,49 @@ class CocoMetric(BaseMetric):
         Args:
             predictions (Sequence[dict]): Predictions from the model. With the
                 following keys:
-                    - img_id
-                    - bboxes
-                    - scores
-                    - labels
-                    - masks (optioal)
-                    - mask_scores (optional)
+                    - img_id (int)
+                    - bboxes (np.array)
+                    - scores (np.array)
+                    - labels (np.array)
+                    - masks (np.array, optional)
+                    - mask_scores (np.array, optional)
 
             groundtruth (Sequence[dict]): The ground truth labels. With the
                 following keys:
-                    - img_id
-                    - width
-                    - height
-                    - instances (optional), `instances` is requried when
-                      annotation json file is provided.
+                    - img_id (int)
+                    - width (int)
+                    - height (int)
+                    - instances (list[dict]), each element in list should have
+                      the following structrue:
+                        {
+                            'bbox': [xmin, ymin, xmax, ymax],
+                            'bbox_label': int,
+                            'mask': list[list[float]] or list[float] or RLE
+                        }
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             self._results.append((prediction, groundtruth))
+
+    def __call__(self, *args, **kwargs) -> Dict:
+        """Stateless call for a metric compute."""
+
+        # cache states
+        cache_results = self._results
+        cache_coco_api = self._coco_api
+        cache_cat_ids = self.cat_ids
+        cache_img_ids = self.img_ids
+
+        self._results = []
+        self.add(*args, **kwargs)
+        metric_result = self.compute_metric(self._results)
+
+        # recover states from cache
+        self._results = cache_results
+        self._coco_api = cache_coco_api
+        self.cat_ids = cache_cat_ids
+        self.img_ids = cache_img_ids
+
+        return metric_result
 
     def compute_metric(self, results: list) -> Dict[str, float]:
         """Compute the metrics from processed results.
