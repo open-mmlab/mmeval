@@ -274,7 +274,7 @@ class CocoMetric(BaseMetric):
                 height=gt_dict['height'],
                 file_name='')
             image_infos.append(image_info)
-            for ann in gt_dict['anns']:
+            for ann in gt_dict['instances']:
                 label = ann['bbox_label']
                 bbox = ann['bbox']
                 coco_bbox = [
@@ -335,7 +335,8 @@ class CocoMetric(BaseMetric):
                     - img_id
                     - width
                     - height
-                    - anns (optional)
+                    - instances (optional), `instances` is requried when
+                      annotation json file is provided.
         """
         for prediction, label in zip(predictions, labels):
             self._results.append((prediction, label))
@@ -521,4 +522,6 @@ class CocoMetric(BaseMetric):
         return eval_results
 
     def evaluate(self, *args, **kwargs):
+        # metric.evaluate is called in mmengine.evaluator
+        # see https://github.com/open-mmlab/mmengine/blob/36af1f0fee811352369a26d27bd372eb54b6b6ea/mmengine/evaluator/evaluator.py#L79  # noqa
         return self.compute(*args, **kwargs)
