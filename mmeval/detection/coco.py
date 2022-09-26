@@ -317,7 +317,7 @@ class CocoMetric(BaseMetric):
         dump(coco_json, converted_json_path)
         return converted_json_path
 
-    def add(self, predictions: List[Dict], labels: List[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: List[Dict], groundtruths: List[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to `self._results`.
 
         Args:
@@ -330,7 +330,7 @@ class CocoMetric(BaseMetric):
                     - masks (optioal)
                     - mask_scores (optional)
 
-            labels (Sequence[dict]): The ground truth labels. With the
+            groundtruth (Sequence[dict]): The ground truth labels. With the
                 following keys:
                     - img_id
                     - width
@@ -338,8 +338,8 @@ class CocoMetric(BaseMetric):
                     - instances (optional), `instances` is requried when
                       annotation json file is provided.
         """
-        for prediction, label in zip(predictions, labels):
-            self._results.append((prediction, label))
+        for prediction, groundtruth in zip(predictions, groundtruths):
+            self._results.append((prediction, groundtruth))
 
     def compute_metric(self, results: list) -> Dict[str, float]:
         """Compute the metrics from processed results.
