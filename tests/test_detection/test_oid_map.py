@@ -88,13 +88,9 @@ def test_metric_accurate():
 
     oid_map = OIDMeanAP(num_classes=601, class_relation_matrix=RELATION_MATRIX)
     for pred, ann in results:
-        oid_map.add([
-            pred,
-        ], [
-            ann,
-        ])
-
+        oid_map.add([pred], [ann])
     metric_results = oid_map.compute()
+
     np.testing.assert_almost_equal(metric_results['mAP'], 0.7325832)
 
 

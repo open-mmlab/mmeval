@@ -90,11 +90,7 @@ def test_metric_accurate():
         num_classes=20, eval_mode='area', use_legacy_coordinate=True)
 
     for pred, ann in results:
-        voc_map.add([
-            pred,
-        ], [
-            ann,
-        ])
+        voc_map.add([pred], [ann])
     metric_results = voc_map.compute()
 
     np.testing.assert_almost_equal(metric_results['mAP'], 0.8224697)
