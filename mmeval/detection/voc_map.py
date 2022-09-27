@@ -38,7 +38,6 @@ class VOCMeanAP(BaseMetric):
         classwise_result (bool, optional): Whether to return the computed
             results of each class.
             Defaults to False.
-
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
     """
 
