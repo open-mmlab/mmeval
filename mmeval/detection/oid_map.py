@@ -410,17 +410,11 @@ class OIDMeanAP(VOCMeanAP):
             num_images = len(class_preds)
             tpfp_list = pool.starmap(
                 self._calculate_image_tpfp,
-                zip(class_preds, class_gts, class_group_of_flags, [
-                    self.use_group_of,
-                ] * num_images, [
-                    self.iof_thrs,
-                ] * num_images, [
-                    self.iou_thrs,
-                ] * num_images, [
-                    self._area_ranges,
-                ] * num_images, [
-                    self.use_legacy_coordinate,
-                ] * num_images))
+                zip(class_preds, class_gts, class_group_of_flags,
+                    [self.use_group_of] * num_images,
+                    [self.iof_thrs] * num_images, [self.iou_thrs] * num_images,
+                    [self._area_ranges] * num_images,
+                    [self.use_legacy_coordinate] * num_images))
         else:
             tpfp_list = []
             for img_idx in range(len(class_preds)):
