@@ -1,0 +1,340 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+
+import numpy as np
+from typing import Dict, List, Optional, Sequence, Tuple, Union, overload
+
+from mmeval.core.base_metric import BaseMetric
+from mmeval.core.dispatcher import dispatch
+
+try:
+    import torch
+    import torch.nn.functional as F
+except ImportError:
+    torch = None
+    F = None
+
+NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.int64], np.int64]
+TORCH_IMPL_HINTS = Tuple['torch.Tensor', 'torch.Tensor']
+
+
+def _precision_recall_f1_support(pred_positive, gt_positive, average):
+    """calculate base classification task metrics, such as  precision, recall,
+    f1_score, support."""
+    average_options = ['micro', 'macro', None]
+    assert average in average_options, 'Invalid `average` argument, ' \
+        f'please specify from {average_options}.'
+
+    class_correct = (pred_positive & gt_positive)
+    if average == 'micro':
+        tp_sum = class_correct.sum()
+        pred_sum = pred_positive.sum()
+        gt_sum = gt_positive.sum()
+    else:
+        tp_sum = class_correct.sum(0)
+        pred_sum = pred_positive.sum(0)
+        gt_sum = gt_positive.sum(0)
+
+    # in case torch is not supported
+    if torch and isinstance(pred_sum, torch.Tensor):
+        # use torch with torch.Tensor
+        precision = tp_sum / torch.clamp(pred_sum, min=1).double() * 100
+        print(tp_sum)
+        print(torch.clamp(pred_sum, min=1))
+        print(precision.dtype)
+        recall = tp_sum / torch.clamp(gt_sum, min=1).double() * 100
+        f1_score = 2 * precision * recall / torch.clamp(
+            precision + recall, min=torch.finfo(torch.float32).eps)
+    else:
+        # use numpy with numpy.ndarray
+        precision = tp_sum / np.clip(pred_sum, 1, np.inf) * 100
+        print(tp_sum)
+        print(np.clip(pred_sum, 1, np.inf))
+        print(precision.dtype)
+        recall = tp_sum / np.clip(gt_sum, 1, np.inf) * 100
+        f1_score = 2 * precision * recall / np.clip(precision + recall,
+                                                    np.finfo(np.float32).eps,
+                                                    np.inf)
+
+    # skip process float results by numpy
+    if average in ['macro', 'micro'] and not isinstance(precision, float):
+        precision = precision.mean(0)
+        recall = recall.mean(0)
+        f1_score = f1_score.mean(0)
+        support = gt_sum.sum(0)
+    else:
+        support = gt_sum
+    return precision, recall, f1_score, support
+
+
+class SingleLabelMetric(BaseMetric):
+    """A collection of metrics for single-label multi-class classification task
+    based on confusion matrix.
+
+    It includes precision, recall, f1-score and support. Comparing with
+    :class:`Accuracy`, these metrics doesn't support topk, but supports
+    various average mode.
+
+    Args:
+        thrs (Sequence[float | None] | float | None): Predictions with scores
+            under the thresholds are considered negative. None means no
+            thresholds. Defaults to 0.
+        items (Sequence[str]): The detailed metric items to evaluate. Here is
+            the available options:
+
+                - `"precision"`: The ratio tp / (tp + fp) where tp is the
+                  number of true positives and fp the number of false
+                  positives.
+                - `"recall"`: The ratio tp / (tp + fn) where tp is the number
+                  of true positives and fn the number of false negatives.
+                - `"f1-score"`: The f1-score is the harmonic mean of the
+                  precision and recall.
+                - `"support"`: The total number of occurrences of each category
+                  in the target.
+
+            Defaults to ('precision', 'recall', 'f1-score').
+        average (str, optional): The average method. If None, the scores
+            for each class are returned. And it supports two average modes:
+
+                - `"macro"`: Calculate metrics for each category, and calculate
+                  the mean value over all categories.
+                - `"micro"`: Calculate metrics globally by counting the total
+                  true positives, false negatives and false positives.
+
+            Defaults to "macro".
+        num_classes (int, optional): Number of classes, only need for predictions
+            without scores. Defaults to None.
+
+    Examples:
+
+        >>> from mmeval import SingleLabelMetric
+        >>> single_lable_metic = SingleLabelMetric(num_classes=4)
+
+    Use NumPy implementation:
+
+        >>> import numpy as np
+        >>> labels = np.asarray([0, 1, 2, 3])
+        >>> preds = np.asarray([0, 2, 1, 3])
+        >>> single_lable_metic(preds, labels)
+        {'precision': 50.0, 'recall': 50.0, 'f1-score': 50.0}
+
+    Use PyTorch implementation:
+
+        >>> import torch
+        >>> labels = torch.Tensor([0, 1, 2, 3])
+        >>> preds = torch.Tensor([0, 2, 1, 3])
+        >>> single_lable_metic(preds, labels)
+        {'precision': 50.0, 'recall': 50.0, 'f1-score': 50.0}
+
+    Computing with `micro` average mode:
+
+        >>> labels = np.asarray([0, 1, 2, 3])
+        >>> preds = np.asarray([
+            [0.7, 0.1, 0.1, 0.1],
+            [0.1, 0.3, 0.4, 0.2],
+            [0.3, 0.4, 0.2, 0.1],
+            [0.0, 0.0, 0.1, 0.9]])
+        >>> single_lable_metic = SingleLabelMetric(average='micro')
+        >>> single_lable_metic(preds, labels)
+        {'precision_micro': 50.0, 'recall_micro': 50.0, 'f1-score_micro': 50.0} # noqa
+
+    Accumulate batch:
+
+        >>> for i in range(10):
+        ...     labels = torch.randint(0, 4, size=(100, ))
+        ...     predicts = torch.randint(0, 4, size=(100, ))
+        ...     single_lable_metic.add(predicts, labels)
+        >>> single_lable_metic.compute()  # doctest: +SKIP
+    """
+
+    def __init__(self,
+                 thrs: Union[float, Sequence[Optional[float]], None] = 0.,
+                 items: Sequence[str] = ('precision', 'recall', 'f1-score'),
+                 average: Optional[str] = 'macro',
+                 num_classes: Optional[int] = None,
+                 **kwargs) -> None:
+        super().__init__(**kwargs)
+
+        if isinstance(thrs, float) or thrs is None:
+            self.thrs = (thrs, )
+        else:
+            self.thrs = tuple(thrs)  # type: ignore
+
+        for item in items:
+            assert item in ['precision', 'recall', 'f1-score', 'support'], \
+                f'The metric {item} is not supported by `SingleLabelMetric`,' \
+                ' please specify from "precision", "recall", "f1-score" and ' \
+                '"support".'
+        self.items = tuple(items)
+
+        self.average = average
+        self.num_classes = num_classes
+
+    def add(self, predictions: Sequence, labels: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
+        """Add the intermediate results to `self._results`.
+
+        Args:
+            predictions (Sequence): Predictions from the model. It can be
+                labels (N, ), or scores of every class (N, C).
+            labels (Sequence): The ground truth labels. It should be (N, ).
+        """
+        for pred, label in zip(predictions, labels):
+            self._results.append((pred, label))
+
+    def _format_metric_results(self, results: List[List]) -> Dict:
+        """Format the given metric results into a dictionary.
+
+        Args:
+            results_per_topk (list): A list of per topk and thrs accuracy.
+
+        Returns:
+            dict: The formatted dictionary.
+        """
+        metrics = {}
+
+        def pack_results(precision, recall, f1_score, support):
+            single_metrics = {}
+            if 'precision' in self.items:
+                single_metrics['precision'] = precision
+            if 'recall' in self.items:
+                single_metrics['recall'] = recall
+            if 'f1-score' in self.items:
+                single_metrics['f1-score'] = f1_score
+            if 'support' in self.items:
+                single_metrics['support'] = support
+            return single_metrics
+
+        if isinstance(results[0], tuple):
+            # for predictions with scores
+            multi_thrs = len(self.thrs) > 1
+            for i, thr in enumerate(self.thrs):
+                if multi_thrs:
+                    suffix = '_no-thr' if thr is None else f'_thr-{thr:.2f}'
+                else:
+                    suffix = ''
+
+                for k, v in pack_results(*results[i]).items():
+                    metrics[k + suffix] = v
+        else:
+            metrics = pack_results(*results)
+
+        result_metrics = dict()
+        for k, v in metrics.items():
+
+            if self.average is None:
+                result_metrics[k + '_classwise'] = v.tolist()
+            elif self.average == 'micro':
+                result_metrics[k + f'_{self.average}'] = v.item()
+            else:
+                result_metrics[k] = v.item()
+
+        return result_metrics
+
+    @overload  # type: ignore
+    @dispatch
+    def _compute_metric(self, predictions: Sequence['torch.Tensor'],
+                        labels: Sequence['torch.Tensor']) -> List[List]:
+        """A PyTorch implementation that computes the accuracy metric."""
+        predictions = torch.stack(predictions)
+        labels = torch.stack(labels)
+
+        assert predictions.size(0) == labels.size(0), \
+            f"The size of pred ({predictions.size(0)}) doesn't match "\
+            f'the labels ({labels.size(0)}).'
+
+        if predictions.ndim == 1:
+            assert self.num_classes is not None, \
+                'Please specify the `self.` if the `pred` is labels ' \
+                'intead of scores.'
+            gt_positive = F.one_hot(labels.flatten().to(torch.int64),
+                                    self.num_classes)
+            pred_positive = F.one_hot(
+                predictions.to(torch.int64), self.num_classes)
+            return _precision_recall_f1_support(pred_positive, gt_positive,
+                                                self.average)
+        else:
+            # For pred score, calculate on all thresholds.
+            num_classes = predictions.size(1)
+            pred_score, pred_label = torch.topk(predictions, k=1)
+            pred_score = pred_score.flatten()
+            pred_label = pred_label.flatten()
+
+            gt_positive = F.one_hot(labels.flatten().to(torch.int64),
+                                    num_classes)
+
+            results = []
+            for thr in self.thrs:
+                pred_positive = F.one_hot(
+                    pred_label.to(torch.int64), num_classes)
+                if thr is not None:
+                    pred_positive[pred_score <= thr] = 0
+                results.append(
+                    _precision_recall_f1_support(pred_positive, gt_positive,
+                                                 self.average))
+
+            return results
+
+    @dispatch
+    def _compute_metric(self, predictions: Sequence[Union[np.ndarray,
+                                                          np.int64]],
+                        labels: Sequence[np.int64]) -> List[List]:
+        """A NumPy implementation that computes the accuracy metric."""
+        predictions = np.stack(predictions)
+        labels = np.stack(labels)
+
+        assert predictions.shape[0] == labels.shape[0], \
+            f"The size of pred ({predictions.shape[0]}) doesn't match "\
+            f'the labels ({labels.shape[0]}).'
+
+        if predictions.ndim == 1:
+            assert self.num_classes is not None, \
+                'Please specify the `self.` if the `pred` is labels ' \
+                'intead of scores.'
+            gt_positive = np.eye(self.num_classes, dtype=bool)[labels]
+
+            pred_positive = np.eye(self.num_classes, dtype=bool)[predictions]
+
+            return _precision_recall_f1_support(pred_positive, gt_positive,
+                                                self.average)
+        else:
+            # For pred score, calculate on all thresholds.
+            num_classes = predictions.shape[1]
+            pred_score = predictions.max(axis=1)
+            pred_label = predictions.argmax(axis=1)
+
+            gt_positive = np.eye(num_classes, dtype=bool)[labels]
+
+            results = []
+            for thr in self.thrs:
+                pred_positive = np.eye(num_classes, dtype=bool)[pred_label]
+                if thr is not None:
+                    pred_positive[pred_score <= thr] = 0
+                results.append(
+                    _precision_recall_f1_support(pred_positive, gt_positive,
+                                                 self.average))
+
+            return results
+
+    def compute_metric(
+        self, results: List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS]]
+    ) -> Dict[str, float]:
+        """Compute the accuracy metric.
+
+        Currently, there are 2 implementations of this method: NumPy and
+        PyTorch. Which implementation to use is determined by the type of the
+        calling parameters. e.g. `numpy.ndarray` or `torch.Tensor`.
+
+        This method would be invoked in `BaseMetric.compute` after distributed
+        synchronization.
+
+        Args:
+            results (List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS]]): A list
+                of tuples that consisting the prediction and label. This list
+                has already been synced across all ranks.
+
+        Returns:
+            Dict[str, float]: The computed accuracy metric.
+        """
+        predictions = [res[0] for res in results]
+        labels = [res[1] for res in results]
+        metric_results = self._compute_metric(predictions, labels)
+        return self._format_metric_results(metric_results)
