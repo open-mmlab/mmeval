@@ -49,6 +49,9 @@ class OIDMeanAP(VOCMeanAP):
         self.iof_thrs = iof_thrs
         self.num_iof = len(iof_thrs)
 
+        assert self.num_iof == self.num_iou, "The IoU and IoF thresholds' \
+            ' should be one-to-one correspondence"
+
         self.use_group_of = use_group_of
         self.get_supercategory = get_supercategory
         self.filter_labels = filter_labels
@@ -341,6 +344,7 @@ class OIDMeanAP(VOCMeanAP):
                 pred_bboxes = np.concatenate(
                     (pred_bboxes[~match_group_of[i, j]],
                      pred_bboxes_group[i, j]))  # noqa: E501
+
             tps_list.append(np.vstack(tps))
             fps_list.append(np.vstack(fps))
 

@@ -28,6 +28,7 @@ class VOCMeanAP(BaseMetric):
             calculating the average precision of recalls at [0, 0.1, ..., 1].
             The PASCAL VOC2007 defaults to use '11points', while PASCAL
             VOC2012 defaults to use 'area'.
+            Defaults to '11points'.
         use_legacy_coordinate (bool, optional): Whether to use coordinate
             system in mmdet v1.x. which means width, height should be
             calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
