@@ -1,18 +1,22 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-
 import datetime
 import itertools
 import numpy as np
 import os.path as osp
 import tempfile
 from collections import OrderedDict
-from mmengine.fileio import FileClient, dump, load
+from json import dump, load
 from mmengine.logging import MMLogger
 from terminaltables import AsciiTable
 from typing import Dict, List, Optional, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
 from .utils import COCO, COCOeval, eval_recalls
+
+try:
+    from mmengine.fileio import FileClient
+except ImportError:
+    FileClient = None
 
 
 class CocoMetric(BaseMetric):
@@ -75,9 +79,10 @@ class CocoMetric(BaseMetric):
                  dataset_meta: Optional[Dict] = None,
                  dist_collect_mode: str = 'unzip',
                  dist_backend: Optional[str] = None) -> None:
-        super().__init__(dataset_meta=dataset_meta,
-                         dist_collect_mode=dist_collect_mode,
-                         dist_backend=dist_backend)
+        super().__init__(
+            dataset_meta=dataset_meta,
+            dist_collect_mode=dist_collect_mode,
+            dist_backend=dist_backend)
         # coco evaluation metrics
         self.metrics = metric if isinstance(metric, list) else [metric]
         allowed_metrics = ['bbox', 'segm', 'proposal', 'proposal_fast']
@@ -107,14 +112,21 @@ class CocoMetric(BaseMetric):
 
         self.outfile_prefix = outfile_prefix
 
-        self.file_client_args = file_client_args
-        self.file_client = FileClient(**file_client_args)
-
         # if ann_file is not specified,
         # initialize coco api with the converted dataset
         if ann_file is not None:
-            with self.file_client.get_local_path(ann_file) as local_path:
-                self._coco_api = COCO(local_path)
+            if FileClient is not None:
+                self.file_client = FileClient(**file_client_args)
+                with self.file_client.get_local_path(ann_file) as local_path:
+                    self._coco_api = COCO(local_path)
+            elif file_client_args.get('backend') != 'disk':
+                raise RuntimeError('MMEngine is not installed. '
+                                   'Please install MMEngine by '
+                                   '`pip install mmengine`.')
+            elif osp.exists(ann_file):
+                self._coco_api = COCO(ann_file)
+            else:
+                raise RuntimeError('ann_file is not a local path.')
         else:
             self._coco_api = None
 
@@ -314,7 +326,8 @@ class CocoMetric(BaseMetric):
         if len(annotations) > 0:
             coco_json['annotations'] = annotations
         converted_json_path = f'{outfile_prefix}.gt.json'
-        dump(coco_json, converted_json_path)
+        with open(converted_json_path, 'w') as f:
+            dump(coco_json, f)
         return converted_json_path
 
     def add(self, predictions: List[Dict], groundtruths: List[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
@@ -433,7 +446,8 @@ class CocoMetric(BaseMetric):
             if metric not in result_files:
                 raise KeyError(f'{metric} is not in results')
             try:
-                predictions = load(result_files[metric])
+                with open(result_files[metric], 'r') as f:
+                    predictions = load(f)
                 if iou_type == 'segm':
                     # Refer to https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocotools/coco.py#L331  # noqa
                     # When evaluating mask AP, if the results contain bbox,
