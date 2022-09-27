@@ -320,12 +320,8 @@ class OIDMeanAP(VOCMeanAP):
                     else:
                         match_group_of[iof_idx, area_idx, pred_bbox_idx] = True
 
-                    if pred_bboxes_group[iof_idx, area_idx, matched_gt_idx,
-                                         -1] < pred_bboxes[pred_bbox_idx,
-                                                           -1]:  # noqa: E501
-                        pred_bboxes_group[iof_idx, area_idx,
-                                          matched_gt_idx] = pred_bboxes[
-                                              pred_bbox_idx]  # noqa: E501
+                    if pred_bboxes_group[iof_idx, area_idx, matched_gt_idx, -1] < pred_bboxes[pred_bbox_idx, -1]:  # noqa: E501  # yapf: disable
+                        pred_bboxes_group[iof_idx, area_idx, matched_gt_idx] = pred_bboxes[pred_bbox_idx]  # noqa: E501  # yapf: disable
 
         fp_group = (tp_group <= 0).astype(float)
         tps_list = []
