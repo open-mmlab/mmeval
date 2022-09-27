@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-from typing import Optional
 import numpy as np
+from typing import Optional
 
 
 def calculate_bboxes_area(bboxes: np.ndarray,
@@ -33,9 +33,9 @@ def calculate_bboxes_area(bboxes: np.ndarray,
 
 
 def filter_by_bboxes_area(bboxes: np.ndarray,
-                         min_area: Optional[float],
-                         max_area: Optional[float],
-                         use_legacy_coordinate=False) -> np.ndarray:
+                          min_area: Optional[float],
+                          max_area: Optional[float],
+                          use_legacy_coordinate=False) -> np.ndarray:
     """Filter the bboxes area."""
     bboxes_area = calculate_bboxes_area(bboxes, use_legacy_coordinate)
     area_mask = np.ones_like(bboxes_area, dtype=bool)
@@ -56,11 +56,11 @@ def calculate_overlaps(bboxes1,
     Args:
         bboxes1 (ndarray): The bboxes with shape (n, 4) in 'xyxy' format.
         bboxes2 (ndarray): The bboxes with shape (k, 4) in 'xyxy' format.
-        mode (str): 'iou' (intersection over union) or 'iof' (intersection
-            over foreground). Defaults to 'iou'.
-        eps (float): The epsilon value. Defaults to 1e-6.
-        use_legacy_coordinate (bool): Whether to use coordinate system in
-            mmdet v1.x. which means width, height should be
+        mode (str, optional): 'iou' (intersection over union) or 'iof'
+            (intersection over foreground). Defaults to 'iou'.
+        eps (float, optional): The epsilon value. Defaults to 1e-6.
+        use_legacy_coordinate (bool, optional): Whether to use coordinate
+            system in mmdet v1.x. which means width, height should be
             calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
             Note when function is used in `VOCDataset`, it should be
             True to align with the official implementation
@@ -88,7 +88,7 @@ def calculate_overlaps(bboxes1,
     else:
         exchange = False
 
-    # Caculate the bboxes area.
+    # Calculate the bboxes area.
     area1 = calculate_bboxes_area(bboxes1, use_legacy_coordinate)
     area2 = calculate_bboxes_area(bboxes2, use_legacy_coordinate)
 
