@@ -251,11 +251,13 @@ class CocoMetric(BaseMetric):
         result_files = dict()
         result_files['bbox'] = f'{outfile_prefix}.bbox.json'
         result_files['proposal'] = f'{outfile_prefix}.bbox.json'
-        dump(bbox_json_results, result_files['bbox'])
+        with open(result_files['bbox'], 'w') as f:
+            dump(bbox_json_results, f)
 
         if segm_json_results is not None:
             result_files['segm'] = f'{outfile_prefix}.segm.json'
-            dump(segm_json_results, result_files['segm'])
+            with open(result_files['segm'], 'w') as f:
+                dump(segm_json_results, f)
 
         return result_files
 
@@ -446,7 +448,7 @@ class CocoMetric(BaseMetric):
             if metric not in result_files:
                 raise KeyError(f'{metric} is not in results')
             try:
-                with open(result_files[metric], 'r') as f:
+                with open(result_files[metric]) as f:
                     predictions = load(f)
                 if iou_type == 'segm':
                     # Refer to https://github.com/cocodataset/cocoapi/blob/master/PythonAPI/pycocotools/coco.py#L331  # noqa
@@ -560,8 +562,3 @@ class CocoMetric(BaseMetric):
         if tmp_dir is not None:
             tmp_dir.cleanup()
         return eval_results
-
-    def evaluate(self, *args, **kwargs):
-        # metric.evaluate is called in mmengine.evaluator
-        # see https://github.com/open-mmlab/mmengine/blob/36af1f0fee811352369a26d27bd372eb54b6b6ea/mmengine/evaluator/evaluator.py#L79  # noqa
-        return self.compute(*args, **kwargs)
