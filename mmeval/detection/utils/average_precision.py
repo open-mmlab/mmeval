@@ -11,9 +11,9 @@ def calculate_average_precision(recalls: np.ndarray,
     Args:
         recalls (ndarray): The recalls with shape (num_dets, ).
         precisions (ndarray): The precisions with shape (num_dets, ).
-        mode (str): The average mode, should be 'area' or '11points'. 
+        mode (str): The average mode, should be 'area' or '11points'.
             'area' means calculating the area under precision-recall curve.
-            '11points' means calculating the average precision of recalls at 
+            '11points' means calculating the average precision of recalls at
             [0, 0.1, ..., 1.0]. Defaults to 'area'.
 
     Returns:
