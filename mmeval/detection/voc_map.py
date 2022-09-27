@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 from multiprocessing.pool import Pool
-from typing import Dict, List, Optional, Tuple, Union
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.detection.utils import (calculate_average_precision,
@@ -107,31 +107,31 @@ class VOCMeanAP(BaseMetric):
                 f'in dataset_meta: {self.dataset_meta}')
         return self._num_classes
 
-    def add(self, predictions: List[Dict], groundtruths: List[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
 
         Args:
             predictions (Sequence[dict]): A sequence of dict. Each dict
                 representing a detection result for an image, with the
                 following keys:
-                    - bboxes, numpy.ndarray with shape (N, 4), the predicted
-                    bounding bboxes of this image, in 'xyxy' foramrt.
-                    - scores, numpy.ndarray with shape (N, 1), the predicted
-                    scores of bounding boxes.
-                    - labels, numpy.ndarray with shape (N, 1), the predicted
-                    labels of bounding boxes.
+                - bboxes, numpy.ndarray with shape (N, 4), the predicted
+                bounding bboxes of this image, in 'xyxy' foramrt.
+                - scores, numpy.ndarray with shape (N, 1), the predicted scores
+                of bounding boxes.
+                - labels, numpy.ndarray with shape (N, 1), the predicted labels
+                of bounding boxes.
             groundtruths (Sequence[dict]): A sequence of dict. Each dict
                 representing a groundtruths for an image, with the following
                 keys:
-                    - bboxes, numpy.ndarray with shape (M, 4), the ground truth
-                    bounding bboxes of this image, in 'xyxy' foramrt.
-                    - labels, numpy.ndarray with shape (M, 1), theground truth
-                    labels of bounding boxes.
-                    - bboxes_ignore, numpy.ndarray with shape (K, 4), the
-                    ground truth ignored bounding bboxes of this image,
-                    in 'xyxy' foramrt.
-                    - labels_ignore, numpy.ndarray with shape (K, 1), the
-                    ground truth ignored labels of bounding boxes.
+                - bboxes, numpy.ndarray with shape (M, 4), the ground truth
+                bounding bboxes of this image, in 'xyxy' foramrt.
+                - labels, numpy.ndarray with shape (M, 1), theground truth
+                labels of bounding boxes.
+                - bboxes_ignore, numpy.ndarray with shape (K, 4), the ground
+                truth ignored bounding bboxes of this image,
+                in 'xyxy' foramrt.
+                - labels_ignore, numpy.ndarray with shape (K, 1), the ground
+                truth ignored labels of bounding boxes.
         """
         for prediction, label in zip(predictions, groundtruths):
             self._results.append((prediction, label))
@@ -142,7 +142,7 @@ class VOCMeanAP(BaseMetric):
             ignore_gt_bboxes: np.ndarray, iou_thrs: List[float],
             area_ranges: List[Tuple[Optional[float], Optional[float]]],
             use_legacy_coordinate: bool) -> Tuple[np.ndarray, np.ndarray]:
-        """Check if detected bboxes are true positive or false positive.
+        """Calculate the true positive and false positive on an image.
 
         Note:
             This method should be a staticmethod to avoid resource competition
@@ -161,8 +161,8 @@ class VOCMeanAP(BaseMetric):
             use_legacy_coordinate (bool): Refer to :class:`VOCMeanAP`.
 
         Returns:
-            tuple (tp, fp): whose elements are 0 and 1. The shape
-            of each array is (num_ious, num_scales, N).
+            tuple (tp, fp): Whose elements are 0 and 1. The shape of each array
+            is (num_ious, num_scales, N).
         """
         # Step 1. Concatenate `gt_bboxes` and `ignore_gt_bboxes`, then set
         # the `ignore_gt_flags`.
