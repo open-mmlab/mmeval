@@ -389,8 +389,8 @@ class VOCMeanAP(BaseMetric):
             results_per_class.append({
                 'num_gts': num_gts,
                 'num_dets': tp.shape[-1],
-                'recall': recalls,
-                'precision': precisions,
+                'recalls': recalls,
+                'precisions': precisions,
                 'ap': ap,
             })
 
@@ -425,7 +425,7 @@ class VOCMeanAP(BaseMetric):
                     res['ap'][i][j] for res in results_per_class
                     if res['num_gts'][i][j] > 0
                 ]
-                eval_results[f'mAP@{iou_thr}'] = np.mean(aps)
+                eval_results[f'mAP@{iou_thr}'] = np.array(aps).mean().item()
 
         for j, scale_range in enumerate(self.scale_ranges):
             ap_per_ious = []
@@ -434,11 +434,12 @@ class VOCMeanAP(BaseMetric):
                     res['ap'][i][j] for res in results_per_class
                     if res['num_gts'][i][j] > 0
                 ]
-                ap_per_ious.append(np.mean(aps))
+                ap_per_ious.append(np.array(aps).mean().item())
             if scale_range == (None, None):
                 key = 'mAP'
             else:
                 key = f'mAP@{scale_range}'
-            eval_results[key] = np.mean(ap_per_ious)
+            print(ap_per_ious)
+            eval_results[key] = np.array(ap_per_ious).mean().item()
 
         return eval_results
