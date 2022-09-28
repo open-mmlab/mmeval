@@ -91,7 +91,7 @@ def test_metric_accurate():
         oid_map.add([pred], [ann])
     metric_results = oid_map.compute()
 
-    np.testing.assert_almost_equal(metric_results['mAP'], 0.7325832)
+    np.testing.assert_almost_equal(metric_results['mAP'], 0.731455445)
 
 
 if __name__ == '__main__':
