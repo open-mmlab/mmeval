@@ -28,7 +28,7 @@ class VOCMeanAP(BaseMetric):
             calculating the average precision of recalls at [0, 0.1, ..., 1].
             The PASCAL VOC2007 defaults to use '11points', while PASCAL
             VOC2012 defaults to use 'area'.
-            Defaults to '11points'.
+            Defaults to 'area'.
         use_legacy_coordinate (bool, optional): Whether to use coordinate
             system in mmdet v1.x. which means width, height should be
             calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
@@ -46,7 +46,7 @@ class VOCMeanAP(BaseMetric):
                  iou_thrs: Union[float, List[float]] = 0.5,
                  scale_ranges: Optional[List[Tuple]] = None,
                  num_classes: Optional[int] = None,
-                 eval_mode: str = '11points',
+                 eval_mode: str = 'area',
                  use_legacy_coordinate: bool = False,
                  nproc: int = 4,
                  classwise_result: bool = False,
@@ -439,7 +439,6 @@ class VOCMeanAP(BaseMetric):
                 key = 'mAP'
             else:
                 key = f'mAP@{scale_range}'
-            print(ap_per_ious)
             eval_results[key] = np.array(ap_per_ious).mean().item()
 
         return eval_results
