@@ -2,8 +2,8 @@
 
 # flake8: noqa
 
-from .oid_map import OIDMeanAP
+from .oid_map import OIDMeanAP, get_relation_matrix
 from .utils import *
 from .voc_map import VOCMeanAP
 
-__all__ = ['VOCMeanAP', 'OIDMeanAP']
+__all__ = ['VOCMeanAP', 'OIDMeanAP', 'get_relation_matrix']

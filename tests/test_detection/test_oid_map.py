@@ -6,8 +6,7 @@ import pytest
 import random
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.detection.oid_map import OIDMeanAP
-from mmeval.detection.utils import get_relation_matrix
+from mmeval.detection.oid_map import OIDMeanAP, get_relation_matrix
 
 
 def _gen_bboxes(num_bboxes, img_w, img_h):

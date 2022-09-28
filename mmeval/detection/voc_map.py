@@ -15,28 +15,27 @@ class VOCMeanAP(BaseMetric):
     thresholds and scale ranges.
 
     Args:
-        iou_thrs (float or List[float], optional): IoU thresholds.
-            Defaults to 0.5.
+        iou_thrs (float ｜ List[float]): IoU thresholds. Defaults to 0.5.
         scale_ranges (List[tuple], optional): Scale ranges for evaluating
             mAP. If not specified, all bounding boxes would be included in
             evaluation. Defaults to None.
         num_classes (int, optional): The number of classes. If None, it will be
             obtained from the 'CLASSES' field in ``self.dataset_meta``.
             Defaults to None.
-        eval_mode (str, optional): 'area' or '11points', 'area' means
-            calculating the area under precision-recall curve, '11points' means
-            calculating the average precision of recalls at [0, 0.1, ..., 1].
+        eval_mode (str): 'area' or '11points', 'area' means calculating the
+            area under precision-recall curve, '11points' means calculating
+            the average precision of recalls at [0, 0.1, ..., 1].
             The PASCAL VOC2007 defaults to use '11points', while PASCAL
             VOC2012 defaults to use 'area'.
             Defaults to 'area'.
-        use_legacy_coordinate (bool, optional): Whether to use coordinate
+        use_legacy_coordinate (bool): Whether to use coordinate
             system in mmdet v1.x. which means width, height should be
             calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
             Defaults to False.
-        nproc (int, optional): Processes used for computing TP and FP. If nproc
+        nproc (int): Processes used for computing TP and FP. If nproc
             is less than or equal to 1, multiprocessing will not be used.
             Defaults to 4.
-        classwise_result (bool, optional): Whether to return the computed
+        classwise_result (bool): Whether to return the computed
             results of each class.
             Defaults to False.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
@@ -161,8 +160,11 @@ class VOCMeanAP(BaseMetric):
             use_legacy_coordinate (bool): Refer to :class:`VOCMeanAP`.
 
         Returns:
-            tuple (tp, fp): Whose elements are 0 and 1. The shape of each array
-            is (num_ious, num_scales, N).
+            tuple (tp, fp):
+            - tp, numpy.ndarray with shape (num_ious, num_scales, N),
+            the true positive flag of each predicted bbox on this image.
+            - fp, numpy.ndarray with shape (num_ious, num_scales, N),
+            the false positive flag of each predicted bbox on this image.
         """
         # Step 1. Concatenate `gt_bboxes` and `ignore_gt_bboxes`, then set
         # the `ignore_gt_flags`.
@@ -300,9 +302,9 @@ class VOCMeanAP(BaseMetric):
         Returns:
             tuple (tp, fp, num_gts):
             - tp, numpy.ndarray with shape (num_ious, num_scales, num_pred),
-            the true positive flag of each predict bbox.
+            the true positive flag of each predicted bbox for this class.
             - fp, numpy.ndarray with shape (num_ious, num_scales, num_pred),
-            the false positive flag of each predict bbox.
+            the false positive flag of each predicted bbox for this class.
             - num_gts, numpy.ndarray with shape (num_ious, num_scales), the
             number of ground truths.
         """

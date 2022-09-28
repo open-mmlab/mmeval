@@ -56,9 +56,9 @@ def calculate_overlaps(bboxes1,
     Args:
         bboxes1 (ndarray): The bboxes with shape (n, 4) in 'xyxy' format.
         bboxes2 (ndarray): The bboxes with shape (k, 4) in 'xyxy' format.
-        mode (str, optional): 'iou' (intersection over union) or 'iof'
+        mode (str): 'iou' (intersection over union) or 'iof'
             (intersection over foreground). Defaults to 'iou'.
-        eps (float, optional): The epsilon value. Defaults to 1e-6.
+        eps (float): The epsilon value. Defaults to 1e-6.
         use_legacy_coordinate (bool, optional): Whether to use coordinate
             system in mmdet v1.x. which means width, height should be
             calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.

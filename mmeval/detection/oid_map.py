@@ -1,12 +1,99 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 import copy
+import csv
+import json
 import numpy as np
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from mmeval.detection.utils import calculate_overlaps, filter_by_bboxes_area
 from mmeval.detection.voc_map import VOCMeanAP
+
+
+def _convert_hierarchy_tree(hierarchy_map: dict,
+                            label_index_map: dict,
+                            relation_matrix: np.ndarray,
+                            parents: list = [],
+                            get_all_parents: bool = True) -> np.ndarray:
+    """Get matrix of the corresponding relationship between the parent class
+    and the child class.
+
+    Args:
+        hierarchy_map (dict): Including label name and corresponding
+            subcategory. Keys of dicts are:
+            - `LabeName` (str): Name of the label.
+            - `Subcategory` (dict | list): Corresponding subcategory(ies).
+        label_index_map (dict): The mapping of label name to description names.
+        relation_matrix (ndarray): The matrix of the corresponding
+            relationship between the parent class and the child class,
+            of shape (class_num, class_num).
+        parents (list): Corresponding parent class.
+        get_all_parents (bool): Whether get all parent names.
+            Default: True
+
+    Returns:
+        numpy.ndarray: The matrix of the corresponding relationship between the
+        parent class and the child class, of shape (class_num, class_num).
+    """
+    if 'Subcategory' not in hierarchy_map:
+        return relation_matrix
+
+    for node in hierarchy_map['Subcategory']:
+        if 'LabelName' not in node:
+            continue
+
+        children_name = node['LabelName']
+        children_index = label_index_map[children_name]
+        children = [children_index]
+
+        if len(parents) > 0:
+            for parent_index in parents:
+                if get_all_parents:
+                    children.append(parent_index)
+                relation_matrix[children_index, parent_index] = 1
+        relation_matrix = _convert_hierarchy_tree(
+            node, label_index_map, relation_matrix, parents=children)
+    return relation_matrix
+
+
+def get_relation_matrix(hierarchy_file: str, label_file: str) -> np.ndarray:
+    """Get the matrix of class hierarchy from the hierarchy file. Hierarchy for
+    600 classes can be found at https://storage.googleapis.com/openimages/
+    2018_04/bbox_labels_600_hierarchy_visualizer/circle.html.
+
+    Reference: https://github.com/open-mmlab/mmdetection/blob/
+    9d3e162459590eee4cfc891218dfbb5878378842/mmdet/datasets/openimages.py#L357
+
+    Args:
+        hierarchy_file (str): File path to the hierarchy for classes.
+            E.g. https://storage.googleapis.com/openimages/2018_04/
+            bbox_labels_600_hierarchy.json
+        label_file (str): File path to the mapping of label name to class
+            description names. E.g. https://storage.googleapis.com/openimages
+            /2018_04/class-descriptions-boxable.csv
+
+    Returns:
+        np.ndarray: The matrix of the corresponding relationship between
+        the parent class and the child class, of shape (class_num, class_num).
+    """
+    index_list = []
+    classes_names = []
+    with open(label_file) as f:
+        reader = csv.reader(f)
+        for line in reader:
+            classes_names.append(line[1])
+            index_list.append(line[0])
+    label_index_map = {index: i for i, index in enumerate(index_list)}
+
+    with open(hierarchy_file) as f:
+        hierarchy_map = json.load(f)
+
+    class_num = len(label_index_map)
+    relation_matrix = np.eye(class_num, class_num)
+    relation_matrix = _convert_hierarchy_tree(hierarchy_map, label_index_map,
+                                              relation_matrix)
+    return relation_matrix
 
 
 class OIDMeanAP(VOCMeanAP):
@@ -20,9 +107,8 @@ class OIDMeanAP(VOCMeanAP):
     For more see: https://storage.googleapis.com/openimages/web/evaluation.html
 
     Args:
-        iof_thrs (Union[float, List[float]], optional): IoF thresholds.
-            Defaults to 0.5.
-        use_group_of (bool, optional): Whether consider group of groud truth
+        iof_thrs (float ｜ List[float]): IoF thresholds. Defaults to 0.5.
+        use_group_of (bool): Whether consider group of groud truth
             bboxes during evaluating. Defaults to True.
         get_supercategory (bool, optional): Whether to get parent class of the
             current class. Defaults to True.
@@ -256,6 +342,12 @@ class OIDMeanAP(VOCMeanAP):
             tuple (tp, fp, pred_bboxes): The tp, fp and modified pred bboxes.
             Since some predicted bboxes would be ignored, we should return the
             modified predicted bboxes.
+            - tp, numpy.ndarray with shape (num_ious, num_scales, N),
+            the true positive flag of each predicted bbox on this image.
+            - fp, numpy.ndarray with shape (num_ious, num_scales, N),
+            the false positive flag of each predicted bbox on this image.
+            - pred_bboxes, numpy.ndarray with shape (K, 5), the modified
+            pred bboxes.
         """
         ignore_gt_bboxes = np.empty((0, 4))
 
