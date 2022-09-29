@@ -36,7 +36,25 @@ def filter_by_bboxes_area(bboxes: np.ndarray,
                           min_area: Optional[float],
                           max_area: Optional[float],
                           use_legacy_coordinate=False) -> np.ndarray:
-    """Filter the bboxes area."""
+    """Filter the bboxes with an area range.
+
+    Args:
+        bboxes (numpy.ndarray): The bboxes with shape (n, 4) in 'xyxy' format.
+        min_area (Optional[float]): The minimum area. If None, does not filter
+            the minimum area.
+        max_area (Optional[float]): The maximum area. If None, does not filter
+            the maximum area.
+        use_legacy_coordinate (bool): Whether to use coordinate system in
+            mmdet v1.x. which means width, height should be
+            calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
+            Note when function is used in `VOCDataset`, it should be
+            True to align with the official implementation
+            `http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCdevkit_18-May-2011.tar`
+            Default: False.
+
+    Returns:
+        numpy.ndarray: A mask of ``bboxes`` identify which bbox are filtered.
+    """
     bboxes_area = calculate_bboxes_area(bboxes, use_legacy_coordinate)
     area_mask = np.ones_like(bboxes_area, dtype=bool)
     if min_area is not None:
@@ -59,7 +77,7 @@ def calculate_overlaps(bboxes1,
         mode (str): 'iou' (intersection over union) or 'iof'
             (intersection over foreground). Defaults to 'iou'.
         eps (float): The epsilon value. Defaults to 1e-6.
-        use_legacy_coordinate (bool, optional): Whether to use coordinate
+        use_legacy_coordinate (bool): Whether to use coordinate
             system in mmdet v1.x. which means width, height should be
             calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
             Note when function is used in `VOCDataset`, it should be

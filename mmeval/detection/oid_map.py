@@ -151,11 +151,11 @@ class OIDMeanAP(VOCMeanAP):
         otherwise it will be obtained from the 'RELATION_MATRIX' field in
         ``self.dataset_meta``.
 
-        Raises:
-            RuntimeError: If the class relation matrix is not set.
-
         Returns:
             numpy.ndarray: The class relation matrix.
+
+        Raises:
+            RuntimeError: If the class relation matrix is not set.
         """
         if self._class_relation_matrix is not None:
             return self._class_relation_matrix
@@ -194,21 +194,21 @@ class OIDMeanAP(VOCMeanAP):
                             allowed_labels: np.ndarray) -> dict:
         """Process results of the corresponding label of the predicted bboxes.
 
-        Note:
-            It will choose to do the following 2 processing according to
-            ``self.get_supercategory`` and ``self.filter_labels``.
-            - Extend the the parent label of the corresponding prediction box.
-            - Filter unannotated classes of the corresponding prediction box.
+        It will choose to do the following 2 processing according to
+        ``self.get_supercategory`` and ``self.filter_labels``:
+        1. Extend the the parent label of the corresponding prediction box.
+        2. Filter unannotated classes of the corresponding prediction box.
 
         Args:
             pred (dict): The predicted detection result for an image, with the
                 following keys:
-                - bboxes, numpy.ndarray with shape (N, 4), the predicted
-                bounding bboxes of this image, in 'xyxy' foramrt.
-                - scores, numpy.ndarray with shape (N, 1), the predicted
-                scores of bounding boxes.
-                - labels, numpy.ndarray with shape (N, 1), the predicted
-                labels of bounding boxes.
+
+                - bboxes (numpy.ndarray): Shape (N, 4), the predicted bounding
+                bboxes of this image, in 'xyxy' foramrt.
+                - scores (numpy.ndarray): Shape (N, 1), the predicted scores of
+                bounding boxes.
+                - labels (numpy.ndarray): Shape (N, 1), the predicted labels of
+                bounding boxes.
 
         Returns:
             pred (dict): The processed predicted detection result.
@@ -244,16 +244,17 @@ class OIDMeanAP(VOCMeanAP):
         Args:
             instances (List[dict]): List[dict], each dict representing a
                 bounding box with the following keys:
-                - bbox, list containing box location in 'xyxy' foramrt.
-                - bbox_label, box label index.
-                - is_group_of, bool, whether the box is group or not.
+
+                - bbox (list): Containing box location in 'xyxy' foramrt.
+                - bbox_label (int): Box label index.
+                - is_group_of (bool): Whether the box is group or not.
 
         Returns:
-            Dict[str, numpy.ndarray]: The stacked gt instances, with the
-            following keys:
-            - bboxes, numpy.ndarray with shape (N, 4).
-            - labels, numpy.ndarray with shape (N, ).
-            - is_group_ofs, numpy.ndarray with shape (N, ).
+            dict: The stacked gt instances, with the following keys:
+
+            - bboxes (numpy.ndarray): Shape (N, 4).
+            - labels (numpy.ndarray): Shape (N, ).
+            - is_group_ofs (numpy.ndarray): Shape (N, ).
         """
         gt_labels, gt_bboxes, is_group_ofs = [], [], []
         for ins in instances:
@@ -319,10 +320,6 @@ class OIDMeanAP(VOCMeanAP):
 
         This is an overridden method of :class:`VOCMeanAP`.
 
-        Note:
-            This method should be a staticmethod to avoid resource competition
-            during multiple process.
-
         Args:
             pred_bboxes (numpy.ndarray): Predicted bboxes of this image, with
                 shape (N, 5). The scores The predicted score of the bbox is
@@ -342,12 +339,17 @@ class OIDMeanAP(VOCMeanAP):
             tuple (tp, fp, pred_bboxes): The tp, fp and modified pred bboxes.
             Since some predicted bboxes would be ignored, we should return the
             modified predicted bboxes.
-            - tp, numpy.ndarray with shape (num_ious, num_scales, N),
+
+            - tp (numpy.ndarray): Shape (num_ious, num_scales, N),
             the true positive flag of each predicted bbox on this image.
-            - fp, numpy.ndarray with shape (num_ious, num_scales, N),
+            - fp (numpy.ndarray): Shape (num_ious, num_scales, N),
             the false positive flag of each predicted bbox on this image.
-            - pred_bboxes, numpy.ndarray with shape (K, 5), the modified
+            - pred_bboxes (numpy.ndarray): Shape (K, 5), the modified
             pred bboxes.
+
+        Note:
+            This method should be a staticmethod to avoid resource competition
+            during multiple process.
         """
         ignore_gt_bboxes = np.empty((0, 4))
 
@@ -487,11 +489,12 @@ class OIDMeanAP(VOCMeanAP):
 
         Returns:
             tuple (tp, fp, num_gts):
-            - tp, numpy.ndarray with shape (num_ious, num_scales, num_pred),
+
+            - tp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
             the true positive flag of each predict bbox.
-            - fp, numpy.ndarray with shape (num_ious, num_scales, num_pred),
+            - fp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
             the false positive flag of each predict bbox.
-            - num_gts, numpy.ndarray with shape (num_ious, num_scales), the
+            - num_gts (numpy.ndarray): Shape (num_ious, num_scales), the
             number of ground truths.
         """
         class_preds = self.get_class_predictions(predictions, class_index)

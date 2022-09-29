@@ -90,11 +90,11 @@ class VOCMeanAP(BaseMetric):
         The number of classes should be set during initialization, otherwise it
         will be obtained from the 'CLASSES' field in ``self.dataset_meta``.
 
-        Raises:
-            RuntimeError: If the num_classes is not set.
-
         Returns:
             int: The number of classes.
+
+        Raises:
+            RuntimeError: If the num_classes is not set.
         """
         if self._num_classes is not None:
             return self._num_classes
@@ -113,23 +113,26 @@ class VOCMeanAP(BaseMetric):
             predictions (Sequence[dict]): A sequence of dict. Each dict
                 representing a detection result for an image, with the
                 following keys:
-                - bboxes, numpy.ndarray with shape (N, 4), the predicted
+
+                - bboxes (numpy.ndarray): Shape (N, 4), the predicted
                 bounding bboxes of this image, in 'xyxy' foramrt.
-                - scores, numpy.ndarray with shape (N, 1), the predicted scores
+                - scores (numpy.ndarray): Shape (N, 1), the predicted scores
                 of bounding boxes.
-                - labels, numpy.ndarray with shape (N, 1), the predicted labels
+                - labels (numpy.ndarray): Shape (N, 1), the predicted labels
                 of bounding boxes.
+
             groundtruths (Sequence[dict]): A sequence of dict. Each dict
                 representing a groundtruths for an image, with the following
                 keys:
-                - bboxes, numpy.ndarray with shape (M, 4), the ground truth
+
+                - bboxes (numpy.ndarray): Shape (M, 4), the ground truth
                 bounding bboxes of this image, in 'xyxy' foramrt.
-                - labels, numpy.ndarray with shape (M, 1), theground truth
+                - labels (numpy.ndarray): Shape (M, 1), theground truth
                 labels of bounding boxes.
-                - bboxes_ignore, numpy.ndarray with shape (K, 4), the ground
+                - bboxes_ignore (numpy.ndarray): Shape (K, 4), the ground
                 truth ignored bounding bboxes of this image,
                 in 'xyxy' foramrt.
-                - labels_ignore, numpy.ndarray with shape (K, 1), the ground
+                - labels_ignore (numpy.ndarray): Shape (K, 1), the ground
                 truth ignored labels of bounding boxes.
         """
         for prediction, label in zip(predictions, groundtruths):
@@ -142,10 +145,6 @@ class VOCMeanAP(BaseMetric):
             area_ranges: List[Tuple[Optional[float], Optional[float]]],
             use_legacy_coordinate: bool) -> Tuple[np.ndarray, np.ndarray]:
         """Calculate the true positive and false positive on an image.
-
-        Note:
-            This method should be a staticmethod to avoid resource competition
-            during multiple process.
 
         Args:
             pred_bboxes (numpy.ndarray): Predicted bboxes of this image, with
@@ -161,10 +160,15 @@ class VOCMeanAP(BaseMetric):
 
         Returns:
             tuple (tp, fp):
-            - tp, numpy.ndarray with shape (num_ious, num_scales, N),
+
+            - tp (numpy.ndarray): Shape (num_ious, num_scales, N),
             the true positive flag of each predicted bbox on this image.
-            - fp, numpy.ndarray with shape (num_ious, num_scales, N),
+            - fp (numpy.ndarray): Shape (num_ious, num_scales, N),
             the false positive flag of each predicted bbox on this image.
+
+        Note:
+            This method should be a staticmethod to avoid resource competition
+            during multiple process.
         """
         # Step 1. Concatenate `gt_bboxes` and `ignore_gt_bboxes`, then set
         # the `ignore_gt_flags`.
@@ -268,8 +272,9 @@ class VOCMeanAP(BaseMetric):
 
         Returns:
             tuple (class_gts, class_ignore_gts):
-            - class_gts, List[numpy.ndarray], The gt bboxes of this class.
-            - class_ignore_gts, List[numpy.ndarray], The ignored gt bboxes of
+
+            - class_gts (List[numpy.ndarray]): The gt bboxes of this class.
+            - class_ignore_gts (List[numpy.ndarray]): The ignored gt bboxes of
             this class. This is necessary when counting tp and fp.
         """
         class_gts = []
@@ -301,11 +306,12 @@ class VOCMeanAP(BaseMetric):
 
         Returns:
             tuple (tp, fp, num_gts):
-            - tp, numpy.ndarray with shape (num_ious, num_scales, num_pred),
+
+            - tp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
             the true positive flag of each predicted bbox for this class.
-            - fp, numpy.ndarray with shape (num_ious, num_scales, num_pred),
+            - fp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
             the false positive flag of each predicted bbox for this class.
-            - num_gts, numpy.ndarray with shape (num_ious, num_scales), the
+            - num_gts (numpy.ndarray): Shape (num_ious, num_scales), the
             number of ground truths.
         """
         class_preds = self.get_class_predictions(predictions, class_index)
@@ -354,6 +360,7 @@ class VOCMeanAP(BaseMetric):
 
         Returns:
             dict: The computed metric, with the following keys:
+
             - mAP, the averaged across all IoU thresholds and all class.
             - mAP@{IoU}, the mAP of the specified IoU threshold.
             - mAP@{scale_range}, the mAP of the specified scale range.
@@ -413,6 +420,7 @@ class VOCMeanAP(BaseMetric):
 
         Returns:
             dict: The aggregated metric results, with the following keys:
+
             - mAP, the averaged across all IoU thresholds and all class.
             - mAP@{IoU}, the mAP of the specified IoU threshold.
             - mAP@{scale_range}, the mAP of the specified scale range.
