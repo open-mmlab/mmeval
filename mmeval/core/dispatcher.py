@@ -232,6 +232,8 @@ class _MMEvalDispatcher(plum.Dispatcher):
             for param in signature.parameters.values():
                 param._annotation = self._traverse_type_hints(  # type: ignore
                     param._annotation)  # type: ignore
+            signature._return_annotation = self._traverse_type_hints(  # type: ignore # noqa: E501
+                signature._return_annotation)  # type: ignore
             method.__signature__ = signature  # type: ignore
         return super().__call__(method=method, **kwargs)
 
