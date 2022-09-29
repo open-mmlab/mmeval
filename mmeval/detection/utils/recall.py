@@ -10,14 +10,14 @@ from .bbox import calculate_overlaps
 def _recalls(all_ious, proposal_nums, thrs):
 
     img_num = all_ious.shape[0]
-    total_gt_num = sum([ious.shape[0] for ious in all_ious])
+    total_gt_num = sum(ious.shape[0] for ious in all_ious)
 
     _ious = np.zeros((proposal_nums.size, total_gt_num), dtype=np.float32)
     for k, proposal_num in enumerate(proposal_nums):
         tmp_ious = np.zeros(0)
         for i in range(img_num):
             ious = all_ious[i][:, :proposal_num].copy()
-            gt_ious = np.zeros((ious.shape[0]))
+            gt_ious = np.zeros(ious.shape[0])
             if ious.size == 0:
                 tmp_ious = np.hstack((tmp_ious, gt_ious))
                 continue

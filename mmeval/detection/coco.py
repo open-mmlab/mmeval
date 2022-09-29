@@ -76,7 +76,7 @@ class CocoMetric(BaseMetric):
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  file_client_args: dict = dict(backend='disk'),
-                 dataset_meta: Optional[Dict] = None,
+                 dataset_meta: Optional[dict] = None,
                  dist_collect_mode: str = 'unzip',
                  dist_backend: Optional[str] = None) -> None:
         super().__init__(
@@ -114,6 +114,7 @@ class CocoMetric(BaseMetric):
 
         # if ann_file is not specified,
         # initialize coco api with the converted dataset
+        self._coco_api: Optional[COCO]  # type: ignore
         if ann_file is not None:
             if FileClient is not None:
                 self.file_client = FileClient(**file_client_args)
@@ -131,13 +132,13 @@ class CocoMetric(BaseMetric):
             self._coco_api = None
 
         # handle dataset lazy init
-        self.cat_ids = None
-        self.img_ids = None
+        self.cat_ids: list = []
+        self.img_ids: list = []
 
     def fast_eval_recall(self,
                          results: List[dict],
                          proposal_nums: Sequence[int],
-                         iou_thrs: Sequence[float],
+                         iou_thrs: Union[float, Sequence[float]],
                          logger: Optional[MMLogger] = None) -> np.ndarray:
         """Evaluate proposal recall with COCO's fast_eval_recall.
 
@@ -154,8 +155,9 @@ class CocoMetric(BaseMetric):
         gt_bboxes = []
         pred_bboxes = [result['bboxes'] for result in results]
         for i in range(len(self.img_ids)):
-            ann_ids = self._coco_api.get_ann_ids(img_ids=self.img_ids[i])
-            ann_info = self._coco_api.load_anns(ann_ids)
+            ann_ids = self._coco_api.get_ann_ids(  # type: ignore
+                img_ids=self.img_ids[i])  # type: ignore
+            ann_info = self._coco_api.load_anns(ann_ids)  # type: ignore
             if len(ann_info) == 0:
                 gt_bboxes.append(np.zeros((0, 4)))
                 continue
@@ -166,7 +168,7 @@ class CocoMetric(BaseMetric):
                 x1, y1, w, h = ann['bbox']
                 bboxes.append([x1, y1, x1 + w, y1 + h])
             bboxes = np.array(bboxes, dtype=np.float32)
-            if bboxes.shape[0] == 0:
+            if len(bboxes) == 0:
                 bboxes = np.zeros((0, 4))
             gt_bboxes.append(bboxes)
 
@@ -216,7 +218,8 @@ class CocoMetric(BaseMetric):
             values are corresponding filenames.
         """
         bbox_json_results = []
-        segm_json_results = [] if 'masks' in results[0] else None
+        segm_json_results: Optional[
+            list] = [] if 'masks' in results[0] else None
         for idx, result in enumerate(results):
             image_id = result.get('img_id', idx)
             labels = result['labels']
@@ -274,11 +277,11 @@ class CocoMetric(BaseMetric):
             str: The filename of the json file.
         """
         categories = [
-            dict(id=id, name=name)
-            for id, name in enumerate(self.dataset_meta['CLASSES'])
+            dict(id=id, name=name) for id, name in enumerate(
+                self.dataset_meta['CLASSES'])  # type: ignore
         ]
-        image_infos = []
-        annotations = []
+        image_infos: List[dict] = []
+        annotations: List[dict] = []
 
         for idx, gt_dict in enumerate(gt_dicts):
             img_id = gt_dict.get('img_id', idx)
@@ -412,16 +415,16 @@ class CocoMetric(BaseMetric):
             self._coco_api = COCO(coco_json_path)
 
         # handle lazy init
-        if self.cat_ids is None:
+        if self.cat_ids:
             self.cat_ids = self._coco_api.get_cat_ids(
-                cat_names=self.dataset_meta['CLASSES'])
-        if self.img_ids is None:
+                cat_names=self.dataset_meta['CLASSES'])  # type: ignore
+        if self.img_ids:
             self.img_ids = self._coco_api.get_img_ids()
 
         # convert predictions to coco format and dump to json file
         result_files = self.results2json(preds, outfile_prefix)
 
-        eval_results = OrderedDict()
+        eval_results: OrderedDict = OrderedDict()
         if self.format_only:
             logger.info('results are saved in '
                         f'{osp.dirname(outfile_prefix)}')
@@ -439,8 +442,8 @@ class CocoMetric(BaseMetric):
                 for i, num in enumerate(self.proposal_nums):
                     eval_results[f'AR@{num}'] = ar[i]
                     log_msg.append(f'\nAR@{num}\t{ar[i]:.4f}')
-                log_msg = ''.join(log_msg)
-                logger.info(log_msg)
+                log_msg_ = ''.join(log_msg)
+                logger.info(log_msg_)
                 continue
 
             # evaluate proposal, bbox and segm
