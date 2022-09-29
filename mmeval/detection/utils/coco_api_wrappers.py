@@ -1,13 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 # This file add snake case alias for coco api
 
+import pycocotools
 import warnings
 from collections import defaultdict
-from typing import List, Optional, Union
-
-import pycocotools
 from pycocotools.coco import COCO as _COCO
 from pycocotools.cocoeval import COCOeval as _COCOeval
+from typing import Dict, List, Optional, Sequence, Union
 
 
 class COCO(_COCO):
@@ -60,14 +59,16 @@ class COCOPanoptic(COCO):
     """
 
     def __init__(self, annotation_file: Optional[str] = None) -> None:
-        super(COCOPanoptic, self).__init__(annotation_file)
+        super().__init__(annotation_file)
 
     def createIndex(self) -> None:
         """Create index."""
         # create index
         print('creating index...')
         # anns stores 'segment_id -> annotation'
-        anns, cats, imgs = {}, {}, {}
+        anns: Dict[int, list] = {}
+        cats: Dict[int, dict] = {}
+        imgs: Dict[int, dict] = {}
         img_to_anns, cat_to_imgs = defaultdict(list), defaultdict(list)
         if 'annotations' in self.dataset:
             for ann in self.dataset['annotations']:
@@ -112,26 +113,25 @@ class COCOPanoptic(COCO):
         self.imgs = imgs
         self.cats = cats
 
-    def load_anns(self,
-                  ids: Union[List[int], int] = []) -> Optional[List[dict]]:
+    def load_anns(self, ids: Union[Sequence[int], int] = []) -> List[dict]:
         """Load anns with the specified ids.
 
         ``self.anns`` is a list of annotation lists instead of a
         list of annotations.
 
         Args:
-            ids (Union[List[int], int]): Integer ids specifying anns.
+            ids (Union[Sequence[int], int]): Integer ids specifying anns.
 
         Returns:
-            anns (List[dict], optional): Loaded ann objects.
+            anns (List[dict]): Loaded ann objects.
         """
         anns = []
 
-        if hasattr(ids, '__iter__') and hasattr(ids, '__len__'):
+        if isinstance(ids, Sequence):
             # self.anns is a list of annotation lists instead of
             # a list of annotations
             for id in ids:
                 anns += self.anns[id]
             return anns
-        elif type(ids) == int:
+        else:
             return self.anns[ids]
