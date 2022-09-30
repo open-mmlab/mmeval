@@ -6,7 +6,6 @@ import os.path as osp
 import tempfile
 from collections import OrderedDict
 from json import dump, load
-from mmengine.logging import MMLogger
 from terminaltables import AsciiTable
 from typing import Dict, List, Optional, Sequence, Union
 
@@ -135,11 +134,13 @@ class CocoMetric(BaseMetric):
         self.cat_ids: list = []
         self.img_ids: list = []
 
-    def fast_eval_recall(self,
-                         results: List[dict],
-                         proposal_nums: Sequence[int],
-                         iou_thrs: Union[float, Sequence[float]],
-                         logger: Optional[MMLogger] = None) -> np.ndarray:
+    def fast_eval_recall(
+        self,
+        results: List[dict],
+        proposal_nums: Sequence[int],
+        iou_thrs: Union[float, Sequence[float]],
+        logger: Optional['logging.Logger'] = None  # type: ignore # noqa: F821
+    ) -> np.ndarray:
         """Evaluate proposal recall with COCO's fast_eval_recall.
 
         Args:
@@ -147,8 +148,8 @@ class CocoMetric(BaseMetric):
             proposal_nums (Sequence[int]): Proposal numbers used for
                 evaluation.
             iou_thrs (Sequence[float]): IoU thresholds used for evaluation.
-            logger (MMLogger, optional): Logger used for logging the recall
-                summary.
+            logger (:obj:`logging.Logger`, optional): Logger used for logging
+                the recall summary.
         Returns:
             np.ndarray: Averaged recall results.
         """
@@ -395,7 +396,7 @@ class CocoMetric(BaseMetric):
             Dict[str, float]: The computed metrics. The keys are the names of
             the metrics, and the values are corresponding results.
         """
-        logger: MMLogger = MMLogger.get_current_instance()
+        from mmeval.core.dispatcher import logger
 
         # split gt and prediction list
         preds, gts = zip(*results)
