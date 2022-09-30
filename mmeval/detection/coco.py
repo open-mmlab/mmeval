@@ -119,7 +119,9 @@ class CocoMetric(BaseMetric):
                 self.file_client = FileClient(**file_client_args)
                 with self.file_client.get_local_path(ann_file) as local_path:
                     self._coco_api = COCO(local_path)
-            elif file_client_args.get('backend') != 'disk':
+            elif isinstance(
+                    file_client_args,
+                    dict) and file_client_args.get('backend') != 'disk':
                 raise RuntimeError('MMEngine is not installed. '
                                    'Please install MMEngine by '
                                    '`pip install mmengine`.')
@@ -416,10 +418,10 @@ class CocoMetric(BaseMetric):
             self._coco_api = COCO(coco_json_path)
 
         # handle lazy init
-        if self.cat_ids:
+        if len(self.cat_ids) == 0:
             self.cat_ids = self._coco_api.get_cat_ids(
                 cat_names=self.dataset_meta['CLASSES'])  # type: ignore
-        if self.img_ids:
+        if len(self.img_ids) == 0:
             self.img_ids = self._coco_api.get_img_ids()
 
         # convert predictions to coco format and dump to json file
