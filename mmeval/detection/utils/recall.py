@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 from collections.abc import Sequence
-from mmengine.logging import print_log
 from terminaltables import AsciiTable
 
 from .bbox import calculate_overlaps
@@ -145,54 +144,4 @@ def print_recall_summary(recalls,
         row.insert(0, num)
         table_data.append(row)
     table = AsciiTable(table_data)
-    print_log('\n' + table.table, logger=logger)
-
-
-def plot_num_recall(recalls, proposal_nums):
-    """Plot Proposal_num-Recalls curve.
-
-    Args:
-        recalls(ndarray or list): shape (k,)
-        proposal_nums(ndarray or list): same shape as `recalls`
-    """
-    if isinstance(proposal_nums, np.ndarray):
-        _proposal_nums = proposal_nums.tolist()
-    else:
-        _proposal_nums = proposal_nums
-    if isinstance(recalls, np.ndarray):
-        _recalls = recalls.tolist()
-    else:
-        _recalls = recalls
-
-    import matplotlib.pyplot as plt
-    f = plt.figure()
-    plt.plot([0] + _proposal_nums, [0] + _recalls)
-    plt.xlabel('Proposal num')
-    plt.ylabel('Recall')
-    plt.axis([0, proposal_nums.max(), 0, 1])
-    f.show()
-
-
-def plot_iou_recall(recalls, iou_thrs):
-    """Plot IoU-Recalls curve.
-
-    Args:
-        recalls(ndarray or list): shape (k,)
-        iou_thrs(ndarray or list): same shape as `recalls`
-    """
-    if isinstance(iou_thrs, np.ndarray):
-        _iou_thrs = iou_thrs.tolist()
-    else:
-        _iou_thrs = iou_thrs
-    if isinstance(recalls, np.ndarray):
-        _recalls = recalls.tolist()
-    else:
-        _recalls = recalls
-
-    import matplotlib.pyplot as plt
-    f = plt.figure()
-    plt.plot(_iou_thrs + [1.0], _recalls + [0.])
-    plt.xlabel('IoU')
-    plt.ylabel('Recall')
-    plt.axis([iou_thrs.min(), 1, 0, 1])
-    f.show()
+    logger.info('\n' + table.table)
