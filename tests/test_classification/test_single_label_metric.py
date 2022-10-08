@@ -14,6 +14,43 @@ except ImportError:
     torch = None
 
 
+def test_metric_init_assertion():
+    with pytest.raises(AssertionError,
+                       match='Invalid `average` argument'):
+        SingleLabelMetric(average='mean')
+    with pytest.raises(AssertionError,
+                       match='The metric map is not supported'):
+        SingleLabelMetric(items=('map',))
+
+
+def test_metric_assertion():
+    single_label_metric = SingleLabelMetric()
+    with pytest.raises(AssertionError,
+                       match='Please specify `num_classes`'):
+        single_label_metric(
+            np.asarray([1, 2, 3]), np.asarray([3, 2, 1]))
+
+    single_label_metric = SingleLabelMetric(num_classes=2)
+    with pytest.raises(AssertionError,
+                       match='Number of classes does not match'):
+        single_label_metric(
+            np.asarray([[0.1, 0.9, 0], [0.5, 0.5, 0]]), np.asarray([0, 1]))
+
+
+@pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
+def test_metric_torch_assertion():
+    single_label_metric = SingleLabelMetric()
+    with pytest.raises(AssertionError, match='Please specify `num_classes`'):
+        single_label_metric(
+            torch.Tensor([1, 2, 3]), torch.Tensor([3, 2, 1]))
+
+    single_label_metric = SingleLabelMetric(num_classes=2)
+    with pytest.raises(AssertionError,
+                       match='Number of classes does not match'):
+        single_label_metric(
+            torch.Tensor([[0.1, 0.9, 0], [0.5, 0.5, 0]]), torch.Tensor([0, 1]))
+
+
 @pytest.mark.parametrize(
     argnames='metric_kwargs',
     argvalues=[
@@ -28,11 +65,14 @@ except ImportError:
     ]
 )
 def test_metric_interface(metric_kwargs):
+    # test predictions with labels
     single_label_metric = SingleLabelMetric(**metric_kwargs)
     assert isinstance(single_label_metric, BaseMetric)
     assert isinstance(single_label_metric.thrs, tuple)
     results = single_label_metric(
         np.asarray([[0.1, 0.9], [0.5, 0.5]]), np.asarray([0, 1]))
+
+    # test predictions with pred_scores
     single_label_metric = SingleLabelMetric(**metric_kwargs, num_classes=4)
     assert isinstance(single_label_metric, BaseMetric)
     assert isinstance(single_label_metric.thrs, tuple)
@@ -43,13 +83,16 @@ def test_metric_interface(metric_kwargs):
 
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
 def test_metric_interface_torch():
-    single_label_metric = SingleLabelMetric(num_classes=4)
-    results = single_label_metric(
-        torch.Tensor([1, 2, 3]), torch.Tensor([3, 2, 1]))
-    assert isinstance(results, dict)
+    # test predictions with labels
     single_label_metric = SingleLabelMetric()
     results = single_label_metric(
         torch.Tensor([[0.1, 0.9], [0.5, 0.5]]), torch.Tensor([0, 1]))
+    assert isinstance(results, dict)
+
+    # test predictions with pred_scores
+    single_label_metric = SingleLabelMetric(num_classes=4)
+    results = single_label_metric(
+        torch.Tensor([1, 2, 3]), torch.Tensor([3, 2, 1]))
     assert isinstance(results, dict)
 
 

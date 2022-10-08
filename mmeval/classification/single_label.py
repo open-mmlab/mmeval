@@ -18,8 +18,17 @@ TORCH_IMPL_HINTS = Tuple['torch.Tensor', 'torch.Tensor']
 
 
 def _precision_recall_f1_support(pred_positive, gt_positive, average):
-    """calculate base classification task metrics, such as  precision, recall,
-    f1_score, support."""
+    """Calculate base classification task metrics, such as  precision, recall,
+    f1_score, support.
+
+    Inputs of `pred_positive` and `gt_positive` should be both
+    `torch.tensor` with `torch.int64` dtype or `numpy.ndarray`
+    with `numpy.int64` dtype.
+
+    And should be both with shape of (M, N):
+        - M: Number of samples.
+        - N: Number of classes.
+    """
     average_options = ['micro', 'macro', None]
     assert average in average_options, 'Invalid `average` argument, ' \
         f'please specify from {average_options}.'
@@ -38,18 +47,12 @@ def _precision_recall_f1_support(pred_positive, gt_positive, average):
     if torch and isinstance(pred_sum, torch.Tensor):
         # use torch with torch.Tensor
         precision = tp_sum / torch.clamp(pred_sum, min=1).double() * 100
-        print(tp_sum)
-        print(torch.clamp(pred_sum, min=1))
-        print(precision.dtype)
         recall = tp_sum / torch.clamp(gt_sum, min=1).double() * 100
         f1_score = 2 * precision * recall / torch.clamp(
             precision + recall, min=torch.finfo(torch.float32).eps)
     else:
         # use numpy with numpy.ndarray
         precision = tp_sum / np.clip(pred_sum, 1, np.inf) * 100
-        print(tp_sum)
-        print(np.clip(pred_sum, 1, np.inf))
-        print(precision.dtype)
         recall = tp_sum / np.clip(gt_sum, 1, np.inf) * 100
         f1_score = 2 * precision * recall / np.clip(precision + recall,
                                                     np.finfo(np.float32).eps,
@@ -166,6 +169,9 @@ class SingleLabelMetric(BaseMetric):
                 '"support".'
         self.items = tuple(items)
 
+        average_options = ['micro', 'macro', None]
+        assert average in average_options, 'Invalid `average` argument, ' \
+            f'please specify from {average_options}.'
         self.average = average
         self.num_classes = num_classes
 
@@ -237,14 +243,17 @@ class SingleLabelMetric(BaseMetric):
         predictions = torch.stack(predictions)
         labels = torch.stack(labels)
 
-        assert predictions.size(0) == labels.size(0), \
-            f"The size of pred ({predictions.size(0)}) doesn't match "\
-            f'the labels ({labels.size(0)}).'
+        # cannot be raised in current implementation because
+        # `add` method will guarantee the equal length.
+        # However length check should remain somewhere.
+        assert predictions.shape[0] == labels.shape[0], \
+            'Number of samples does not match between predictions' \
+            f'({predictions.shape[0]}) and labels ({labels.shape[0]}).'
 
         if predictions.ndim == 1:
             assert self.num_classes is not None, \
-                'Please specify the `self.` if the `pred` is labels ' \
-                'intead of scores.'
+                'Please specify `num_classes` in `self.` if the `predictions`'\
+                'is labels instead of scores.'
             gt_positive = F.one_hot(labels.flatten().to(torch.int64),
                                     self.num_classes)
             pred_positive = F.one_hot(
@@ -253,7 +262,11 @@ class SingleLabelMetric(BaseMetric):
                                                 self.average)
         else:
             # For pred score, calculate on all thresholds.
-            num_classes = predictions.size(1)
+            num_classes = predictions.shape[1]
+            if self.num_classes is not None:
+                assert num_classes == self.num_classes, \
+                    'Number of classes does not match between predictions' \
+                    f'({num_classes}) and `self` ({self.num_classes}).'
             pred_score, pred_label = torch.topk(predictions, k=1)
             pred_score = pred_score.flatten()
             pred_label = pred_label.flatten()
@@ -281,31 +294,39 @@ class SingleLabelMetric(BaseMetric):
         predictions = np.stack(predictions)
         labels = np.stack(labels)
 
+        # cannot be raised in current implementation because
+        # `add` method will guarantee the equal length.
+        # However length check should remain somewhere.
         assert predictions.shape[0] == labels.shape[0], \
-            f"The size of pred ({predictions.shape[0]}) doesn't match "\
-            f'the labels ({labels.shape[0]}).'
+            'Number of samples does not match between predictions' \
+            f'({predictions.shape[0]}) and labels ({labels.shape[0]}).'
 
         if predictions.ndim == 1:
             assert self.num_classes is not None, \
-                'Please specify the `self.` if the `pred` is labels ' \
-                'intead of scores.'
-            gt_positive = np.eye(self.num_classes, dtype=bool)[labels]
+                'Please specify `num_classes` in `self.` if the `predictions`'\
+                'is labels instead of scores.'
+            gt_positive = np.eye(self.num_classes, dtype=np.int64)[labels]
 
-            pred_positive = np.eye(self.num_classes, dtype=bool)[predictions]
+            pred_positive = np.eye(
+                self.num_classes, dtype=np.int64)[predictions]
 
             return _precision_recall_f1_support(pred_positive, gt_positive,
                                                 self.average)
         else:
             # For pred score, calculate on all thresholds.
             num_classes = predictions.shape[1]
+            if self.num_classes is not None:
+                assert num_classes == self.num_classes, \
+                    'Number of classes does not match between predictions' \
+                    f'({num_classes}) and `self` ({self.num_classes}).'
             pred_score = predictions.max(axis=1)
             pred_label = predictions.argmax(axis=1)
 
-            gt_positive = np.eye(num_classes, dtype=bool)[labels]
+            gt_positive = np.eye(num_classes, dtype=np.int64)[labels]
 
             results = []
             for thr in self.thrs:
-                pred_positive = np.eye(num_classes, dtype=bool)[pred_label]
+                pred_positive = np.eye(num_classes, dtype=np.int64)[pred_label]
                 if thr is not None:
                     pred_positive[pred_score <= thr] = 0
                 results.append(
