@@ -2,6 +2,7 @@
 
 # flake8: noqa
 
+from .classification import *
 from .core import *
 from .segmentation import *
 from .version import __version__
