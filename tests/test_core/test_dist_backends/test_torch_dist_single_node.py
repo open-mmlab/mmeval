@@ -7,12 +7,12 @@ import pytest
 if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') != '0':
     pytest.skip(allow_module_level=True)
 
-import torch
-import torch.distributed as torch_dist
-import torch.multiprocessing as mp
-
 from mmeval.core.dist_backends.torch_cpu import TorchCPUDist
 from mmeval.core.dist_backends.torch_cuda import TorchCUDADist
+
+torch = pytest.importorskip('torch')
+torch_dist = pytest.importorskip('torch.distributed')
+mp = pytest.importorskip('torch.multiprocessing')
 
 DIST_COMM_BACKENDS = {
     'gloo': TorchCPUDist,
