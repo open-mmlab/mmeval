@@ -1,16 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 import pickle
-from typing import Any, List, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, List, Tuple, TypeVar, Union
 
+from mmeval.utils import try_import
 from .base_backend import TensorBaseDistBackend
 
-try:
+if TYPE_CHECKING:
     import torch
     import torch.distributed as torch_dist
-except ImportError:
-    torch = None
-    torch_dist = None
+else:
+    torch = try_import('torch')
+    torch_dist = try_import('torch.distributed')
 
 Tensor = TypeVar('Tensor', bound='torch.Tensor')
 

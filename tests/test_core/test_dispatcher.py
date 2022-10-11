@@ -5,11 +5,9 @@ import pytest
 from typing import Dict, List, overload
 
 from mmeval.core.dispatcher import _MMEvalDispatcher, dispatch
+from mmeval.utils import try_import
 
-try:
-    import torch
-except ImportError:
-    torch = None
+torch = try_import('torch')
 
 
 class TestMMEvalDispatcher:
