@@ -18,8 +18,8 @@ BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[int]], Union[int,
                                                             Sequence[int]]]
 
 
-def label_to_onehot(label: Union[np.ndarray, torch.Tensor],
-                    num_classes: int) -> Union[np.ndarray, torch.Tensor]:
+def label_to_onehot(label: Union[np.ndarray, 'torch.Tensor'],
+                    num_classes: int) -> Union[np.ndarray, 'torch.Tensor']:
     """Convert the label-format input to one-hot.
 
     Args:
