@@ -2,7 +2,8 @@
 
 from .accuracy import Accuracy
 from .mean_iou import MeanIoU
+from .multi_label import MultiLabelMetric
 from .oid_map import OIDMeanAP
 from .voc_map import VOCMeanAP
 
-__all__ = ['Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP']
+__all__ = ['Accuracy', 'MultiLabelMetric', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP']
