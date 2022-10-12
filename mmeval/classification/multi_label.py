@@ -14,8 +14,8 @@ except ImportError:
 NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.int64], Union[np.ndarray,
                                                             np.int64]]
 TORCH_IMPL_HINTS = Tuple['torch.Tensor', 'torch.Tensor']
-BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[int]], Union[int,
-                                                            Sequence[int]]]
+BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[Union[int, float]]],
+                           Union[int, Sequence[int]]]
 
 
 def label_to_onehot(label: Union[np.ndarray, 'torch.Tensor'],
@@ -141,26 +141,52 @@ class MultiLabelMetric(BaseMetric):
         >>> from mmeval import MultiLabelMetric
         >>> multi_lable_metic = MultiLabelMetric(num_classes=4)
 
-    Use Builtin implementation:
+    Use Builtin implementation with raw indices:
 
-        >>> labels = [[0], [1], [2], [0, 3]]
-        >>> preds = [[0], [1, 2], [2], [3]]
+        >>> preds = [[0], [1], [2], [0, 3]]
+        >>> labels = [[0], [1, 2], [2], [3]]
         >>> multi_lable_metic(preds, labels)
         {'precision': 87.5, 'recall': 87.5, 'f1-score': 83.33}
 
-    Use NumPy implementation:
+    Use Builtin implementation with one-hot indices:
+
+        >>> preds = [[1, 0, 0, 0],
+                      [0, 1, 0, 0],
+                      [0, 0, 1, 0],
+                      [1, 0, 0, 1]]
+        >>> labels = [[1, 0, 0, 0],
+                     [0, 1, 1, 0],
+                     [0, 0, 1, 0],
+                     [0, 0, 0, 1]]
+        >>> multi_lable_metic(preds, labels)
+        {'precision': 87.5, 'recall': 87.5, 'f1-score': 83.33}
+
+    Use Builtin implementation with scores:
+
+        >>> preds = [[0.9, 0.1, 0.2, 0.3],
+                      [0.1, 0.8, 0.1, 0.1],
+                      [0.4, 0.3, 0.7, 0.1],
+                      [0.8, 0.1, 0.1, 0.9]]
+        >>> labels = [[1, 0, 0, 0],
+                     [0, 1, 1, 0],
+                     [0, 0, 1, 0],
+                     [0, 0, 0, 1]]
+        >>> multi_lable_metic(preds, labels)
+        {'precision': 87.5, 'recall': 87.5, 'f1-score': 83.33}
+
+    Use NumPy implementation with raw indices:
 
         >>> import numpy as np
-        >>> labels = [np.array([0]), np.array([1]), np.array([2]), np.array([0, 3])] # noqa
         >>> preds = [np.array([0]), np.array([1, 2]), np.array([2]), np.array([3])] # noqa
+        >>> labels = [np.array([0]), np.array([1]), np.array([2]), np.array([0, 3])] # noqa
         >>> multi_lable_metic(preds, labels)
         {'precision': 87.5, 'recall': 87.5, 'f1-score': 83.33}
 
     Use PyTorch implementation:
 
         >>> import torch
-        >>> labels = [torch.tensor([0]), torch.tensor([1]), torch.tensor([2]), torch.tensor([0, 3])] # noqa
         >>> preds = [torch.tensor([0]), torch.tensor([1, 2]), torch.tensor([2]), torch.tensor([3])] # noqa
+        >>> labels = [torch.tensor([0]), torch.tensor([1]), torch.tensor([2]), torch.tensor([0, 3])] # noqa
         >>> multi_lable_metic(preds, labels)
         {'precision': 87.5, 'recall': 87.5, 'f1-score': 83.33}
 
@@ -376,7 +402,8 @@ class MultiLabelMetric(BaseMetric):
     @overload
     @dispatch
     def _compute_metric(
-            self, predictions: Sequence[Union[int, Sequence[int]]],
+            self, predictions: Sequence[Union[int, Sequence[Union[int,
+                                                                  float]]]],
             labels: Sequence[Union[int, Sequence[int]]]) -> List[List]:
         """A Builtin implementation that computes the metric."""
 
