@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.segmentation.mean_iou import MeanIoU
+from mmeval.metrics import MeanIoU
 
 try:
     import torch

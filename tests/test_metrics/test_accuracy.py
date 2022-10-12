@@ -5,8 +5,8 @@
 import numpy as np
 import pytest
 
-from mmeval.classification.accuracy import Accuracy
 from mmeval.core.base_metric import BaseMetric
+from mmeval.metrics import Accuracy
 
 try:
     import torch
