@@ -1,13 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-from typing import Any, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, Tuple, TypeVar, Union
 
+from mmeval.utils import try_import
 from .torch_cpu import TorchCPUDist
 
-try:
+if TYPE_CHECKING:
     import torch
-except ImportError:
-    torch = None
+else:
+    torch = try_import('torch')
 
 Tensor = TypeVar('Tensor', bound='torch.Tensor')
 

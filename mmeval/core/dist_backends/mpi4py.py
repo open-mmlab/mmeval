@@ -1,14 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 import os
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
+from mmeval.utils import try_import
 from .base_backend import BaseDistBackend
 
-try:
+if TYPE_CHECKING:
     from mpi4py import MPI
-except ImportError:
-    MPI = None
+else:
+    MPI = try_import('mpi4py.MPI')
 
 
 class MPI4PyDist(BaseDistBackend):

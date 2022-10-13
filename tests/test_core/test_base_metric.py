@@ -3,11 +3,9 @@
 import pytest
 
 from mmeval.core.base_metric import BaseMetric
+from mmeval.utils import try_import
 
-try:
-    import torch
-except ImportError:
-    torch = None
+torch = try_import('torch')
 
 
 class Mertic(BaseMetric):

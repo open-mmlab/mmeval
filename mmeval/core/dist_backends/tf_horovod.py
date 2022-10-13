@@ -1,13 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-from typing import Any, List
+from typing import TYPE_CHECKING, Any, List
 
+from mmeval.utils import try_import
 from .base_backend import BaseDistBackend
 
-try:
+if TYPE_CHECKING:
     import horovod.tensorflow as hvd
-except ImportError:
-    hvd = None
+else:
+    hvd = try_import('horovod.tensorflow')
 
 
 class TFHorovodDist(BaseDistBackend):

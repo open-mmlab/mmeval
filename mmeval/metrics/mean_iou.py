@@ -1,15 +1,16 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 import numpy as np
-from typing import List, Optional, Sequence, Tuple, overload
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, overload
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.core.dispatcher import dispatch
+from mmeval.utils import try_import
 
-try:
+if TYPE_CHECKING:
     import torch
-except ImportError:
-    torch = None
+else:
+    torch = try_import('torch')
 
 
 class MeanIoU(BaseMetric):
