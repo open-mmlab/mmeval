@@ -18,29 +18,124 @@ BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[Union[int, float]]],
                            Union[int, Sequence[int]]]
 
 
-def label_to_onehot(label: Union[np.ndarray, 'torch.Tensor'],
-                    num_classes: int) -> Union[np.ndarray, 'torch.Tensor']:
-    """Convert the label-format input to one-hot.
+class MultiLabelMixin:
 
-    Args:
-        label (torch.Tensor): The label-format input. The format
-            of item must be label-format.
-        num_classes (int): The number of classes.
+    def __init__(self, *args, **kwargs) -> None:
+        # for multiple inheritances
+        super().__init__(*args, **kwargs)  # type: ignore
+        self._pred_is_label = False
+        self._target_is_label = False
 
-    Return:
-        torch.Tensor: The converted results.
-    """
-    if torch and isinstance(label, torch.Tensor):
-        label = label.long()
-        onehot = label.new_zeros((num_classes, ))
-    else:
-        label = label.astype(np.int64)
-        onehot = np.zeros((num_classes, ), dtype=np.int64)
-    assert label.max().item() < num_classes, \
-        'Max index is out of `num_classes` {num_classes}'
-    assert label.min().item() >= 0
-    onehot[label] = 1
-    return onehot
+    @property
+    def pred_is_label(self) -> bool:
+        """Whether prediction is label-format."""
+        warnings.warn(
+            '`pred_is_label` only works for corner case when num_classes=2 '
+            'to distinguish one-hot encodings or label-format.')
+        return self._pred_is_label
+
+    @pred_is_label.setter
+    def pred_is_label(self, is_label: bool):
+        """Set a flag of whether prediction is label-format."""
+        warnings.warn(
+            '`pred_is_label` only works for corner case when num_classes=2 '
+            'to distinguish one-hot encodings or label-format.')
+        self._pred_is_label = is_label
+
+    @property
+    def target_is_label(self) -> bool:
+        """Whether target is label-format."""
+        warnings.warn(
+            '`target_is_label` only works for corner case when num_classes=2 '
+            'to distinguish one-hot encodings or label-format.')
+        return self._target_is_label
+
+    @target_is_label.setter
+    def target_is_label(self, is_label: bool):
+        """Set a flag of whether target is label-format."""
+        warnings.warn(
+            '`target_is_label` only works for corner case when num_classes=2 '
+            'to distinguish one-hot encodings or label-format.')
+        self._target_is_label = is_label
+
+    @staticmethod
+    def label_to_onehot(label: Union[np.ndarray, 'torch.Tensor'],
+                        num_classes: int) -> Union[np.ndarray, 'torch.Tensor']:
+        """Convert the label-format input to one-hot encodings.
+
+        Args:
+            label (torch.Tensor or np.ndarray): The label-format input.
+                The format of item must be label-format.
+            num_classes (int): The number of classes.
+
+        Return:
+            torch.Tensor or np.ndarray: The converted one-hot encodings.
+        """
+        if torch and isinstance(label, torch.Tensor):
+            label = label.long()
+            onehot = label.new_zeros((num_classes, ))
+        else:
+            label = label.astype(np.int64)
+            onehot = np.zeros((num_classes, ), dtype=np.int64)
+        assert label.max().item() < num_classes, \
+            'Max index is out of `num_classes` {num_classes}'
+        assert label.min().item() >= 0
+        onehot[label] = 1
+        return onehot
+
+    def _format_data(self, data, num_classes, is_label):
+        """Format data from different inputs such as prediction scores, label-
+        format data and one-hot encodings into the same output shape of `(N,
+        num_classes)`.
+
+        Args:
+            data (Sequence of torch.Tensor or np.ndarray): The input data of
+                prediction or targets.
+            num_classes (int): The number of classes.
+            is_label (bool): Whether the data is label-format.
+
+        Return:
+            torch.Tensor or np.ndarray: The converted one-hot encodings.
+        """
+        if torch and isinstance(data[0], torch.Tensor):
+            stack_func = torch.stack
+        elif isinstance(data[0], (np.ndarray, np.int64)):
+            stack_func = np.stack
+        else:
+            raise NotImplementedError(f'Data type of {type(data[0])}'
+                                      'is not supported.')
+
+        try:
+            # try stack scores or one-hot indices directly
+            formated_data = stack_func(data)
+            # all assertions below is to find labels that are
+            # raw indices which should be caught in exception
+            # to convert to one-hot indices.
+            #
+            # 1. all raw indices has only 1 dims
+            assert formated_data.ndim == 2
+            # 2. all raw indices has the same dims
+            assert formated_data.shape[1] == num_classes
+            # 3. all raw indices has the same dims as num_classes
+            # then max indices should greater than 1 for num_classes > 2
+            assert formated_data.max() <= 1
+            # 4. corner case, num_classes=2, then one-hot indices
+            # and raw indices are undistinguishable, for instance:
+            #   [[0, 1], [0, 1]] can be one-hot indices of 2 positives
+            #   or raw indices of 4 positives.
+            # Extra induction is needed.
+            if num_classes == 2:
+                warnings.warn('Ambiguous data detected, reckoned as scores'
+                              ' or one-hot indices as defaults. Please set '
+                              '`self.pred_is_label` and `self.target_is_label`'
+                              ' if use label-format data to compute metrics.')
+                assert not is_label
+        # Error corresponds to np, torch, assert respectively
+        except (ValueError, RuntimeError, AssertionError):
+            # convert raw indices to one-hot indices
+            formated_data = stack_func(
+                [self.label_to_onehot(sample, num_classes) for sample in data])
+        return formated_data
 
 
 def _precision_recall_f1_support(pred_positive, gt_positive, average):
@@ -92,7 +187,7 @@ def _precision_recall_f1_support(pred_positive, gt_positive, average):
     return precision, recall, f1_score, support
 
 
-class MultiLabelMetric(BaseMetric):
+class MultiLabelMetric(MultiLabelMixin, BaseMetric):
     """A collection of metrics for multi-label multi-class classification task
     based on confusion matrix.
 
@@ -244,51 +339,16 @@ class MultiLabelMetric(BaseMetric):
         self.average = average
         self.num_classes = num_classes
 
-        self._pred_is_rawindex = False
-        self._label_is_rawindex = False
-
-    @property
-    def pred_is_rawindex(self):
-        """Whether use raw index for predictions."""
-        warnings.warn(
-            '`pred_is_rawindex` only works for corner case when '
-            'num_classes=2 to distinguish one-hot indices or raw indices')
-        return self._pred_is_rawindex
-
-    @pred_is_rawindex.setter
-    def pred_is_rawindex(self, is_rawindex):
-        """Set a flag of whether use raw index for predictions."""
-        warnings.warn(
-            '`pred_is_rawindex` only works for corner case when '
-            'num_classes=2 to distinguish one-hot indices or raw indices')
-        self._pred_is_rawindex = is_rawindex
-
-    @property
-    def label_is_rawindex(self):
-        """Whether use raw index for labels."""
-        warnings.warn(
-            '`label_is_rawindex` only works for corner case when '
-            'num_classes=2 to distinguish one-hot indices or raw indices')
-        return self._label_is_rawindex
-
-    @label_is_rawindex.setter
-    def label_is_rawindex(self, is_rawindex):
-        """Set a flag of whether use raw index for labels."""
-        warnings.warn(
-            '`label_is_rawindex` only works for corner case when '
-            'num_classes=2 to distinguish one-hot indices or raw indices')
-        self._label_is_rawindex = is_rawindex
-
-    def add(self, predictions: Sequence, labels: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, preds: Sequence, targets: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to `self._results`.
 
         Args:
-            predictions (Sequence): Predictions from the model. It can be
+            preds (Sequence): Predictions from the model. It can be
                 labels (N, ), or scores of every class (N, C).
-            labels (Sequence): The ground truth labels. It should be (N, ).
+            targets (Sequence): The ground truth labels. It should be (N, ).
         """
-        for pred, label in zip(predictions, labels):
-            self._results.append((pred, label))
+        for pred, target in zip(preds, targets):
+            self._results.append((pred, target))
 
     def _format_metric_results(self, results: List) -> Dict:
         """Format the given metric results into a dictionary.
@@ -333,112 +393,74 @@ class MultiLabelMetric(BaseMetric):
 
         return result_metrics
 
-    def _get_label(self, labels, is_rawindex, stack_func):
-        """Get labels with shape of (N, num_classes) from different inputs of
-        scores/ one-hot indices/ raw indices."""
-        try:
-            # try stack scores or one-hot indices directly
-            _labels = stack_func(labels)
-            # all assertions below is to find labels that are
-            # raw indices which should be caught in exception
-            # to convert to one-hot indices.
-            #
-            # 1. all raw indices has only 1 dims
-            assert _labels.ndim == 2
-            # 2. all raw indices has the same dims
-            assert _labels.shape[1] == self.num_classes
-            # 3. all raw indices has the same dims as num_classes
-            # then max indices should greater than 1 for num_classes > 2
-            assert _labels.max() <= 1
-            # 4. corner case, num_classes=2, then one-hot indices
-            # and raw indices are undistinguishable, for instance:
-            #   [[0, 1], [0, 1]] can be one-hot indices of 2 positives
-            #   or raw indices of 4 positives.
-            # Extra induction is needed.
-            if self.num_classes == 2:
-                warnings.warn(
-                    'Ambiguous labels detected, reckoned as scores'
-                    ' or one-hot indices as defaults. Please set '
-                    '`self.pred_is_rawindex` and `self.label_is_rawindex`'
-                    ' if use raw indices to compute metrics.')
-                assert not is_rawindex
-        # Error corresponds to np, torch, assert respectively
-        except (ValueError, RuntimeError, AssertionError):
-            # convert raw indices to one-hot indices
-            _labels = stack_func(
-                [label_to_onehot(label, self.num_classes) for label in labels])
-        return _labels
-
     @overload
     @dispatch
-    def _compute_metric(self, predictions: Sequence['torch.Tensor'],
-                        labels: Sequence['torch.Tensor']) -> List[List]:
+    def _compute_metric(self, preds: Sequence['torch.Tensor'],
+                        targets: Sequence['torch.Tensor']) -> List[List]:
         """A PyTorch implementation that computes the metric."""
 
-        preds = self._get_label(predictions, self._pred_is_rawindex,
-                                torch.stack)
-        gts = self._get_label(labels, self._label_is_rawindex,
-                              torch.stack).long()
+        preds = self._format_data(preds, self.num_classes, self._pred_is_label)
+        targets = self._format_data(targets, self.num_classes,
+                                    self._target_is_label).long()
 
         # cannot be raised in current implementation because
         # `and` method will guarantee the equal length.
         # However length check should remain somewhere.
-        assert preds.shape[0] == gts.shape[0], \
+        assert preds.shape[0] == targets.shape[0], \
             'Number of samples does not match between preds' \
-            f'({preds.shape[0]}) and labels ({gts.shape[0]}).'
+            f'({preds.shape[0]}) and targets ({targets.shape[0]}).'
 
         if self.thr is not None:
             # a label is predicted positive if larger than self.
             # work for index as well
             pos_inds = (preds >= self.thr).long()
         else:
-            # top-k gts will be predicted positive for any example
+            # top-k targets will be predicted positive for any example
             _, topk_indices = preds.topk(self.topk)
             pos_inds = torch.zeros_like(preds).scatter_(1, topk_indices, 1)
             pos_inds = pos_inds.long()
 
-        return _precision_recall_f1_support(pos_inds, gts, self.average)
+        return _precision_recall_f1_support(pos_inds, targets, self.average)
 
     @overload
     @dispatch
     def _compute_metric(
-            self, predictions: Sequence[Union[int, Sequence[Union[int,
-                                                                  float]]]],
-            labels: Sequence[Union[int, Sequence[int]]]) -> List[List]:
+            self, preds: Sequence[Union[int, Sequence[Union[int, float]]]],
+            targets: Sequence[Union[int, Sequence[int]]]) -> List[List]:
         """A Builtin implementation that computes the metric."""
 
-        return self._compute_metric([np.array(pred) for pred in predictions],
-                                    [np.array(gt) for gt in labels])
+        return self._compute_metric([np.array(pred) for pred in preds],
+                                    [np.array(target) for target in targets])
 
     @dispatch
     def _compute_metric(
-            self, predictions: Sequence[Union[np.ndarray, np.int64]],
-            labels: Sequence[Union[np.ndarray, np.int64]]) -> List[List]:
+            self, preds: Sequence[Union[np.ndarray, np.int64]],
+            targets: Sequence[Union[np.ndarray, np.int64]]) -> List[List]:
         """A NumPy implementation that computes the metric."""
 
-        preds = self._get_label(predictions, self._pred_is_rawindex, np.stack)
-        gts = self._get_label(labels, self._label_is_rawindex,
-                              np.stack).astype(np.int64)
+        preds = self._format_data(preds, self.num_classes, self._pred_is_label)
+        targets = self._format_data(targets, self.num_classes,
+                                    self._target_is_label).astype(np.int64)
 
         # cannot be raised in current implementation because
         # `and` method will guarantee the equal length.
         # However length check should remain somewhere.
-        assert preds.shape[0] == gts.shape[0], \
+        assert preds.shape[0] == targets.shape[0], \
             'Number of samples does not match between preds' \
-            f'({preds.shape[0]}) and labels ({gts.shape[0]}).'
+            f'({preds.shape[0]}) and targets ({targets.shape[0]}).'
 
         if self.thr is not None:
             # a label is predicted positive if larger than self.
             # work for index as well
             pos_inds = (preds >= self.thr).astype(np.int64)
         else:
-            # top-k labels will be predicted positive for any example
+            # top-k targets will be predicted positive for any example
             topk_indices = np.argpartition(
                 preds, -self.topk, axis=-1)[:, -self.topk:]  # type: ignore
             pos_inds = np.zeros(preds.shape, dtype=np.int64)
             np.put_along_axis(pos_inds, topk_indices, 1, axis=1)
 
-        return _precision_recall_f1_support(pos_inds, gts, self.average)
+        return _precision_recall_f1_support(pos_inds, targets, self.average)
 
     def compute_metric(
         self, results: List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS,
@@ -458,7 +480,7 @@ class MultiLabelMetric(BaseMetric):
         Returns:
             Dict[str, float]: The computed metric.
         """
-        predictions = [res[0] for res in results]
-        labels = [res[1] for res in results]
-        metric_results = self._compute_metric(predictions, labels)
+        preds = [res[0] for res in results]
+        targets = [res[1] for res in results]
+        metric_results = self._compute_metric(preds, targets)
         return self._format_metric_results(metric_results)

@@ -178,15 +178,15 @@ def test_metric_accurate(metric_kwargs, preditions, labels, results):
         np.asarray(preditions), np.asarray(labels)) == results
 
 
-def test_metric_accurate_is_rawindex():
+def test_metric_accurate_is_label():
     """Test ambiguous cases when num_classes=2."""
     multi_label_metric = MultiLabelMetric(num_classes=2, items=('precision', 'recall')) # noqa
-    assert multi_label_metric.pred_is_rawindex is False
-    assert multi_label_metric.label_is_rawindex is False
+    assert multi_label_metric.pred_is_label is False
+    assert multi_label_metric.target_is_label is False
     assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 50.0, 'recall': 25.0} # noqa
-    multi_label_metric.pred_is_rawindex = True
+    multi_label_metric.pred_is_label = True
     assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 50.0, 'recall': 50.0} # noqa
-    multi_label_metric.label_is_rawindex = True
+    multi_label_metric.target_is_label = True
     assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 100.0, 'recall': 100.0} # noqa
 
 
