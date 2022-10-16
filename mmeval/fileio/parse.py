@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 from io import StringIO
+
 from .io import get_text
 
 
