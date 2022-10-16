@@ -1,4 +1,5 @@
 coverage
+opencv-python
 parameterized
 pytest
 pytest-mpi
