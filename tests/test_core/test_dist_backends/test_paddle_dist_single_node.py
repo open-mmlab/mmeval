@@ -25,6 +25,8 @@ def _create_obj_list(world_size):
 
 
 def _init_dist_env(comm_backend):
+    if comm_backend == 'gloo':
+        paddle.set_device('cpu')
     try:
         paddle_dist.init_parallel_env()
     except Exception as e:
