@@ -35,6 +35,12 @@ class PaddleDist(TensorBaseDistBackend):
             bool: Returns True if the distributed environment has been
             initialized, otherwise returns False.
         """
+        # NOTE: The `paddle_dist.parallel.parallel_helper._is_parallel_ctx_initialized()`  # noqa: E501
+        # API is not work when init parallel env with gloo backend. So we just
+        # return True if use gloo backend (CPU only).
+        place = paddle.fluid.framework._current_expected_place()
+        if isinstance(place, paddle.fluid.core.CUDAPlace):
+            return True
         return paddle_dist.parallel.parallel_helper._is_parallel_ctx_initialized()  # noqa: E501 # yapf: disable
 
     @property
