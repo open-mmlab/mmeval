@@ -97,7 +97,7 @@ jobs:
     steps:
       - checkout
       - run:
-          name: Install NCCL
+          name: Install CUDNN
           command: |
             OS=ubuntu2004
             cudnn_version=8.1.0.77
