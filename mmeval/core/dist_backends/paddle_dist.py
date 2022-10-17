@@ -35,7 +35,7 @@ class PaddleDist(TensorBaseDistBackend):
             bool: Returns True if the distributed environment has been
             initialized, otherwise returns False.
         """
-        return True
+        return paddle_dist.parallel.parallel_helper._is_parallel_ctx_initialized()  # noqa: E501 # yapf: disable
 
     @property
     def rank(self) -> int:
@@ -68,6 +68,8 @@ class PaddleDist(TensorBaseDistBackend):
         obj_tensor = paddle.to_tensor(data)
         # NOTE: Many ops in paddle are not implemented for 'uint8'.
         # So we cast to 'int32' here.
+        # TODO: We should remove this data type cast once all ops that we used
+        #  have been implemented for 'uint8'.
         obj_tensor = paddle.cast(obj_tensor, 'int32')
         return obj_tensor, obj_tensor.numel()
 
