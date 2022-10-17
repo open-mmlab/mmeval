@@ -500,9 +500,9 @@ def _average_precision_torch(preds: torch.Tensor, targets: torch.Tensor,
     constant.
 
     Args:
-        pred (torch.Tensor): The model prediction with shape
+        preds (torch.Tensor): The model prediction with shape
             ``(N, num_classes)``.
-        target (torch.Tensor): The target of predictions with shape
+        targets (torch.Tensor): The target of predictions with shape
             ``(N, num_classes)``.
 
     Returns:
@@ -546,9 +546,9 @@ def _average_precision(preds: np.ndarray, targets: np.ndarray,
     constant.
 
     Args:
-        pred (np.ndarray): The model prediction with shape
+        preds (np.ndarray): The model prediction with shape
             ``(N, num_classes)``.
-        target (np.ndarray): The target of predictions with shape
+        targets (np.ndarray): The target of predictions with shape
             ``(N, num_classes)``.
 
     Returns:
