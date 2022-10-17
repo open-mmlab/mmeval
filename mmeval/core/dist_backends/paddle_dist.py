@@ -39,7 +39,7 @@ class PaddleDist(TensorBaseDistBackend):
         # API is not work when init parallel env with gloo backend. So we just
         # return True if use gloo backend (CPU only).
         place = paddle.fluid.framework._current_expected_place()
-        if isinstance(place, paddle.fluid.core.CUDAPlace):
+        if isinstance(place, paddle.fluid.core.CPUPlace):
             return True
         return paddle_dist.parallel.parallel_helper._is_parallel_ctx_initialized()  # noqa: E501 # yapf: disable
 
