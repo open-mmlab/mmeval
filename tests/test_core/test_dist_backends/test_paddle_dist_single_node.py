@@ -29,7 +29,7 @@ def _init_dist_env(comm_backend):
         paddle_dist.init_parallel_env()
     except Exception as e:
         if comm_backend == 'nccl':
-            # NCCL maybe not install success, we skip this test.
+            # NCCL maybe not be installed successfully so we skip this test.
             print(e)
             return
         else:

@@ -82,7 +82,7 @@ class PaddleDist(TensorBaseDistBackend):
         Args:
             tenosr (Tensor): A tensor-like data.
             tensor_size (int or Tensor): The tensor size of the given Tensor to
-                be convert object.
+                be converted object.
 
         Returns:
             Any: The object converted from the given tensor.
@@ -123,7 +123,7 @@ class PaddleDist(TensorBaseDistBackend):
         Returns:
             list: A list of the gathered tensor.
         """
-        # NOTE: The value of world size should be >=2 when invoke
+        # NOTE: The value of world size should be >=2 when invoking
         # `paddle_dist.all_gather`.
         if self.world_size < 2:
             return [tensor]
