@@ -90,7 +90,7 @@ jobs:
           command: |
             mpirun -np 2 pytest -vv --capture=no --with-mpi tests/test_core/test_dist_backends
 
-  build_cu101:
+  build_cu112:
     machine:
       image: ubuntu-2004-cuda-11.2:202103-01
     resource_class: gpu.nvidia.small
@@ -180,7 +180,7 @@ workflows:
             - build_cpu_torch1.8_py3.9
             - build_cpu_torch1.9_paddle2.3_py3.8
             - build_cpu_torch1.9_paddle2.4_py3.9
-      - build_cu101:
+      - build_cu112:
           requires:
             - build_mpirun_and_tf_2.4
             - build_mpirun_and_tf_2.7
