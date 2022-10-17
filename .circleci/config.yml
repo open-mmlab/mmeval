@@ -97,6 +97,7 @@ jobs:
     steps:
       - checkout
       - run:
+          # CUDNN is required for Paddle to use GPU, otherwise, the test cases will report an error.
           name: Install CUDNN
           command: |
             OS=ubuntu2004
