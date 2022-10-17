@@ -39,7 +39,7 @@ def test_metric_init_assertion():
     ]
 )
 def test_metric_inputs(metric_kwargs):
-    # test predictions with labels
+    # test predictions with targets
     multi_label_metric = MultiLabelMetric(num_classes=2, **metric_kwargs)
     assert isinstance(multi_label_metric, BaseMetric)
     results = multi_label_metric(
@@ -48,103 +48,103 @@ def test_metric_inputs(metric_kwargs):
 
 
 @pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2}])
-@pytest.mark.parametrize('preditions', [
-    [1, 1],  # raw int indices
-    [[1], [0, 1]],  # raw int indices
+@pytest.mark.parametrize('preds', [
+    [1, 1],  # label-format predictions
+    [[1], [0, 1]],  # label-format predictions
 ])
-@pytest.mark.parametrize('labels', [
-    [0, 1],  # raw int indices
-    [[0, 1], [1]],  # raw int indices
+@pytest.mark.parametrize('targets', [
+    [0, 1],  # label-format targets
+    [[0, 1], [1]],  # label-format targets
 ])
-def test_metric_interface_builtin(metric_kwargs, preditions, labels):
+def test_metric_interface_builtin(metric_kwargs, preds, targets):
     """Test builtin inputs."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preditions, labels)
+    results = multi_label_metric(preds, targets)
     assert isinstance(results, dict)
 
 
 @pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2, 'topk': 1}])
-@pytest.mark.parametrize('preditions', [
+@pytest.mark.parametrize('preds', [
     np.array([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
     [np.array([0.1, 0.9]), np.array([0.5, 0.6])],  # scores in Sequence
 ])
-@pytest.mark.parametrize('labels', [
-    np.array([[1, 0], [0, 1]]),  # one-hot indices in a ndarray
-    [np.array([1, 0]), np.array([0, 1])],  # one-hot indices in Sequence
-    [np.array([0]), np.array([1])],  # raw indices in Sequence
+@pytest.mark.parametrize('targets', [
+    np.array([[1, 0], [0, 1]]),  # one-hot encodings in a ndarray
+    [np.array([1, 0]), np.array([0, 1])],  # one-hot encodings in Sequence
+    [np.array([0]), np.array([1])],  # label-format in Sequence
 ])
-def test_metric_interface_topk(metric_kwargs, preditions, labels):
+def test_metric_interface_topk(metric_kwargs, preds, targets):
     """Test scores inputs with topk."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preditions, labels)
+    results = multi_label_metric(preds, targets)
     assert isinstance(results, dict)
 
 
 @pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2, 'topk': 1}])
-@pytest.mark.parametrize('preditions', [
+@pytest.mark.parametrize('preds', [
     torch.Tensor([[0.1, 0.9], [0.5, 0.6]]),  # scores in a Tensor
     [torch.Tensor([0.1, 0.9]), torch.Tensor([0.5, 0.6])],  # scores in Sequence
 ])
-@pytest.mark.parametrize('labels', [
-    torch.Tensor([[1, 0], [0, 1]]),  # one-hot indices in a Tensor
-    # one-hot indices in Sequence
+@pytest.mark.parametrize('targets', [
+    torch.Tensor([[1, 0], [0, 1]]),  # one-hot encodings in a Tensor
+    # one-hot encodings in Sequence
     [torch.Tensor([1, 0]), torch.Tensor([0, 1])],
-    [torch.Tensor([0]), torch.Tensor([1])],  # raw indices in Sequence
+    [torch.Tensor([0]), torch.Tensor([1])],  # label-format in Sequence
 ])
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
-def test_metric_interface_torch_topk(metric_kwargs, preditions, labels):
+def test_metric_interface_torch_topk(metric_kwargs, preds, targets):
     """Test scores inputs with topk in torch."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preditions, labels)
+    results = multi_label_metric(preds, targets)
     assert isinstance(results, dict)
 
 
 @pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2}])
-@pytest.mark.parametrize('preditions', [
+@pytest.mark.parametrize('preds', [
     np.array([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
     [np.array([0.1, 0.9]), np.array([0.5, 0.6])],  # scores in Sequence
-    np.array([[0, 1], [1, 1]]),  # one-hot indices in a ndarray
-    [np.array([0, 1]), np.array([1, 1])],  # one-hot indices in Sequence
-    [np.array([1]), np.array([0, 1])],  # raw indices in Sequence
+    np.array([[0, 1], [1, 1]]),  # one-hot encodings in a ndarray
+    [np.array([0, 1]), np.array([1, 1])],  # one-hot encodings in Sequence
+    [np.array([1]), np.array([0, 1])],  # label-format in Sequence
 ])
-@pytest.mark.parametrize('labels', [
-    np.array([[1, 0], [0, 1]]),  # one-hot indices in a ndarray
-    [np.array([1, 0]), np.array([0, 1])],  # one-hot indices in Sequence
-    [np.array([0]), np.array([1])],  # raw indices in Sequence
+@pytest.mark.parametrize('targets', [
+    np.array([[1, 0], [0, 1]]),  # one-hot encodings in a ndarray
+    [np.array([1, 0]), np.array([0, 1])],  # one-hot encodings in Sequence
+    [np.array([0]), np.array([1])],  # label-format in Sequence
 ])
-def test_metric_interface(metric_kwargs, preditions, labels):
+def test_metric_interface(metric_kwargs, preds, targets):
     """Test all kinds of inputs."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preditions, labels)
+    results = multi_label_metric(preds, targets)
     assert isinstance(results, dict)
 
 
 @pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2}])
-@pytest.mark.parametrize('preditions', [
+@pytest.mark.parametrize('preds', [
     torch.Tensor([[0.1, 0.9], [0.5, 0.6]]),  # scores in a Tensor
     # scores in Sequence
     [torch.Tensor([0.1, 0.9]), torch.Tensor([0.5, 0.6])],
-    torch.Tensor([[0, 1], [1, 1]]),  # one-hot indices in a Tensor
-    # one-hot indices in Sequence
+    torch.Tensor([[0, 1], [1, 1]]),  # one-hot encodings in a Tensor
+    # one-hot encodings in Sequence
     [torch.Tensor([0, 1]), torch.Tensor([1, 1])],
-    [torch.Tensor([1]), torch.Tensor([0, 1])],  # raw indices in Sequence
+    [torch.Tensor([1]), torch.Tensor([0, 1])],  # label-format in Sequence
 ])
-@pytest.mark.parametrize('labels', [
-    torch.Tensor([[1, 0], [0, 1]]),  # one-hot indices in a Tensor
-    # one-hot indices in Sequence
+@pytest.mark.parametrize('targets', [
+    torch.Tensor([[1, 0], [0, 1]]),  # one-hot encodings in a Tensor
+    # one-hot encodings in Sequence
     [torch.Tensor([1, 0]), torch.Tensor([0, 1])],
-    [torch.Tensor([0]), torch.Tensor([1])],  # raw indices in Sequence
+    [torch.Tensor([0]), torch.Tensor([1])],  # label-format in Sequence
 ])
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
-def test_metric_interface_torch(metric_kwargs, preditions, labels):
+def test_metric_interface_torch(metric_kwargs, preds, targets):
     """Test all kinds of inputs in torch."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preditions, labels)
+    results = multi_label_metric(preds, targets)
     assert isinstance(results, dict)
 
 
 @pytest.mark.parametrize(
-    argnames=['metric_kwargs', 'preditions', 'labels', 'results'],
+    argnames=['metric_kwargs', 'preds', 'targets', 'results'],
     argvalues=[
         ({'num_classes': 4}, [0, 2, 1, 3], [0, 1, 2, 3], {'precision': 50.0, 'recall': 50.0, 'f1-score': 50.0}), # noqa
         (
@@ -171,11 +171,11 @@ def test_metric_interface_torch(metric_kwargs, preditions, labels):
         )
     ]
 )
-def test_metric_accurate(metric_kwargs, preditions, labels, results):
+def test_metric_accurate(metric_kwargs, preds, targets, results):
     """Test accurate."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
     assert multi_label_metric(
-        np.asarray(preditions), np.asarray(labels)) == results
+        np.asarray(preds), np.asarray(targets)) == results
 
 
 def test_metric_accurate_is_label():
@@ -204,14 +204,14 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
     """Metamorphic testing for NumPy and PyTorch implementation."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
 
-    predictions = np.random.rand(length, classes_num)
-    labels = np.random.randint(0, classes_num, length)
+    preds = np.random.rand(length, classes_num)
+    targets = np.random.randint(0, classes_num, length)
 
-    np_acc_results = multi_label_metric(predictions, labels)
+    np_acc_results = multi_label_metric(preds, targets)
 
-    predictions = torch.from_numpy(predictions)
-    labels = torch.from_numpy(labels)
-    torch_acc_results = multi_label_metric(predictions, labels)
+    preds = torch.from_numpy(preds)
+    targets = torch.from_numpy(targets)
+    torch_acc_results = multi_label_metric(preds, targets)
 
     assert np_acc_results.keys() == torch_acc_results.keys()
     for key in np_acc_results:
