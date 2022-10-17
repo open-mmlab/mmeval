@@ -2,7 +2,7 @@
 
 from typing import List, Optional, no_type_check
 
-from .dist_backends import (BaseDistBackend, MPI4PyDist, NonDist,
+from .dist_backends import (BaseDistBackend, MPI4PyDist, NonDist, PaddleDist,
                             TFHorovodDist, TorchCPUDist, TorchCUDADist)
 
 _DIST_BACKENDS = {
@@ -11,6 +11,7 @@ _DIST_BACKENDS = {
     'tf_horovod': TFHorovodDist,
     'torch_cpu': TorchCPUDist,
     'torch_cuda': TorchCUDADist,
+    'paddle_dist': PaddleDist,
 }
 
 _DEFAULT_BACKEND = 'non_dist'

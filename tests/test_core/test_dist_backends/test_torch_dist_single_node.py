@@ -7,12 +7,12 @@ import pytest
 if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') != '0':
     pytest.skip(allow_module_level=True)
 
-import torch
-import torch.distributed as torch_dist
-import torch.multiprocessing as mp
-
 from mmeval.core.dist_backends.torch_cpu import TorchCPUDist
 from mmeval.core.dist_backends.torch_cuda import TorchCUDADist
+
+torch = pytest.importorskip('torch')
+torch_dist = pytest.importorskip('torch.distributed')
+mp = pytest.importorskip('torch.multiprocessing')
 
 DIST_COMM_BACKENDS = {
     'gloo': TorchCPUDist,
@@ -108,6 +108,12 @@ def test_mpi_all_gather_object(process_num, comm_port):
         args=(process_num, comm_backend, comm_port))
 
 
+try:
+    nccl_version = torch.cuda.nccl.version()
+except Exception:
+    nccl_version = 0
+
+
 @pytest.mark.skipif(
     not torch_dist.is_nccl_available(),
     reason='NCCL backend is not available.')
@@ -115,7 +121,16 @@ def test_mpi_all_gather_object(process_num, comm_port):
     torch.cuda.device_count() < 0,
     reason='CUDA device count must greater than 0.')
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port'], argvalues=[(1, 2347), (2, 2347)])
+    argnames=['process_num', 'comm_port'],
+    argvalues=[
+        (1, 2347),
+        pytest.param(
+            2,
+            2347,
+            marks=pytest.mark.skipif(
+                torch.cuda.device_count() < 2 and nccl_version >= 2500,
+                reason='Multi ranks in one GPU is not allowed since NCCL 2.5'))
+    ])
 def test_nccl_all_gather_object(process_num, comm_port):
     comm_backend = 'nccl'
     mp.spawn(
@@ -146,12 +161,6 @@ def test_mpi_broadcast_object(process_num, comm_port):
         args=(process_num, comm_backend, comm_port))
 
 
-try:
-    nccl_version = torch.cuda.nccl.version()
-except AttributeError:
-    nccl_version = 0
-
-
 @pytest.mark.skipif(
     not torch_dist.is_nccl_available(),
     reason='NCCL backend is not available.')
@@ -168,7 +177,7 @@ except AttributeError:
             2,
             2350,
             marks=pytest.mark.skipif(
-                torch.cuda.device_count() < 1 and nccl_version >= 2500,
+                torch.cuda.device_count() < 2 and nccl_version >= 2500,
                 reason='Multi ranks in one GPU is not allowed since NCCL 2.5'))
     ])
 def test_nccl_broadcast_object(process_num, comm_port):

@@ -8,9 +8,9 @@ import pytest
 if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') == '0':
     pytest.skip(allow_module_level=True)
 
-import horovod.tensorflow as hvd
-
 from mmeval.core.dist_backends.tf_horovod import TFHorovodDist
+
+hvd = pytest.importorskip('horovod.tensorflow')
 
 
 def _create_obj_list(world_size):
