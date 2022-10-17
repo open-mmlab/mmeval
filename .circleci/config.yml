@@ -92,7 +92,7 @@ jobs:
 
   build_cu101:
     machine:
-      image: ubuntu-1604-cuda-10.1:201909-23
+      image: ubuntu-2004-cuda-11.2:202103-01
     resource_class: gpu.nvidia.small
     steps:
       - checkout
@@ -102,8 +102,8 @@ jobs:
             pyenv global 3.7.0
             pip install --upgrade pip
             python -V
-            pip install torch==1.6.0+cu101 -f https://download.pytorch.org/whl/torch_stable.html
-            pip install paddlepaddle-gpu==2.3.2.post101 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+            pip install torch==1.7.1+cu110 -f https://4download.pytorch.org/whl/torch_stable.html
+            pip install paddlepaddle-gpu==2.3.2.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
       - run:
           name: Install mmeval and dependencies
           command: |
