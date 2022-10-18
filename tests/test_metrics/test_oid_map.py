@@ -82,6 +82,28 @@ def test_metric_interface(metric_kwargs):
     assert 'mAP' in metric_results
 
 
+def test_metric_invalid_usage():
+    with pytest.raises(AssertionError):
+        OIDMeanAP(eval_mode='xxx')
+
+    oid_map = OIDMeanAP()
+
+    with pytest.raises(RuntimeError):
+        oid_map.num_classes
+
+    with pytest.raises(RuntimeError):
+        oid_map.class_relation_matrix
+
+    with pytest.raises(KeyError):
+        num_classes = 10
+        oid_map = OIDMeanAP(
+            num_classes=num_classes, class_relation_matrix=RELATION_MATRIX)
+        prediction = _gen_prediction(num_classes=num_classes)
+        groundtruth = _gen_groundtruth(num_classes=num_classes)
+        del prediction['bboxes']
+        oid_map([prediction], [groundtruth])
+
+
 @pytest.mark.parametrize(
     argnames=('predictions', 'groundtruths', 'num_classes', 'target_mAP'),
     argvalues=[
