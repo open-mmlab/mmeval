@@ -45,7 +45,7 @@ class MPI4PyDist(BaseDistBackend):
 
     def all_gather_object(self, obj: Any) -> List[Any]:
         """All gather the given object from the current process group and
-        returns a list consisting gathered object of each process..
+        returns a list consisting gathered object of each process.
 
         Args:
             obj (any): Any pickle-able python object for all gather.

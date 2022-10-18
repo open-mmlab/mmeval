@@ -266,9 +266,9 @@ class VOCMeanAP(BaseMetric):
             tuple (tp, fp):
 
             - tp (numpy.ndarray): Shape (num_ious, num_scales, N),
-            the true positive flag of each predicted bbox on this image.
+              the true positive flag of each predicted bbox on this image.
             - fp (numpy.ndarray): Shape (num_ious, num_scales, N),
-            the false positive flag of each predicted bbox on this image.
+              the false positive flag of each predicted bbox on this image.
 
         Note:
             This method should be a staticmethod to avoid resource competition
@@ -379,7 +379,7 @@ class VOCMeanAP(BaseMetric):
 
             - class_gts (List[numpy.ndarray]): The gt bboxes of this class.
             - class_ignore_gts (List[numpy.ndarray]): The ignored gt bboxes of
-            this class. This is necessary when counting tp and fp.
+              this class. This is necessary when counting tp and fp.
         """
         class_gts = []
         class_ignore_gts = []
@@ -412,11 +412,11 @@ class VOCMeanAP(BaseMetric):
             tuple (tp, fp, num_gts):
 
             - tp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
-            the true positive flag of each predicted bbox for this class.
+              the true positive flag of each predicted bbox for this class.
             - fp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
-            the false positive flag of each predicted bbox for this class.
+              the false positive flag of each predicted bbox for this class.
             - num_gts (numpy.ndarray): Shape (num_ious, num_scales), the
-            number of ground truths.
+              number of ground truths.
         """
         class_preds = self.get_class_predictions(predictions, class_index)
         class_gts, class_ignore_gts = self.get_class_gts(
