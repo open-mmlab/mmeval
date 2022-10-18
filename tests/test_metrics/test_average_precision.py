@@ -5,8 +5,8 @@
 import numpy as np
 import pytest
 
-from mmeval.classification.multi_label import AveragePrecision
 from mmeval.core.base_metric import BaseMetric
+from mmeval.metrics import AveragePrecision
 
 try:
     import torch
