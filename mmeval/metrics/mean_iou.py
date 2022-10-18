@@ -8,8 +8,10 @@ from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
+    import paddle
     import torch
 else:
+    paddle = try_import('paddle')
     torch = try_import('torch')
 
 
@@ -21,9 +23,9 @@ class MeanIoU(BaseMetric):
     In addition to mean iou, it will also compute and return accuracy, mean
     accuracy, mean dice, mean precision, mean recall and mean f-score.
 
-    This metric supports 2 kinds of inputs, i.e. ``numpy.ndarray`` and
-    ``torch.Tensor``, and the implementation for the calculation depends on
-    the inputs type.
+    This metric supports 3 kinds of inputs, i.e. ``numpy.ndarray``,
+    ``torch.Tensor`` and ``paddle.Tensor``, and the implementation for the
+    calculation depends on the inputs type.
 
     Args:
         num_classes (int, optional): The number of classes. If None, it will be
@@ -35,7 +37,7 @@ class MeanIoU(BaseMetric):
             by the numbers defined by the user. Defaults to None.
         beta (int, optional): Determines the weight of recall in the F-score.
             Defaults to 1.
-        classwise_result (bool, optional): Whether to return the computed
+        classwise_results (bool, optional): Whether to return the computed
             results of each class. Defaults to False.
         **kwargs: Keyword arguments passed to :class:`BaseMetric`.
 
@@ -56,7 +58,8 @@ class MeanIoU(BaseMetric):
          'mDice': 0.75,
          'mPrecision': 0.75,
          'mRecall': 0.75,
-         'mFscore': 0.75}
+         'mFscore': 0.75,
+         'kappa': 0.5384615384615384}
 
     Use PyTorch implementation:
 
@@ -70,7 +73,8 @@ class MeanIoU(BaseMetric):
          'mDice': 0.75,
          'mPrecision': 0.75,
          'mRecall': 0.75,
-         'mFscore': 0.75}
+         'mFscore': 0.75,
+         'kappa': 0.5384615384615384}
 
     Accumulate batch:
 
@@ -176,10 +180,11 @@ class MeanIoU(BaseMetric):
                                                        num_classes)
         return confusion_matrix
 
+    @overload  # type: ignore
     @dispatch
-    def compute_confusion_matrix(self, prediction: 'torch.Tensor',
-                                 label: 'torch.Tensor',
-                                 num_classes: int) -> np.ndarray:
+    def compute_confusion_matrix(  # type: ignore
+            self, prediction: 'torch.Tensor', label: 'torch.Tensor',
+            num_classes: int) -> np.ndarray:
         """Compute confusion matrix with PyTorch.
 
         Args:
@@ -197,6 +202,32 @@ class MeanIoU(BaseMetric):
         confusion_matrix = confusion_matrix_1d.reshape(num_classes,
                                                        num_classes)
         return confusion_matrix.cpu().numpy()
+
+    @dispatch
+    def compute_confusion_matrix(self, prediction: 'paddle.Tensor',
+                                 label: 'paddle.Tensor',
+                                 num_classes: int) -> np.ndarray:
+        """Compute confusion matrix with Paddle.
+
+        Args:
+            prediction (paddle.Tensor): The predicition.
+            label (paddle.Tensor): The ground truth.
+            num_classes (int): The number of classes.
+
+        Returns:
+            numpy.ndarray: The computed confusion matrix.
+        """
+        mask = (label != self.ignore_index)
+        prediction, label = prediction[mask], label[mask]
+        # NOTE: Since the `paddle.bincount` has bug on the CUDA device, we use
+        # the `np.bincount` instead. Once the bug is fixed, we will use
+        # `paddle.bincount`.
+        # For more see at: https://github.com/PaddlePaddle/Paddle/issues/46978
+        confusion_matrix_1d = np.bincount(
+            num_classes * label + prediction, minlength=num_classes**2)
+        confusion_matrix = confusion_matrix_1d.reshape(
+            (num_classes, num_classes))
+        return confusion_matrix
 
     def compute_metric(
         self,
@@ -230,6 +261,7 @@ class MeanIoU(BaseMetric):
             - mPrecision, the mean precision for all classes.
             - mRecall, the mean recall for all classes.
             - mFscore, the mean f-score for all classes.
+            - kappa, the Cohen's kappa coefficient.
             - classwise_result, the evaluate results of each classes.
             This would be returned if ``self.classwise_result`` is True.
         """
@@ -259,6 +291,12 @@ class MeanIoU(BaseMetric):
         f_score = (1 + self.beta**2) * (precision * recall) / (
             (self.beta**2 * precision) + recall)
 
+        # compute kappa coefficient
+        po = num_tp_per_class.sum() / num_gts_per_class.sum()
+        pe = (num_gts_per_class * num_preds_per_class).sum() / (
+            num_gts_per_class.sum()**2)
+        kappa = (po - pe) / (1 - pe)
+
         def _mean(values: np.ndarray):
             if self.nan_to_num is not None:
                 values = np.nan_to_num(values, nan=self.nan_to_num)
@@ -271,7 +309,8 @@ class MeanIoU(BaseMetric):
             'mDice': _mean(dice),
             'mPrecision': _mean(precision),
             'mRecall': _mean(recall),
-            'mFscore': _mean(f_score)
+            'mFscore': _mean(f_score),
+            'kappa': kappa,
         }
 
         # Add the class-wise metric results to the returned results.
