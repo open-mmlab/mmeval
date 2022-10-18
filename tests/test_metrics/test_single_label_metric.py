@@ -5,8 +5,8 @@
 import numpy as np
 import pytest
 
-from mmeval.classification.single_label import SingleLabelMetric
 from mmeval.core.base_metric import BaseMetric
+from mmeval.single_label import SingleLabelMetric
 
 try:
     import torch
