@@ -50,8 +50,8 @@ def _precision_recall_f1_support(pred_positive, gt_positive, average):
     # in case torch is not supported
     if torch and isinstance(pred_sum, torch.Tensor):
         # use torch with torch.Tensor
-        precision = tp_sum / torch.clamp(pred_sum, min=1).double() * 100
-        recall = tp_sum / torch.clamp(gt_sum, min=1).double() * 100
+        precision = tp_sum / torch.clamp(pred_sum, min=1) * 100
+        recall = tp_sum / torch.clamp(gt_sum, min=1) * 100
         f1_score = 2 * precision * recall / torch.clamp(
             precision + recall, min=torch.finfo(torch.float32).eps)
     else:

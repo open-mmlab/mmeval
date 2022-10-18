@@ -170,8 +170,10 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
 
     assert np_acc_results.keys() == torch_acc_results.keys()
     print(np_acc_results, torch_acc_results)
+    # torch defaults to float32 whereas numpy uses double
     for key in np_acc_results:
-        np.testing.assert_allclose(np_acc_results[key], torch_acc_results[key])
+        np.testing.assert_allclose(
+            np_acc_results[key], torch_acc_results[key], rtol=1e-5)
 
 
 if __name__ == '__main__':
