@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.single_label import SingleLabelMetric
+from mmeval.metrics import SingleLabelMetric
 
 try:
     import torch
@@ -82,7 +82,7 @@ def test_metric_interface(metric_kwargs):
 
 
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
-def test_metric_interface_torch():
+def test_metric_input_torch():
     # test predictions with labels
     single_label_metric = SingleLabelMetric()
     results = single_label_metric(
@@ -93,6 +93,21 @@ def test_metric_interface_torch():
     single_label_metric = SingleLabelMetric(num_classes=4)
     results = single_label_metric(
         torch.Tensor([1, 2, 3]), torch.Tensor([3, 2, 1]))
+    assert isinstance(results, dict)
+
+
+@pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
+def test_metric_input_builtin():
+    # test predictions with labels
+    single_label_metric = SingleLabelMetric()
+    results = single_label_metric(
+        [[0.1, 0.9], [0.5, 0.5]], [0, 1])
+    assert isinstance(results, dict)
+
+    # test predictions with pred_scores
+    single_label_metric = SingleLabelMetric(num_classes=4)
+    results = single_label_metric(
+        [1, 2, 3], [3, 2, 1])
     assert isinstance(results, dict)
 
 
