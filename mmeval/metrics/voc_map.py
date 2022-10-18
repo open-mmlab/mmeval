@@ -330,6 +330,10 @@ class VOCMeanAP(BaseMetric):
                   truth ignored labels of bounding boxes.
         """
         for prediction, label in zip(predictions, groundtruths):
+            assert isinstance(prediction, dict), 'The prediciton should be ' \
+                f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
+            assert isinstance(label, dict), 'The label should be ' \
+                f'a sequence of dict, but got a sequence of {type(label)}.'
             self._results.append((prediction, label))
 
     @staticmethod

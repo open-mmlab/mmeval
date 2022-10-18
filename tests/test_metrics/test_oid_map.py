@@ -94,14 +94,20 @@ def test_metric_invalid_usage():
     with pytest.raises(RuntimeError):
         oid_map.class_relation_matrix
 
+    num_classes = 10
+    oid_map = OIDMeanAP(
+        num_classes=num_classes, class_relation_matrix=RELATION_MATRIX)
+
     with pytest.raises(KeyError):
-        num_classes = 10
-        oid_map = OIDMeanAP(
-            num_classes=num_classes, class_relation_matrix=RELATION_MATRIX)
         prediction = _gen_prediction(num_classes=num_classes)
         groundtruth = _gen_groundtruth(num_classes=num_classes)
         del prediction['bboxes']
         oid_map([prediction], [groundtruth])
+
+    with pytest.raises(AssertionError):
+        prediction = _gen_prediction(num_classes=num_classes)
+        groundtruth = _gen_groundtruth(num_classes=num_classes)
+        oid_map(prediction, groundtruth)
 
 
 @pytest.mark.parametrize(

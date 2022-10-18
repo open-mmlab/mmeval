@@ -79,13 +79,19 @@ def test_metric_invalid_usage():
         voc_map = VOCMeanAP()
         voc_map.num_classes
 
+    num_classes = 10
+    voc_map = VOCMeanAP(num_classes=num_classes)
+
     with pytest.raises(KeyError):
-        num_classes = 10
-        voc_map = VOCMeanAP(num_classes=num_classes)
         prediction = _gen_prediction(num_classes=num_classes)
         groundtruth = _gen_groundtruth(num_classes=num_classes)
         del prediction['bboxes']
         voc_map([prediction], [groundtruth])
+
+    with pytest.raises(AssertionError):
+        prediction = _gen_prediction(num_classes=num_classes)
+        groundtruth = _gen_groundtruth(num_classes=num_classes)
+        voc_map(prediction, groundtruth)
 
 
 @pytest.mark.parametrize(

@@ -331,6 +331,10 @@ class OIDMeanAP(VOCMeanAP):
                 - image_level_labels (numpy.ndarray): The image level labels.
         """
         for pred, groundtruth in zip(predictions, groundtruths):
+            assert isinstance(pred, dict), 'The prediciton should be ' \
+                f'a sequence of dict, but got a sequence of {type(pred)}.'
+            assert isinstance(groundtruth, dict), 'The groundtruth should ' \
+                f'be a sequence of dict, but got a sequence of {type(groundtruth)}.'  # noqa: E501
             instances = copy.deepcopy(groundtruth['instances'])
             pred = copy.deepcopy(pred)
             if self.get_supercategory:
