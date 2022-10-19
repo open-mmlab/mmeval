@@ -26,9 +26,9 @@ class SNR(BaseMetric):
 
     def __init__(self,
                  input_order: str = 'CHW',
-                 channel_order: str = 'rgb',
                  convert_to: Optional[str] = None,
                  crop_border: int = 0,
+                 channel_order: str = 'rgb',
                  **kwargs):
         super().__init__(**kwargs)
 
