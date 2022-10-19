@@ -31,20 +31,36 @@ class SNR(BaseMetric):
                  crop_border: int = 0,
                  **kwargs):
         super().__init__(**kwargs)
-        # TODO: maybe a better solution for channel order
-        self.channel_order = channel_order
 
+        assert input_order.upper() in [
+            'CHW', 'HWC'
+        ], (f'Wrong input_order {input_order}. Supported input_orders are '
+            '"HWC" and "CHW"')
         self.input_order = input_order
-        self.convert_to = convert_to
         self.crop_border = crop_border
 
-    def add(self, preds: Sequence[np.array], gts: Sequence[np.array]) -> None:  # type: ignore # yapf: disable # noqa: E501
+        if convert_to is not None:
+            assert convert_to.upper() == 'Y', (
+                'Wrong color model. Supported values are "Y" and None.')
+            assert channel_order.upper() in [
+                'BGR', 'RGB'
+            ], ('Only support `rgb2y` and `bgr2y`, but the channel_order '
+                f'is {channel_order}')
+        self.channel_order = channel_order
+        self.convert_to = convert_to
+
+    def add(self, preds: Sequence[np.ndarray], gts: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add SNR score of batch to ``self._results``
 
         Args:
-            preds (Sequence[np.array]): Predictions of the model.
-            gts (Sequence[np.array]): The ground truth images.
+            preds (Sequence[np.ndarray]): Predictions of the model.
+            gts (Sequence[np.ndarray]): The ground truth images.
+            channel_order (Optional[str]): The channel order of the input
+                samples. If not passed, will set as :attr:`self.channel_order`.
+                Defaults to None.
         """
+        channel_order = self.channel_order \
+            if channel_order is None else channel_order
         for pred, gt in zip(preds, gts):
             assert gt.shape == pred.shape, (
                 f'Image shapes are different: {gt.shape}, {pred.shape}.')
@@ -80,14 +96,14 @@ class SNR(BaseMetric):
         return {'snr': float(np.array(results).mean())}
 
     @staticmethod
-    def _compute_snr(gt: np.array, pred: np.array) -> np.flaot64:
+    def _compute_snr(gt: np.ndarray, pred: np.ndarray) -> np.float64:
         """Calculate PSNR (Peak Signal-to-Noise Ratio).
 
         Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
 
         Args:
-            gt (np.array): Images with range [0, 255].
-            pred (np.array): Images with range [0, 255].
+            gt (np.ndarray): Images with range [0, 255].
+            pred (np.ndarray): Images with range [0, 255].
 
         Returns:
             np.float64: SNR result.

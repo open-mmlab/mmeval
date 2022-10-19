@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-from typing import Union
+from typing import Optional, Union
 
 
 def _convert_input_type_range(img: np.ndarray) -> np.ndarray:
@@ -160,11 +160,11 @@ def reorder_image(img: np.array, input_order='HWC'):
     return img
 
 
-def img_transform(img,
-                  crop_border=0,
-                  input_order='HWC',
-                  convert_to=None,
-                  channel_order='rgb'):
+def img_transform(img: np.ndarray,
+                  crop_border: int = 0,
+                  input_order: str = 'HWC',
+                  convert_to: Optional[str] = None,
+                  channel_order: str = 'rgb'):
     """Image transform.
 
     Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
@@ -182,7 +182,7 @@ def img_transform(img,
         channel_order (str): The channel order of image. Default: 'rgb'
 
     Returns:
-        float: PSNR result.
+        np.array: The transformation results.
     """
 
     img = reorder_image(img, input_order=input_order)
@@ -195,7 +195,7 @@ def img_transform(img,
             img = bgr2ycbcr(img / 255., y_only=True) * 255.
         else:
             raise ValueError(
-                'Only support `rgb2y` and `bgr2`, but the channel_order '
+                'Only support `rgb2y` and `bgr2y`, but the channel_order '
                 f'is {channel_order}')
         img = np.expand_dims(img, axis=2)
     elif convert_to is not None:
@@ -203,6 +203,6 @@ def img_transform(img,
                          '"Y" and None.')
 
     if crop_border != 0:
-        img = img[crop_border:-crop_border, crop_border:-crop_border, None]
+        img = img[crop_border:-crop_border, crop_border:-crop_border, :]
 
-    return img
+    return img.astype(np.float64)

@@ -7,6 +7,8 @@ from .f_metric import F1Metric
 from .hmean_iou import HmeanIoU
 from .mae import MAE
 from .mean_iou import MeanIoU
+from .snr import SNR
+from .ssim import SSIM
 from .mse import MSE
 from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
@@ -19,5 +21,5 @@ __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
-    'PSNR', 'MAE', 'MSE'
+    'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR'
 ]

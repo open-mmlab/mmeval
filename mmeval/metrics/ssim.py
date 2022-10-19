@@ -39,25 +39,45 @@ class SSIM(BaseMetric):
 
     def __init__(self,
                  input_order: str = 'CHW',
-                 channel_order: str = 'rgb',
-                 convert_to: Optional[str] = None,
                  crop_border: int = 0,
+                 convert_to: Optional[str] = None,
+                 channel_order: str = 'rgb',
                  **kwargs) -> None:
         super().__init__(**kwargs)
-        # TODO: maybe a better solution for channel order
-        self.channel_order = channel_order
 
-        self.crop_border = crop_border
+        assert input_order.upper() in [
+            'CHW', 'HWC'
+        ], (f'Wrong input_order {input_order}. Supported input_orders are '
+            '"HWC" and "CHW"')
         self.input_order = input_order
+        self.crop_border = crop_border
+
+        if convert_to is not None:
+            assert convert_to.upper() == 'Y', (
+                'Wrong color model. Supported values are "Y" and None.')
+            assert channel_order.upper() in [
+                'BGR', 'RGB'
+            ], ('Only support `rgb2y` and `bgr2y`, but the channel_order '
+                f'is {channel_order}')
+        self.channel_order = channel_order
         self.convert_to = convert_to
 
-    def add(self, preds: Sequence[np.array], gts: Sequence[np.array]) -> None:   # type: ignore # yapf: disable # noqa: E501
+    def add(self, preds: Sequence[np.ndarray], gts: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:   # type: ignore # yapf: disable # noqa: E501
         """Add the SSIM score of the batch to ``self._results``.
 
+        For three-channel images, SSIM is calculated for each channel and then
+        averaged.
+
         Args:
-            preds (Sequence[np.array]): Predictions of the model.
-            gts (Sequence[np.array]): The ground truth images.
+            preds (Sequence[np.ndarray]): Predictions of the model.
+            gts (Sequence[np.ndarray]): The ground truth images.
+            channel_order (Optional[str]): The channel order of the input
+                samples. If not passed, will set as :attr:`self.channel_order`.
+                Defaults to None.
         """
+        channel_order = self.channel_order \
+            if channel_order is None else channel_order
+
         for pred, gt in zip(preds, gts):
             assert pred.shape == gt.shape, (
                 f'Image shapes are different: {pred.shape}, {gt.shape}.')
@@ -66,14 +86,19 @@ class SSIM(BaseMetric):
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
+                channel_order=channel_order)
             gt = img_transform(
                 gt,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
-            self._results.append(self._compute_ssim(pred, gt))
+                channel_order=channel_order)
+
+            _ssim_score = []
+            for i in range(pred.shape[2]):
+                _ssim_score.append(
+                    self._compute_ssim(pred[..., i], gt[..., i]))
+            self._results.append(np.array(_ssim_score).mean())
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the SSIM metric.
@@ -93,7 +118,8 @@ class SSIM(BaseMetric):
 
     @staticmethod
     def _compute_ssim(img1: np.ndarray, img2: np.ndarray) -> np.float64:
-        """Calculate SSIM (structural similarity).
+        """Calculate SSIM (structural similarity) between two single channel
+        image.
 
         Ref:
         Image quality assessment: From error visibility to structural
@@ -102,12 +128,9 @@ class SSIM(BaseMetric):
         The results are the same as that of the official released MATLAB code
         in https://ece.uwaterloo.ca/~z70wang/research/ssim/.
 
-        For three-channel images, SSIM is calculated for each channel and then
-        averaged.
-
         Args:
-            img1 (np.ndarray): Images with range [0, 255] with order 'HWC'.
-            img2 (np.ndarray): Images with range [0, 255] with order 'HWC'.
+            img1 (np.ndarray): Single channels Images with range [0, 255].
+            img2 (np.ndarray): Single channels Images with range [0, 255].
 
         Returns:
             np.float64: SSIM result.
