@@ -3,7 +3,7 @@ from .bbox_overlaps import calculate_bboxes_area, calculate_overlaps
 from .hmean import compute_hmean
 from .image_transforms import reorder_and_crop
 from .keypoint_eval import keypoint_pck_accuracy
-from .low_level import img_transform
+from .image_transforms import img_transform
 from .polygon import (poly2shapely, poly_intersection, poly_iou,
                       poly_make_valid, poly_union, polys2shapely)
 
