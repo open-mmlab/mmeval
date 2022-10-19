@@ -1,5 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
+# from mmeval.utils import is_list_of
+# TODO: update when fileio merged in mmeval
+from mmengine.utils import is_list_of
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
@@ -200,8 +203,7 @@ class VOCMeanAP(BaseMetric):
         drop_class_ap (bool): Whether to drop the class without ground truth
             when calculating the average precision for each class.
         classwise_result (bool): Whether to return the computed
-            results of each class.
-            Defaults to False.
+            results of each class. Defaults to False.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -247,6 +249,9 @@ class VOCMeanAP(BaseMetric):
 
         if isinstance(iou_thrs, float):
             iou_thrs = [iou_thrs]
+        assert is_list_of(iou_thrs, float), \
+            '`iou_thrs` should be float or a list of float'
+
         self.iou_thrs = iou_thrs
 
         if scale_ranges is None:
@@ -321,7 +326,7 @@ class VOCMeanAP(BaseMetric):
 
                 - bboxes (numpy.ndarray): Shape (M, 4), the ground truth
                   bounding bboxes of this image, in 'xyxy' foramrt.
-                - labels (numpy.ndarray): Shape (M, 1), theground truth
+                - labels (numpy.ndarray): Shape (M, 1), the ground truth
                   labels of bounding boxes.
                 - bboxes_ignore (numpy.ndarray): Shape (K, 4), the ground
                   truth ignored bounding bboxes of this image,
