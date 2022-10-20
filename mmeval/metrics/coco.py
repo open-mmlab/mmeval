@@ -53,6 +53,10 @@ class CocoDetectionMetric(BaseMetric):
         file_client_args (dict): Arguments to instantiate a FileClient.
             See :class:`mmeval.fileio.FileClient` for details.
             Defaults to ``dict(backend='disk')``.
+        gt_mask_area (bool): Whether calculate GT mask area when not loading
+            ann_file. If True, the GT instance area will be the mask area,
+            else the bounding box area. It will not be used when loading
+            ann_file. Defaults to True.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -150,6 +154,7 @@ class CocoDetectionMetric(BaseMetric):
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  file_client_args: dict = dict(backend='disk'),
+                 gt_mask_area: bool = True,
                  **kwargs) -> None:
         if not HAS_COCOAPI:
             raise RuntimeError('Failed to import `COCO` and `COCOeval` from '
@@ -204,6 +209,7 @@ class CocoDetectionMetric(BaseMetric):
         else:
             self._coco_api = None
 
+        self.gt_mask_area = gt_mask_area
         # handle dataset lazy init
         self.cat_ids: list = []
         self.img_ids: list = []
@@ -365,7 +371,7 @@ class CocoDetectionMetric(BaseMetric):
                     category_id=int(label),
                     area=coco_bbox[2] * coco_bbox[3])
                 if mask is not None:
-                    if mask_util:
+                    if mask_util and self.gt_mask_area:
                         # Using mask area can reduce the gap of
                         # small/medium/large AP results.
                         area = mask_util.area(mask)
