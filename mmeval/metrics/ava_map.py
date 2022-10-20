@@ -1,16 +1,14 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import os
-from datetime import datetime
-from typing import List, Tuple, Optional
-
-from mmeval.core.base_metric import BaseMetric
 import csv
 import logging
+import numpy as np
+import os
 import time
 from collections import defaultdict
+from datetime import datetime
+from typing import List, Optional, Tuple
 
-import numpy as np
-
+from mmeval.core.base_metric import BaseMetric
 from mmeval.utils.ava_evaluation import object_detection_evaluation as det_eval
 from mmeval.utils.ava_evaluation import standard_fields
 
@@ -53,7 +51,7 @@ def results2csv(metric, results, out_file, custom_classes=None):
 
 
 def print_time(message, start):
-    print('==> %g seconds to %s' % (time.time() - start, message), flush=True)
+    print('==> {:g} seconds to {}'.format(time.time() - start, message), flush=True)
 
 
 def make_image_key(video_id, timestamp):
@@ -63,6 +61,7 @@ def make_image_key(video_id, timestamp):
 
 def read_csv(csv_file, class_whitelist=None):
     """Loads boxes and class labels from a CSV file in the AVA format.
+
     CSV file format described at https://research.google.com/ava/download.html.
     Args:
         csv_file: A file object.
@@ -86,7 +85,7 @@ def read_csv(csv_file, class_whitelist=None):
     for row in reader:
         assert len(row) in [7, 8], 'Wrong number of columns: ' + row
         image_key = make_image_key(row[0], row[1])
-        x1, y1, x2, y2 = [float(n) for n in row[2:6]]
+        x1, y1, x2, y2 = (float(n) for n in row[2:6])
         action_id = int(row[6])
         if class_whitelist and action_id not in class_whitelist:
             continue
@@ -110,6 +109,7 @@ def read_csv(csv_file, class_whitelist=None):
 
 def read_exclusions(exclusions_file):
     """Reads a CSV file of excluded timestamps.
+
     Args:
         exclusions_file: A file object containing a csv of video-id,timestamp.
     Returns:
@@ -242,7 +242,7 @@ class AVAMeanAP(BaseMetric):
                  ann_file: str,
                  exclude_file: str,
                  label_file: str,
-                 options: Tuple[str] = ('mAP',),
+                 options: Tuple[str] = ('mAP', ),
                  num_classes: int = 81,
                  custom_classes: Optional[List[int]] = None,
                  **kwargs) -> None:
@@ -263,22 +263,18 @@ class AVAMeanAP(BaseMetric):
 
         self.video_infos = []
         records_dict_by_img = defaultdict(list)
-        with open(self.ann_file, 'r') as fin:
+        with open(self.ann_file) as fin:
             for line in fin:
                 line_split = line.strip().split(',')
                 video_id = line_split[0]
                 timestamp = int(line_split[1])
                 img_key = f'{video_id},{timestamp:04d}'
-                video_info = dict(
-                    video_id=video_id,
-                    timestamp=timestamp)
+                video_info = dict(video_id=video_id, timestamp=timestamp)
                 records_dict_by_img[img_key].append(video_info)
 
         for img_key in records_dict_by_img:
             video_id, timestamp = img_key.split(',')
-            video_info = dict(
-                video_id=video_id,
-                timestamp=int(timestamp))
+            video_info = dict(video_id=video_id, timestamp=int(timestamp))
             self.video_infos.append(video_info)
 
     def add(self, predictions: List[np.ndarray]) -> None:
