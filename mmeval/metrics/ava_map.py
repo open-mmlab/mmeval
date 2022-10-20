@@ -268,7 +268,7 @@ class AVAMeanAP(BaseMetric):
                 line_split = line.strip().split(',')
                 video_id = line_split[0]
                 timestamp = line_split[1]
-                img_key = f'{video_id},{timestamp:04d}'
+                img_key = f'{video_id},{timestamp}'
                 video_info = dict(video_id=video_id, timestamp=int(timestamp))
                 records_dict_by_img[img_key].append(video_info)
 
