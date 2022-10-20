@@ -184,8 +184,8 @@ class F1Metric(BaseMetric):
 
         return result
 
-    def _compute_f1(self, tp: torch.Tensor, fp: torch.Tensor,
-                    fn: torch.Tensor) -> float:
+    def _compute_f1(self, tp: np.ndarray, fp: np.ndarray,
+                    fn: np.ndarray) -> float:
         """Compute the F1-score based on the true positives, false positives
         and false negatives.
 
