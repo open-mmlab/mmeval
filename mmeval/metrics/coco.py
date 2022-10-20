@@ -38,7 +38,7 @@ class CocoMetric(BaseMetric):
             Defaults to None.
         classwise_result (bool): Whether to return the computed
             results of each class. Defaults to False.
-        proposal_nums (Sequence[int]nig): Numbers of proposals to be evaluated.
+        proposal_nums (Sequence[int]): Numbers of proposals to be evaluated.
             Defaults to (100, 300, 1000).
         metric_items (List[str], optional): Metric result names to be
             recorded in the evaluation result. Defaults to None.
