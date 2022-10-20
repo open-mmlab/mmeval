@@ -71,7 +71,7 @@ class TestPCKAccuracy(TestCase):
         self.assertDictEqual(tpck_results, target)
 
 
-class TestMpiiAccuracy(TestCase):
+class TestMpiiPCKAccuracy(TestCase):
 
     def setUp(self):
         """Setup some variables which are used in every test method.
