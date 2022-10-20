@@ -6,7 +6,7 @@ import os
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from mmeval.core.base_metric import BaseMetric
 from .utils.ava_evaluation import object_detection_evaluation as det_eval
@@ -244,7 +244,7 @@ class AVAMeanAP(BaseMetric):
                  label_file: str,
                  options: Tuple[str] = ('mAP', ),
                  num_classes: int = 81,
-                 custom_classes: List[int] = None,
+                 custom_classes: Optional[List[int]] = None,
                  **kwargs) -> None:
         super().__init__(**kwargs)
         assert len(options) == 1
