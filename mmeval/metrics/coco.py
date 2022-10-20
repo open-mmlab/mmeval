@@ -432,12 +432,12 @@ class CocoDetectionMetric(BaseMetric):
                 - ignore_flags (numpy.ndarray, optional): Shape (K, ),
                   the ignore flags.
         """
-        for prediction, label in zip(predictions, groundtruths):
+        for prediction, groundtruth in zip(predictions, groundtruths):
             assert isinstance(prediction, dict), 'The prediciton should be ' \
                 f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
-            assert isinstance(label, dict), 'The label should be ' \
-                f'a sequence of dict, but got a sequence of {type(label)}.'
-            self._results.append((prediction, label))
+            assert isinstance(groundtruth, dict), 'The label should be ' \
+                f'a sequence of dict, but got a sequence of {type(groundtruth)}.'   # noqa: E501
+            self._results.append((prediction, groundtruth))
 
     def __call__(self, *args, **kwargs) -> Dict:
         """Stateless call for a metric compute."""
