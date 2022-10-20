@@ -6,7 +6,7 @@ import os
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, Tuple
+from typing import List, Sequence, Tuple
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.utils.ava_evaluation import object_detection_evaluation as det_eval
@@ -51,7 +51,7 @@ def results2csv(metric, results, out_file, custom_classes=None):
 
 
 def print_time(message, start):
-    print('==> {:g} seconds to {}'.format(time.time() - start, message), flush=True)
+    print(f'==> {time.time() - start:g} seconds to {message}', flush=True)
 
 
 def make_image_key(video_id, timestamp):
@@ -244,7 +244,7 @@ class AVAMeanAP(BaseMetric):
                  label_file: str,
                  options: Tuple[str] = ('mAP', ),
                  num_classes: int = 81,
-                 custom_classes: Optional[List[int]] = None,
+                 custom_classes: List[int] = None,
                  **kwargs) -> None:
         super().__init__(**kwargs)
         assert len(options) == 1
@@ -259,7 +259,7 @@ class AVAMeanAP(BaseMetric):
             assert 0 not in custom_classes
             _, class_whitelist = read_labelmap(open(label_file))
             assert set(custom_classes).issubset(class_whitelist)
-            self.custom_classes = tuple([0] + custom_classes)
+            self.custom_classes = [0] + custom_classes
 
         self.video_infos = []
         records_dict_by_img = defaultdict(list)
@@ -267,9 +267,9 @@ class AVAMeanAP(BaseMetric):
             for line in fin:
                 line_split = line.strip().split(',')
                 video_id = line_split[0]
-                timestamp = int(line_split[1])
+                timestamp = line_split[1]
                 img_key = f'{video_id},{timestamp:04d}'
-                video_info = dict(video_id=video_id, timestamp=timestamp)
+                video_info = dict(video_id=video_id, timestamp=int(timestamp))
                 records_dict_by_img[img_key].append(video_info)
 
         for img_key in records_dict_by_img:
@@ -277,7 +277,7 @@ class AVAMeanAP(BaseMetric):
             video_info = dict(video_id=video_id, timestamp=int(timestamp))
             self.video_infos.append(video_info)
 
-    def add(self, predictions: List[np.ndarray]) -> None:
+    def add(self, predictions: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
         self._results.append(predictions)
 
     def compute_metric(self, results: List) -> dict:

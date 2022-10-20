@@ -172,8 +172,7 @@ class ObjectDetectionEvaluator(DetectionEvaluator):
                 dictionary.
         """
         if image_id in self._image_ids:
-            raise ValueError(
-                f'Image with id {image_id} already added.')
+            raise ValueError(f'Image with id {image_id} already added.')
 
         groundtruth_classes = (
             groundtruth_dict[
