@@ -34,8 +34,12 @@ class EndPointError(BaseMetric):
     Use NumPy implementation:
 
         >>> import numpy as np
-        >>> predictions = np.array([[[10., 5.], [0.1, 3.]], [[3., 15.2], [2.4, 4.5]]])
-        >>> labels = np.array([[[10.1, 4.8], [10, 3.]], [[6., 10.2], [2.0, 4.1]]])
+        >>> predictions = np.array(
+                [[[10., 5.], [0.1, 3.]],
+                [[3., 15.2], [2.4, 4.5]]])
+        >>> labels = np.array(
+                [[[10.1, 4.8], [10, 3.]],
+                [[6., 10.2], [2.0, 4.1]]])
         >>> valid_masks = np.array([[1., 1.], [1., 0.3]])
         >>> epe(predictions, labels, valid_masks)
         {'EPE': 5.318186230865093}
@@ -43,8 +47,12 @@ class EndPointError(BaseMetric):
     Use PyTorch implementation:
 
         >>> import torch
-        >>> predictions = torch.Tensor([[[10., 5.], [0.1, 3.]], [[3., 15.2], [2.4, 4.5]]])
-        >>> labels = torch.Tensor([[[10.1, 4.8], [10, 3.]], [[6., 10.2], [2.0, 4.1]]])
+        >>> predictions = torch.Tensor(
+                [[[10., 5.], [0.1, 3.]],
+                [[3., 15.2], [2.4, 4.5]]])
+        >>> labels = torch.Tensor(
+                [[[10.1, 4.8], [10, 3.]],
+                [[6., 10.2], [2.0, 4.1]]])
         >>> valid_masks = torch.Tensor([[1., 1.], [1., 0.3]])
         >>> epe(predictions, labels, valid_masks)
         {'EPE': 5.3181863}
@@ -61,8 +69,7 @@ class EndPointError(BaseMetric):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def add(self, predictions: Sequence, labels: Sequence,
-            valid_masks: Optional[Sequence] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence, labels: Sequence, valid_masks: Optional[Sequence] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Process one batch of predictions and labels.
 
         Args:
@@ -101,13 +108,13 @@ class EndPointError(BaseMetric):
     @dispatch
     def _end_point_error(self, prediction: np.ndarray, label: np.ndarray,
                          valid_mask: np.ndarray) -> np.ndarray:
-        """Calculate end point error map
+        """Calculate end point error map.
 
         Args:
             prediction (np.ndarray): Prediction with shape (H, W, 2).
             label (np.ndarray): Ground truth with shape (H, W, 2).
             valid_mask (np.ndarray): Valid mask with shape (H, W).
-        
+
         Returns:
             np.ndarray: End point error map with shape (H, W)
         """
@@ -120,13 +127,13 @@ class EndPointError(BaseMetric):
     def _end_point_error(
             self, prediction: torch.Tensor, label: torch.Tensor,
             valid_mask: Union[torch.Tensor, np.ndarray]) -> np.ndarray:
-        """Calculate end point error map
+        """Calculate end point error map.
 
         Args:
             prediction (torch.Tensor): Prediction with shape (H, W, 2).
             label (torch.Tensor): Ground truth with shape (H, W, 2).
             valid_mask (torch.Tensor): Valid mask with shape (H, W).
-        
+
         Returns:
             np.ndarray: End point error map with shape (H, W)
         """
