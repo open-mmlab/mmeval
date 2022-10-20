@@ -182,8 +182,6 @@ class MpiiPCKAccuracy(PCKAccuracy):
             Valid items include 'bbox', 'head', 'torso', which correspond
             to 'PCK', 'PCKh' and 'tPCK' respectively. Default: ``'head'``.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
-
-    Examples:
     """
 
     def __init__(self,
@@ -297,8 +295,6 @@ class JhmdbPCKAccuracy(PCKAccuracy):
             Valid items include 'bbox', 'head', 'torso', which correspond
             to 'PCK', 'PCKh' and 'tPCK' respectively. Default: ``'bbox'``.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
-
-    Examples:
     """
 
     def __init__(self,
