@@ -236,8 +236,8 @@ class HmeanIoU(BaseMetric):
             matched_pred_indexes.add(pred_idx)
         return len(matched_gt_indexes)
 
-    def _filter_preds(self, pred_polys: List[Polygon], gt_polys: List[Polygon],
-                      pred_scores: List[float],
+    def _filter_preds(self, pred_polys: List['Polygon'],
+                      gt_polys: List['Polygon'], pred_scores: List[float],
                       gt_ignore_flags: np.ndarray) -> np.ndarray:
         """Filter out the predictions by score threshold and whether it
         overlaps ignored gt polygons.
