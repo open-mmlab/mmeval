@@ -119,7 +119,7 @@ class EndPointError(BaseMetric):
         epe_map = np.sqrt(np.sum((prediction - label)**2, axis=-1))
         val = valid_mask.reshape(-1) >= 0.5
         epe = epe_map.reshape(-1)[val]
-        return epe.mean(), int(val.sum())
+        return epe.mean(keepdims=True), int(val.sum())
 
     @dispatch
     def end_point_error_map(
