@@ -9,8 +9,10 @@ from .mean_iou import MeanIoU
 from .oid_map import OIDMeanAP
 from .single_label import SingleLabelMetric
 from .voc_map import VOCMeanAP
+from .pck_accuracy import PCKAccuracy, MpiiPCKAccuracy, JhmdbPCKAccuracy
 
 __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
-    'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric'
+    'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
+    'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy'
 ]
