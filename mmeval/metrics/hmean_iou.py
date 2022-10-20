@@ -93,7 +93,7 @@ class HmeanIoU(BaseMetric):
             raise RuntimeError(
                 'scipy is not installed, please run "pip install scipy" to use'
                 ' HmeanIoUMetric with "max_matching" strategy.')
-        if Polygon is None:
+        if 'Polygon' in globals():
             raise RuntimeError(
                 'shapely is not installed, please run "pip install shapely" to'
                 ' use HmeanIoUMetric.')
