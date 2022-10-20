@@ -82,7 +82,7 @@ class BoxList:
         self.data[field] = field_data
 
     def get(self):
-        """Convenience function for accesssing box coordinates.
+        """Convenience function for accessing box coordinates.
 
         Returns:
             a numpy array of shape [N, 4] representing box corners
