@@ -3,8 +3,9 @@ import numpy as np
 from typing import TYPE_CHECKING, Dict, List, Sequence, Tuple
 
 from mmeval.core import BaseMetric
-from mmeval.utils import (compute_hmean, poly_intersection, poly_iou,
-                          polys2shapely, try_import)
+from mmeval.metrics.utils import (compute_hmean, poly_intersection, poly_iou,
+                                  polys2shapely)
+from mmeval.utils import try_import
 
 if TYPE_CHECKING:
     import scipy
@@ -93,7 +94,7 @@ class HmeanIoU(BaseMetric):
             raise RuntimeError(
                 'scipy is not installed, please run "pip install scipy" to use'
                 ' HmeanIoUMetric with "max_matching" strategy.')
-        if 'Polygon' in globals():
+        if 'Polygon' not in globals():
             raise RuntimeError(
                 'shapely is not installed, please run "pip install shapely" to'
                 ' use HmeanIoUMetric.')

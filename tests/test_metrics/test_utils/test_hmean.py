@@ -1,6 +1,6 @@
 import pytest
 
-from mmeval.utils import compute_hmean
+from mmeval.metrics.utils import compute_hmean
 
 
 def test_compute_hmean():

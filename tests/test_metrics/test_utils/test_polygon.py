@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 
-from mmeval.utils import (poly2shapely, poly_intersection, poly_iou,
-                          poly_make_valid, poly_union, polys2shapely,
-                          try_import)
+from mmeval.metrics.utils import (poly2shapely, poly_intersection, poly_iou,
+                                  poly_make_valid, poly_union, polys2shapely)
+from mmeval.utils import try_import
 
 geometry = try_import('shapely.geometry')
 if geometry is not None:
