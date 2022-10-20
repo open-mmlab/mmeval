@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import pycocotools.mask as _mask_util
 from collections import defaultdict
 from pycocotools.coco import COCO as _COCO
 from pycocotools.cocoeval import COCOeval as _COCOeval
@@ -185,3 +186,4 @@ class COCOPanoptic(COCO):
 
 # just for the ease of import
 COCOeval = _COCOeval
+mask_util = _mask_util

@@ -3,6 +3,7 @@ import datetime
 import numpy as np
 import os.path as osp
 import tempfile
+import warnings
 from collections import OrderedDict
 # from mmeval.utils import is_list_of
 # from mmeval.fileio import FileClient, dump, load
@@ -20,8 +21,8 @@ except ImportError:
     HAS_COCOAPI = False
 
 
-class CocoMetric(BaseMetric):
-    """COCO evaluation metric.
+class CocoDetectionMetric(BaseMetric):
+    """COCO object detection task evaluation metric.
 
     Evaluate AR, AP, and mAP for detection tasks including proposal/box
     detection and instance segmentation. Please refer to
@@ -53,6 +54,90 @@ class CocoMetric(BaseMetric):
             See :class:`mmeval.fileio.FileClient` for details.
             Defaults to ``dict(backend='disk')``.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mmeval import CocoDetectionMetric
+        >>> try:
+        >>>     from mmeval.metrics.utils.coco_warpper import mask_util
+        >>> except ImportError as e:
+        >>>     mask_util = None
+        >>>
+        >>> num_classes = 4
+        >>> fake_dataset_metas = {
+        ...     'CLASSES': tuple([str(i) for i in range(num_classes)])
+        ... }
+        >>>
+        >>> coco_det_metric = CocoDetectionMetric(
+        ...     dataset_meta=fake_dataset_metas,
+        ...     metric=['bbox', 'segm']
+        ... )
+        >>> def _gen_bboxes(num_bboxes, img_w=256, img_h=256):
+        ...     # random generate bounding boxes in 'xyxy' formart.
+        ...     x = np.random.rand(num_bboxes, ) * img_w
+        ...     y = np.random.rand(num_bboxes, ) * img_h
+        ...     w = np.random.rand(num_bboxes, ) * (img_w - x)
+        ...     h = np.random.rand(num_bboxes, ) * (img_h - y)
+        ...     return np.stack([x, y, x + w, y + h], axis=1)
+        >>>
+        >>> def _gen_masks(bboxes, img_w=256, img_h=256):
+        ...     if mask_util is None:
+        ...         raise ImportError(
+        ...             'Please try to install official pycocotools by '
+        ...             '"pip install pycocotools"')
+        ...     masks = []
+        ...     for i, bbox in enumerate(bboxes):
+        ...         mask = np.zeros((img_h, img_w))
+        ...         bbox = bbox.astype(np.int32)
+        ...         box_mask = (np.random.rand(
+        ...             bbox[3] - bbox[1],
+        ...             bbox[2] - bbox[0]) > 0.3).astype(np.int)
+        ...         mask[bbox[1]:bbox[3], bbox[0]:bbox[2]] = box_mask
+        ...         masks.append(
+        ...             mask_util.encode(
+        ...                 np.array(mask[:, :, np.newaxis], order='F',
+        ...                          dtype='uint8'))[0])  # encoded with RLE
+        ...     return masks
+        >>>
+        >>> img_id = 1
+        >>> img_w, img_h = 256, 256
+        >>> num_bboxes = 10
+        >>> pred_boxes = _gen_bboxes(
+        ...     num_bboxes=num_bboxes,
+        ...     img_w=img_w,
+        ...     img_h=img_h)
+        >>> pred_masks = _gen_masks(
+        ...     bboxes=pred_boxes,
+        ...     img_w=img_w,
+        ...     img_h=img_h)
+        >>> prediction = {
+        ...     'img_id': img_id,
+        ...     'bboxes': pred_boxes,
+        ...     'scores': np.random.rand(num_bboxes, ),
+        ...     'labels': np.random.randint(0, num_classes, size=(num_bboxes, )),
+        ...     'masks': pred_masks
+        ... }
+        >>> gt_boxes = _gen_bboxes(
+        ...     num_bboxes=num_bboxes,
+        ...     img_w=img_w,
+        ...     img_h=img_h)
+        >>> gt_masks = _gen_masks(
+        ...     bboxes=pred_boxes,
+        ...     img_w=img_w,
+        ...     img_h=img_h)
+        >>> groundtruth = {
+        ...     'img_id': img_id,
+        ...     'width': img_w,
+        ...     'height': img_h,
+        ...     'bboxes': gt_boxes,
+        ...     'labels': np.random.randint(0, num_classes, size=(num_bboxes, )),
+        ...     'masks': gt_masks,
+        ...     'ignore_flags': np.zeros(num_bboxes)
+        ... }
+        >>> coco_det_metric(predictions=[prediction, ], groundtruths=[groundtruth, ])  # doctest: +ELLIPSIS  # noqa: E501
+        {'bbox_mAP': ..., 'bbox_mAP_50': ..., ...,
+         'segm_mAP': ..., 'segm_mAP_50': ..., ...,
+         'bbox_result': ..., 'segm_result': ..., ...}
     """
 
     def __init__(self,
@@ -74,7 +159,7 @@ class CocoMetric(BaseMetric):
         super().__init__(**kwargs)
         # coco evaluation metrics
         self.metrics = metric if isinstance(metric, list) else [metric]
-        allowed_metrics = ['bbox', 'segm', 'proposal', 'proposal_fast']
+        allowed_metrics = ['bbox', 'segm', 'proposal']
         for metric in self.metrics:
             if metric not in allowed_metrics:
                 raise KeyError(
@@ -220,6 +305,17 @@ class CocoMetric(BaseMetric):
         Returns:
             str: The filename of the json file.
         """
+        try:
+            from mmeval.metrics.utils.coco_warpper import mask_util
+        except ImportError:
+            mask_util = None
+
+        warnings.warn(
+            'The area of the instance is default to use bbox area. '
+            'Compared to load annotation file evaluate way, this will '
+            'not affect the overall AP, but leads to different '
+            'small/medium/large AP results.')
+
         categories = [
             dict(id=id, name=name) for id, name in enumerate(
                 self.dataset_meta['CLASSES'])  # type:ignore
@@ -269,12 +365,15 @@ class CocoMetric(BaseMetric):
                     category_id=int(label),
                     area=coco_bbox[2] * coco_bbox[3])
                 if mask is not None:
-                    # area = mask_util.area(mask)
+                    if mask_util:
+                        # Using mask area can reduce the gap of
+                        # small/medium/large AP results.
+                        area = mask_util.area(mask)
+                        annotation['area'] = float(area)
                     if isinstance(mask, dict) and isinstance(
                             mask['counts'], bytes):
                         mask['counts'] = mask['counts'].decode()
                     annotation['segmentation'] = mask
-                    # annotation['area'] = float(area)
                 annotations.append(annotation)
 
         info = dict(
@@ -431,7 +530,7 @@ class CocoMetric(BaseMetric):
 
             coco_eval.params.catIds = self.cat_ids
             coco_eval.params.imgIds = self.img_ids
-            coco_eval.params.maxDets = list(self.proposal_nums)
+            coco_eval.params.maxDets = self.proposal_nums
             coco_eval.params.iouThrs = self.iou_thrs
 
             # mapping of cocoEval.stats
