@@ -1,15 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import warnings
-from typing import Dict, List, Optional, Sequence, Tuple, Union, overload
+from typing import (TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple,
+                    Union, overload)
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.core.dispatcher import dispatch
+from mmeval.utils import try_import
 
-try:
+if TYPE_CHECKING:
     import torch
-except ImportError:
-    torch = None
+else:
+    torch = try_import('torch')
 
 NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.int64], Union[np.ndarray,
                                                             np.int64]]
@@ -28,34 +30,38 @@ class MultiLabelMixin:
 
     @property
     def pred_is_label(self) -> bool:
-        """Whether prediction is label-format."""
-        warnings.warn(
-            '`pred_is_label` only works for corner case when num_classes=2 '
-            'to distinguish one-hot encodings or label-format.')
+        """Whether prediction is label-format.
+
+        Only works for corner case when num_classes=2 to distinguish one-hot
+        encodings or label-format.
+        """
         return self._pred_is_label
 
     @pred_is_label.setter
     def pred_is_label(self, is_label: bool):
-        """Set a flag of whether prediction is label-format."""
-        warnings.warn(
-            '`pred_is_label` only works for corner case when num_classes=2 '
-            'to distinguish one-hot encodings or label-format.')
+        """Set a flag of whether prediction is label-format.
+
+        Only works for corner case when num_classes=2 to distinguish one-hot
+        encodings or label-format.
+        """
         self._pred_is_label = is_label
 
     @property
     def target_is_label(self) -> bool:
-        """Whether target is label-format."""
-        warnings.warn(
-            '`target_is_label` only works for corner case when num_classes=2 '
-            'to distinguish one-hot encodings or label-format.')
+        """Whether target is label-format.
+
+        Only works for corner case when num_classes=2 to distinguish one-hot
+        encodings or label-format.
+        """
         return self._target_is_label
 
     @target_is_label.setter
     def target_is_label(self, is_label: bool):
-        """Set a flag of whether target is label-format."""
-        warnings.warn(
-            '`target_is_label` only works for corner case when num_classes=2 '
-            'to distinguish one-hot encodings or label-format.')
+        """Set a flag of whether target is label-format.
+
+        Only works for corner case when num_classes=2 to distinguish one-hot
+        encodings or label-format.
+        """
         self._target_is_label = is_label
 
     @staticmethod
@@ -164,8 +170,8 @@ def _precision_recall_f1_support(pred_positive, gt_positive, average):
     # in case torch is not supported
     if torch and isinstance(pred_sum, torch.Tensor):
         # use torch with torch.Tensor
-        precision = tp_sum / torch.clamp(pred_sum, min=1).double() * 100
-        recall = tp_sum / torch.clamp(gt_sum, min=1).double() * 100
+        precision = tp_sum / torch.clamp(pred_sum, min=1).float() * 100
+        recall = tp_sum / torch.clamp(gt_sum, min=1).float() * 100
         f1_score = 2 * precision * recall / torch.clamp(
             precision + recall, min=torch.finfo(torch.float32).eps)
     else:
@@ -486,8 +492,8 @@ class MultiLabelMetric(MultiLabelMixin, BaseMetric):
         return self._format_metric_results(metric_results)
 
 
-def _average_precision_torch(preds: torch.Tensor, targets: torch.Tensor,
-                             average) -> torch.Tensor:
+def _average_precision_torch(preds: 'torch.Tensor', targets: 'torch.Tensor',
+                             average) -> 'torch.Tensor':
     r"""Calculate the average precision for torch.
 
     AP summarizes a precision-recall curve as the weighted mean of maximum
@@ -523,7 +529,7 @@ def _average_precision_torch(preds: torch.Tensor, targets: torch.Tensor,
     pred_pos_nums = torch.arange(1, len(sorted_target) + 1).to(preds.device)
 
     tps[torch.logical_not(pos_inds)] = 0
-    precision = tps / pred_pos_nums.unsqueeze(-1)  # divide along rows
+    precision = tps / pred_pos_nums.unsqueeze(-1).float()  # divide along rows
     ap = torch.sum(precision, 0) / torch.clamp(total_pos, min=1)
 
     if average == 'macro':

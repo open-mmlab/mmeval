@@ -40,21 +40,21 @@ def test_metric_init_assertion():
 )
 def test_metric_inputs(metric_kwargs):
     # test predictions with targets
-    multi_label_metric = MultiLabelMetric(num_classes=2, **metric_kwargs)
+    multi_label_metric = MultiLabelMetric(num_classes=3, **metric_kwargs)
     assert isinstance(multi_label_metric, BaseMetric)
     results = multi_label_metric(
-        np.asarray([[0.1, 0.9], [0.5, 0.5]]), np.asarray([0, 1]))
+        np.asarray([[0.1, 0.9, 0.8], [0.5, 0.5, 0.8]]), np.asarray([0, 1]))
     assert isinstance(results, dict)
 
 
-@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2}])
+@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3}])
 @pytest.mark.parametrize('preds', [
-    [1, 1],  # label-format predictions
-    [[1], [0, 1]],  # label-format predictions
+    [1, 1, 2],  # label-format predictions
+    [[1], [0, 1], [2]],  # label-format predictions
 ])
 @pytest.mark.parametrize('targets', [
-    [0, 1],  # label-format targets
-    [[0, 1], [1]],  # label-format targets
+    [0, 1, 2],  # label-format targets
+    [[0, 1], [1], [2]],  # label-format targets
 ])
 def test_metric_interface_builtin(metric_kwargs, preds, targets):
     """Test builtin inputs."""
@@ -63,14 +63,16 @@ def test_metric_interface_builtin(metric_kwargs, preds, targets):
     assert isinstance(results, dict)
 
 
-@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2, 'topk': 1}])
+@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3, 'topk': 1}])
 @pytest.mark.parametrize('preds', [
-    np.array([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
-    [np.array([0.1, 0.9]), np.array([0.5, 0.6])],  # scores in Sequence
+    np.array([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a ndarray
+    # scores in Sequence
+    [np.array([0.1, 0.9, 0.8]), np.array([0.5, 0.6, 0.8])],
 ])
 @pytest.mark.parametrize('targets', [
-    np.array([[1, 0], [0, 1]]),  # one-hot encodings in a ndarray
-    [np.array([1, 0]), np.array([0, 1])],  # one-hot encodings in Sequence
+    np.array([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a ndarray
+    # one-hot encodings in Sequence
+    [np.array([1, 0, 0]), np.array([0, 1, 0])],
     [np.array([0]), np.array([1])],  # label-format in Sequence
 ])
 def test_metric_interface_topk(metric_kwargs, preds, targets):
@@ -80,15 +82,16 @@ def test_metric_interface_topk(metric_kwargs, preds, targets):
     assert isinstance(results, dict)
 
 
-@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2, 'topk': 1}])
+@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3, 'topk': 1}])
 @pytest.mark.parametrize('preds', [
-    torch.Tensor([[0.1, 0.9], [0.5, 0.6]]),  # scores in a Tensor
-    [torch.Tensor([0.1, 0.9]), torch.Tensor([0.5, 0.6])],  # scores in Sequence
+    torch.Tensor([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a Tensor
+    # scores in Sequence
+    [torch.Tensor([0.1, 0.9, 0.8]), torch.Tensor([0.5, 0.6, 0.8])],
 ])
 @pytest.mark.parametrize('targets', [
-    torch.Tensor([[1, 0], [0, 1]]),  # one-hot encodings in a Tensor
+    torch.Tensor([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a Tensor
     # one-hot encodings in Sequence
-    [torch.Tensor([1, 0]), torch.Tensor([0, 1])],
+    [torch.Tensor([1, 0, 0]), torch.Tensor([0, 1, 0])],
     [torch.Tensor([0]), torch.Tensor([1])],  # label-format in Sequence
 ])
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
@@ -99,17 +102,20 @@ def test_metric_interface_torch_topk(metric_kwargs, preds, targets):
     assert isinstance(results, dict)
 
 
-@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2}])
+@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3}])
 @pytest.mark.parametrize('preds', [
-    np.array([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
-    [np.array([0.1, 0.9]), np.array([0.5, 0.6])],  # scores in Sequence
-    np.array([[0, 1], [1, 1]]),  # one-hot encodings in a ndarray
-    [np.array([0, 1]), np.array([1, 1])],  # one-hot encodings in Sequence
+    np.array([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a ndarray
+    # scores in Sequence
+    [np.array([0.1, 0.9, 0.8]), np.array([0.5, 0.6, 0.8])],
+    np.array([[0, 1, 0], [1, 1, 0]]),  # one-hot encodings in a ndarray
+    # one-hot encodings in Sequence
+    [np.array([0, 1, 0]), np.array([1, 1, 0])],
     [np.array([1]), np.array([0, 1])],  # label-format in Sequence
 ])
 @pytest.mark.parametrize('targets', [
-    np.array([[1, 0], [0, 1]]),  # one-hot encodings in a ndarray
-    [np.array([1, 0]), np.array([0, 1])],  # one-hot encodings in Sequence
+    np.array([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a ndarray
+    # one-hot encodings in Sequence
+    [np.array([1, 0, 0]), np.array([0, 1, 0])],
     [np.array([0]), np.array([1])],  # label-format in Sequence
 ])
 def test_metric_interface(metric_kwargs, preds, targets):
@@ -119,20 +125,20 @@ def test_metric_interface(metric_kwargs, preds, targets):
     assert isinstance(results, dict)
 
 
-@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 2}])
+@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3}])
 @pytest.mark.parametrize('preds', [
-    torch.Tensor([[0.1, 0.9], [0.5, 0.6]]),  # scores in a Tensor
+    torch.Tensor([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a Tensor
     # scores in Sequence
-    [torch.Tensor([0.1, 0.9]), torch.Tensor([0.5, 0.6])],
-    torch.Tensor([[0, 1], [1, 1]]),  # one-hot encodings in a Tensor
+    [torch.Tensor([0.1, 0.9, 0.8]), torch.Tensor([0.5, 0.6, 0.8])],
+    torch.Tensor([[0, 1, 0], [1, 1, 0]]),  # one-hot encodings in a Tensor
     # one-hot encodings in Sequence
-    [torch.Tensor([0, 1]), torch.Tensor([1, 1])],
+    [torch.Tensor([0, 1, 0]), torch.Tensor([1, 1, 0])],
     [torch.Tensor([1]), torch.Tensor([0, 1])],  # label-format in Sequence
 ])
 @pytest.mark.parametrize('targets', [
-    torch.Tensor([[1, 0], [0, 1]]),  # one-hot encodings in a Tensor
+    torch.Tensor([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a Tensor
     # one-hot encodings in Sequence
-    [torch.Tensor([1, 0]), torch.Tensor([0, 1])],
+    [torch.Tensor([1, 0, 0]), torch.Tensor([0, 1, 0])],
     [torch.Tensor([0]), torch.Tensor([1])],  # label-format in Sequence
 ])
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
@@ -215,7 +221,9 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
 
     assert np_acc_results.keys() == torch_acc_results.keys()
     for key in np_acc_results:
-        np.testing.assert_allclose(np_acc_results[key], torch_acc_results[key])
+        # precision is different between numpy and torch
+        np.testing.assert_allclose(
+            np_acc_results[key], torch_acc_results[key], rtol=1e-5)
 
 
 if __name__ == '__main__':
