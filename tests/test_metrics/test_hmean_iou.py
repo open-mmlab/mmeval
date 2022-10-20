@@ -38,14 +38,6 @@ def test_hmean_iou_metric():
     pred_scores = [[1, 1, 1, 0.001], np.array([1, 0.95])]
     gt_ignore_flags = [[False, False, False, True], [False]]
 
-    gt_polygons = [[np.array([0, 0, 1, 0, 1, 1, 0, 1])]]
-    pred_polygons = [[
-        np.array([0, 0, 1, 0, 1, 1, 0, 1]),
-        np.array([1, 0, 1, 0, 1, 1, 0, 1]),
-    ]]
-    pred_scores = [np.array([1, 0.95])]
-    gt_ignore_flags = [[False]]
-
     hmeaniou = HmeanIoU()
     results = hmeaniou(pred_polygons, pred_scores, gt_polygons,
                        gt_ignore_flags)
