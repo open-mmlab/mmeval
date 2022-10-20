@@ -408,32 +408,29 @@ class CocoDetectionMetric(BaseMetric):
                 - img_id (int): Image id.
                 - bboxes (numpy.ndarray): Shape (N, 4), the predicted
                   bounding bboxes of this image, in 'xyxy' foramrt.
-                - scores (numpy.ndarray): Shape (N, 1), the predicted scores
+                - scores (numpy.ndarray): Shape (N, ), the predicted scores
                   of bounding boxes.
-                - labels (numpy.ndarray): Shape (N, 1), the predicted labels
+                - labels (numpy.ndarray): Shape (N, ), the predicted labels
                   of bounding boxes.
-                - masks (list[list[float]] or list[float] or list[RLE]): the
-                  predicted masks.
-                - mask_scores (np.array, optional): Shape (N, 1), the predicted
+                - masks (list[RLE], optional): The predicted masks.
+                - mask_scores (np.array, optional): Shape (N, ), the predicted
                   scores of masks.
 
-            groundtruths (Sequence[dict]): A sequence of dict. Each dict
+            groundtruths (Sequence[dict]): A sequence of dict. If load from
+                `ann_file`, the dict inside can be empty. Else, each dict
                 represents a groundtruths for an image, with the following
                 keys:
 
                 - img_id (int): Image id.
                 - width (int): The width of the image.
                 - height (int): The height of the image.
-                - instances (list[dict]): Each dict representing a gt instance
-                  of a category for an image, with the following keys:
-
-                    - bbox (list): The ground truth bounding box of this
-                      category, in 'xyxy' foramrt.
-                    - bbox_label (int): The ground truth label of this
-                      category.
-                    - ignore_flag (int): The ignore flags of this category.
-                    - mask (list, optional): The ground truth mask of this
-                      category.
+                - bboxes (numpy.ndarray): Shape (K, 4), the ground truth
+                  bounding bboxes of this image, in 'xyxy' foramrt.
+                - labels (numpy.ndarray): Shape (K, ), the ground truth
+                  labels of bounding boxes.
+                - masks (list[RLE], optional): The predicted masks.
+                - ignore_flags (numpy.ndarray, optional): Shape (K, ),
+                  the ignore flags.
         """
         for prediction, label in zip(predictions, groundtruths):
             assert isinstance(prediction, dict), 'The prediciton should be ' \
