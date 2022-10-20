@@ -94,8 +94,8 @@ class EndPointError(BaseMetric):
                 valid_mask = valid_masks[idx]
             else:
                 valid_mask = None
-            epe = self.end_point_error_map(prediction, label, valid_mask)
-            self._results.append(epe)
+            epe, num_valid_pixel = self.end_point_error_map(prediction, label, valid_mask)
+            self._results.append((epe, num_valid_pixel))
 
     @overload  # type: ignore
     @dispatch
