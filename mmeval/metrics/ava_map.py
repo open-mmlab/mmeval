@@ -6,14 +6,17 @@ import os
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple, TextIO
 
 from mmeval.core.base_metric import BaseMetric
 from .utils.ava_evaluation import object_detection_evaluation as det_eval
 from .utils.ava_evaluation import standard_fields
 
 
-def det2csv(metric, results, custom_classes):
+def det2csv(metric: BaseMetric,
+            results: List[List[np.ndarray]],
+            custom_classes: Optional[List[int]] = None) -> List[tuple]:
+    """Convert detection results to csv format"""
     csv_results = []
     for idx in range(len(metric.video_infos)):
         video_id = metric.video_infos[idx]['video_id']
@@ -33,8 +36,12 @@ def det2csv(metric, results, custom_classes):
     return csv_results
 
 
-# results is organized by class
-def results2csv(metric, results, out_file, custom_classes=None):
+def results2csv(metric: BaseMetric,
+                results: List[List[np.ndarray]],
+                out_file: str,
+                custom_classes: Optional[List[int]] = None) -> None:
+    """Organize results by class."""
+
     if isinstance(results[0], list):
         csv_results = det2csv(metric, results, custom_classes)
 
@@ -50,31 +57,33 @@ def results2csv(metric, results, out_file, custom_classes=None):
             f.write('\n')
 
 
-def print_time(message, start):
+def print_time(message: str, start: float) -> None:
     print(f'==> {time.time() - start:g} seconds to {message}', flush=True)
 
 
-def make_image_key(video_id, timestamp):
+def make_image_key(video_id: str, timestamp: str) -> str:
     """Returns a unique identifier for a video id & timestamp."""
     return f'{video_id},{int(timestamp):04d}'
 
 
-def read_csv(csv_file, class_whitelist=None):
+def read_csv(csv_file: TextIO, class_whitelist: Optional[set] = None) -> tuple:
     """Loads boxes and class labels from a CSV file in the AVA format.
 
     CSV file format described at https://research.google.com/ava/download.html.
+
     Args:
-        csv_file: A file object.
-        class_whitelist: If provided, boxes corresponding to (integer) class
-        labels not in this set are skipped.
+        csv_file (TextIO): A file object.
+        class_whitelist (set, optional): If provided, boxes corresponding
+            to (integer) class labels not in this set are skipped.
+
     Returns:
-        boxes: A dictionary mapping each unique image key (string) to a list of
-        boxes, given as coordinates [y1, x1, y2, x2].
-        labels: A dictionary mapping each unique image key (string) to a list
-        of integer class labels, matching the corresponding box in `boxes`.
-        scores: A dictionary mapping each unique image key (string) to a list
-        of score values labels, matching the corresponding label in `labels`.
-        If scores are not provided in the csv, then they will default to 1.0.
+        boxes (dict): A dictionary mapping each unique image key (string) to a list of
+            boxes, given as coordinates [y1, x1, y2, x2].
+        labels (dict): A dictionary mapping each unique image key (string) to a list
+            of integer class labels, matching the corresponding box in `boxes`.
+        scores (dict): A dictionary mapping each unique image key (string) to a list
+            of score values labels, matching the corresponding label in `labels`.
+            If scores are not provided in the csv, then they will default to 1.0.
     """
     start = time.time()
     entries = defaultdict(list)
@@ -107,15 +116,16 @@ def read_csv(csv_file, class_whitelist=None):
     return boxes, labels, scores
 
 
-def read_exclusions(exclusions_file):
+def read_exclusions(exclusions_file: TextIO) -> set:
     """Reads a CSV file of excluded timestamps.
 
     Args:
-        exclusions_file: A file object containing a csv of video-id,timestamp.
+        exclusions_file (TextIO): A file object containing a csv of
+            video-id,timestamp.
+
     Returns:
-        A set of strings containing excluded image keys, e.g.
-        "aaaaaaaaaaa,0904",
-        or an empty set if exclusions file is None.
+        excluded (set): A set of strings containing excluded image keys, e.g.
+            "aaaaaaaaaaa,0904" or an empty set if exclusions file is None.
     """
     excluded = set()
     if exclusions_file:
@@ -126,15 +136,18 @@ def read_exclusions(exclusions_file):
     return excluded
 
 
-def read_labelmap(labelmap_file):
+def read_labelmap(labelmap_file: TextIO) -> tuple:
     """Reads a labelmap without the dependency on protocol buffers.
+
     Args:
-        labelmap_file: A file object containing a label map protocol buffer.
+        labelmap_file (TextIO): A file object containing a label map
+            protocol buffer.
+
     Returns:
-        labelmap: The label map in the form used by the
-        object_detection_evaluation
-        module - a list of {"id": integer, "name": classname } dicts.
-        class_ids: A set containing all of the valid class id integers.
+        labelmap (list): The label map in the form used by the
+            object_detection_evaluation module - a list of
+            {"id": integer, "name": classname } dicts.
+        class_ids (set): A set containing all of the valid class id integers.
     """
     labelmap = []
     class_ids = set()
@@ -151,14 +164,13 @@ def read_labelmap(labelmap_file):
 
 
 # Seems there is at most 100 detections for each image
-def ava_eval(result_file,
-             result_type,
-             label_file,
-             ann_file,
-             exclude_file,
-             verbose=True,
-             custom_classes=None):
-
+def ava_eval(result_file: str,
+             result_type: str,
+             label_file: str,
+             ann_file: str,
+             exclude_file: Optional[str] = None,
+             verbose: bool = True,
+             custom_classes: Optional[List[int]] = None) -> dict:
     assert result_type in ['mAP']
 
     start = time.time()
@@ -280,7 +292,7 @@ class AVAMeanAP(BaseMetric):
     def add(self, predictions: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
         self._results.append(predictions)
 
-    def compute_metric(self, results: List) -> dict:
+    def compute_metric(self, results: list) -> dict:
         time_now = datetime.now().strftime('%Y%m%d_%H%M%S')
         temp_file = f'AVA_{time_now}_result.csv'
         results2csv(self, results[0], temp_file, self.custom_classes)
