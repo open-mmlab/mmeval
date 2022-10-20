@@ -29,11 +29,10 @@ Note: This module operates on numpy boxes and box lists.
 
 import collections
 import logging
+import numpy as np
 import warnings
 from abc import ABCMeta, abstractmethod
 from collections import defaultdict
-
-import numpy as np
 
 from . import metrics, per_image_evaluation, standard_fields
 
@@ -132,7 +131,7 @@ class ObjectDetectionEvaluator(DetectionEvaluator):
         Raises:
             ValueError: If the category ids are not 1-indexed.
         """
-        super(ObjectDetectionEvaluator, self).__init__(categories)
+        super().__init__(categories)
         self._num_classes = max([cat['id'] for cat in categories])
         if min(cat['id'] for cat in categories) < 1:
             raise ValueError('Classes should be 1-indexed.')
@@ -146,7 +145,7 @@ class ObjectDetectionEvaluator(DetectionEvaluator):
             use_weighted_mean_ap=self._use_weighted_mean_ap,
             label_id_offset=self._label_id_offset,
         )
-        self._image_ids = set([])
+        self._image_ids = set()
         self._evaluate_corlocs = evaluate_corlocs
         self._metric_prefix = (metric_prefix + '_') if metric_prefix else ''
 
@@ -174,7 +173,7 @@ class ObjectDetectionEvaluator(DetectionEvaluator):
         """
         if image_id in self._image_ids:
             raise ValueError(
-                'Image with id {} already added.'.format(image_id))
+                f'Image with id {image_id} already added.')
 
         groundtruth_classes = (
             groundtruth_dict[
@@ -325,7 +324,7 @@ class PascalDetectionEvaluator(ObjectDetectionEvaluator):
     """A class to evaluate detections using PASCAL metrics."""
 
     def __init__(self, categories, matching_iou_threshold=0.5):
-        super(PascalDetectionEvaluator, self).__init__(
+        super().__init__(
             categories,
             matching_iou_threshold=matching_iou_threshold,
             evaluate_corlocs=False,
