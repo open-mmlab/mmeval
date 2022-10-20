@@ -6,17 +6,17 @@ import os
 import time
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, Sequence, Tuple, TextIO
+from typing import Any, List, Optional, Sequence, TextIO, Tuple
 
 from mmeval.core.base_metric import BaseMetric
 from .utils.ava_evaluation import object_detection_evaluation as det_eval
 from .utils.ava_evaluation import standard_fields
 
 
-def det2csv(metric: BaseMetric,
+def det2csv(metric: Any,
             results: List[List[np.ndarray]],
             custom_classes: Optional[List[int]] = None) -> List[tuple]:
-    """Convert detection results to csv format"""
+    """Convert detection results to csv format."""
     csv_results = []
     for idx in range(len(metric.video_infos)):
         video_id = metric.video_infos[idx]['video_id']
@@ -36,7 +36,7 @@ def det2csv(metric: BaseMetric,
     return csv_results
 
 
-def results2csv(metric: BaseMetric,
+def results2csv(metric: Any,
                 results: List[List[np.ndarray]],
                 out_file: str,
                 custom_classes: Optional[List[int]] = None) -> None:
@@ -77,13 +77,15 @@ def read_csv(csv_file: TextIO, class_whitelist: Optional[set] = None) -> tuple:
             to (integer) class labels not in this set are skipped.
 
     Returns:
-        boxes (dict): A dictionary mapping each unique image key (string) to a list of
-            boxes, given as coordinates [y1, x1, y2, x2].
-        labels (dict): A dictionary mapping each unique image key (string) to a list
-            of integer class labels, matching the corresponding box in `boxes`.
-        scores (dict): A dictionary mapping each unique image key (string) to a list
-            of score values labels, matching the corresponding label in `labels`.
-            If scores are not provided in the csv, then they will default to 1.0.
+        boxes (dict): A dictionary mapping each unique image key (string) to
+            a list of boxes, given as coordinates [y1, x1, y2, x2].
+        labels (dict): A dictionary mapping each unique image key (string) to
+            a list of integer class labels, matching the corresponding box
+            in `boxes`.
+        scores (dict): A dictionary mapping each unique image key (string)
+            to a list of score values labels, matching the corresponding
+            label in `labels`. If scores are not provided in the csv,
+            then they will default to 1.0.
     """
     start = time.time()
     entries = defaultdict(list)
@@ -92,7 +94,9 @@ def read_csv(csv_file: TextIO, class_whitelist: Optional[set] = None) -> tuple:
     scores = defaultdict(list)
     reader = csv.reader(csv_file)
     for row in reader:
-        assert len(row) in [7, 8], 'Wrong number of columns: ' + row
+        assert len(row) in [
+            7, 8
+        ], 'Wrong number of columns: ' + row  # type: ignore
         image_key = make_image_key(row[0], row[1])
         x1, y1, x2, y2 = (float(n) for n in row[2:6])
         action_id = int(row[6])
@@ -152,7 +156,6 @@ def read_labelmap(labelmap_file: TextIO) -> tuple:
     labelmap = []
     class_ids = set()
     name = ''
-    class_id = ''
     for line in labelmap_file:
         if line.startswith('  name:'):
             name = line.split('"')[1]
@@ -189,7 +192,7 @@ def ava_eval(result_file: str,
     if exclude_file is not None:
         excluded_keys = read_exclusions(open(exclude_file))
     else:
-        excluded_keys = list()
+        excluded_keys = set()
 
     start = time.time()
     boxes, labels, scores = read_csv(open(result_file), class_whitelist)
