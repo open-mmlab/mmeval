@@ -36,7 +36,7 @@ class CocoMetric(BaseMetric):
         iou_thrs (float | List[float], optional): IoU threshold to compute AP
             and AR. If not specified, IoUs from 0.5 to 0.95 will be used.
             Defaults to None.
-        classwise_result (bool):Whether to return the computed
+        classwise_result (bool): Whether to return the computed
             results of each class. Defaults to False.
         proposal_nums (Sequence[int]nig): Numbers of proposals to be evaluated.
             Defaults to (100, 300, 1000).
