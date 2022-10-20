@@ -9,8 +9,8 @@ from datetime import datetime
 from typing import List, Sequence, Tuple
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.utils.ava_evaluation import object_detection_evaluation as det_eval
-from mmeval.utils.ava_evaluation import standard_fields
+from .utils.ava_evaluation import object_detection_evaluation as det_eval
+from .utils.ava_evaluation import standard_fields
 
 
 def det2csv(metric, results, custom_classes):
