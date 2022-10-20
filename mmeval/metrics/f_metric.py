@@ -111,7 +111,7 @@ class F1Metric(BaseMetric):
         self.cared_labels = np.array(self.cared_labels, dtype=np.int64)
         self.num_classes = num_classes
 
-    def add(self, predictions: Sequence, labels: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence[Union[Sequence[int], np.ndarray]], labels: Sequence[Union[Sequence[int], np.ndarray]]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Process one batch of data and predictions.
 
         Calculate the following 2 stuff from the inputs and store them in
@@ -121,35 +121,64 @@ class F1Metric(BaseMetric):
         - label: ground truth labels.
 
         Args:
-            predictions (Sequence): A sequence of the predicted segmentation
-                mask.
-            labels (Sequence): A sequence of the segmentation mask labels.
+            predictions (Sequence[Sequence[int] or np.ndarray]): A batch
+                of sequences of non-negative integer labels.
+            labels (Sequence[Sequence[int] or np.ndarray]): A batch of
+                sequences of non-negative integer labels.
         """
         for prediction, label in zip(predictions, labels):
-            self._results.append((prediction.flatten(), label.flatten()))
+            prediction = np.array(prediction, dtype=np.int64).flatten()
+            label = np.array(label, dtype=np.int64).flatten()
+            self._results.append((prediction, label))
 
     @overload  # type: ignore
     @dispatch
-    def _cat_labels(self, predictions: Sequence['torch.Tensor'],
-                    labels: Sequence['torch.Tensor']):
-        """Concatenate torch labels from different batches."""
-        return torch.cat(predictions).cpu().numpy(), torch.cat(
-            labels).cpu().numpy()
+    def _compute_tp_fp_fn(self, predictions: Sequence['torch.Tensor'],
+                          labels: Sequence['torch.Tensor']):
+        """Compute tp, fp and fn from predictions and labels."""
+        preds = torch.cat(predictions)
+        gts = torch.cat(labels)
+
+        assert preds.max() < self.num_classes
+        assert gts.max() < self.num_classes
+
+        cared_labels = preds.new_tensor(self.cared_labels, dtype=torch.long)
+
+        hits = (preds == gts)[None, :]
+        preds_per_label = cared_labels[:, None] == preds[None, :]
+        gts_per_label = cared_labels[:, None] == gts[None, :]
+
+        tp = (hits * preds_per_label).cpu().numpy().astype(float)
+        fp = (~hits * preds_per_label).cpu().numpy().astype(float)
+        fn = (~hits * gts_per_label).cpu().numpy().astype(float)
+        return tp, fp, fn
 
     @dispatch
-    def _cat_labels(self, predictions: Sequence[Union[np.ndarray, int]],
-                    labels: Sequence[Union[np.ndarray, int]]):
-        """Concatenate np labels from different batches."""
-        return np.concatenate(
-            predictions, axis=0), np.concatenate(
-                labels, axis=0)
+    def _compute_tp_fp_fn(self, predictions: Sequence[Union[np.ndarray, int]],
+                          labels: Sequence[Union[np.ndarray, int]]):
+        """Compute tp, fp and fn from predictions and labels."""
+        preds = np.concatenate(predictions, axis=0)
+        gts = np.concatenate(labels, axis=0)
+
+        assert preds.max() < self.num_classes  # type: ignore
+        assert gts.max() < self.num_classes  # type: ignore
+
+        hits = np.equal(preds, gts)[None, :]
+        preds_per_label = np.equal(self.cared_labels[:, None], preds[None, :])  # type: ignore # yapf: disable # noqa: E501
+        gts_per_label = np.equal(self.cared_labels[:, None], gts[None, :])  # type: ignore # yapf: disable # noqa: E501
+
+        tp = (hits * preds_per_label).astype(float)
+        fp = ((1 - hits) * preds_per_label).astype(float)
+        fn = ((1 - hits) * gts_per_label).astype(float)
+        return tp, fp, fn
 
     def compute_metric(
             self, results: Sequence[Tuple[np.ndarray, np.ndarray]]) -> Dict:
         """Compute the metrics from processed results.
 
         Args:
-            results (list[Dict]): The processed results of each batch.
+            results (list[(ndarray, ndarray)]): The processed results of each
+                batch.
 
         Returns:
             dict[str, float]: The f1 scores. The keys are the names of the
@@ -162,18 +191,8 @@ class F1Metric(BaseMetric):
         for result in results:
             preds.append(result[0])
             gts.append(result[1])
-        preds, gts = self._cat_labels(preds, gts)
 
-        assert preds.max() < self.num_classes  # type: ignore
-        assert gts.max() < self.num_classes  # type: ignore
-
-        hits = np.equal(preds, gts)[None, :]
-        preds_per_label = np.equal(self.cared_labels[:, None], preds[None, :])  # type: ignore # yapf: disable # noqa: E501
-        gts_per_label = np.equal(self.cared_labels[:, None], gts[None, :])  # type: ignore # yapf: disable # noqa: E501
-
-        tp = (hits * preds_per_label).astype(float)
-        fp = ((1 - hits) * preds_per_label).astype(float)
-        fn = ((1 - hits) * gts_per_label).astype(float)
+        tp, fp, fn = self._compute_tp_fp_fn(preds, gts)
 
         result = {}
         if 'macro' in self.mode:
