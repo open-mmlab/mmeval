@@ -12,10 +12,10 @@ class SNR(BaseMetric):
     Ref: https://en.wikipedia.org/wiki/Signal-to-noise_ratio
 
     Args:
-        input_order (str): Whether the input order is 'HWC' or 'CHW'.
-            Default: 'HWC'.
         crop_border (int): Cropped pixels in each edges of an image. These
             pixels are not involved in the PSNR calculation. Default: 0.
+        input_order (str): Whether the input order is 'HWC' or 'CHW'.
+            Default: 'HWC'.
         convert_to (str): Whether to convert the images to other color models.
             If None, the images are not altered. When computing for 'Y',
             the images are assumed to be in BGR order. Options are 'Y' and
@@ -25,9 +25,9 @@ class SNR(BaseMetric):
     """
 
     def __init__(self,
+                 crop_border: int = 0,
                  input_order: str = 'CHW',
                  convert_to: Optional[str] = None,
-                 crop_border: int = 0,
                  channel_order: str = 'rgb',
                  **kwargs):
         super().__init__(**kwargs)
@@ -97,9 +97,9 @@ class SNR(BaseMetric):
 
     @staticmethod
     def _compute_snr(gt: np.ndarray, pred: np.ndarray) -> np.float64:
-        """Calculate PSNR (Peak Signal-to-Noise Ratio).
+        """Calculate SNR (Signal-to-Noise Ratio).
 
-        Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
+        Ref: https://en.wikipedia.org/wiki/Signal-to-noise_ratio
 
         Args:
             gt (np.ndarray): Images with range [0, 255].

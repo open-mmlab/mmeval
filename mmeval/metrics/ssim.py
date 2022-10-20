@@ -25,10 +25,10 @@ class SSIM(BaseMetric):
     averaged.
 
     Args:
-        input_order (str): Whether the input order is 'HWC' or 'CHW'.
-            Default: 'HWC'.
         crop_border (int): Cropped pixels in each edges of an image. These
             pixels are not involved in the PSNR calculation. Default: 0.
+        input_order (str): Whether the input order is 'HWC' or 'CHW'.
+            Default: 'HWC'.
         convert_to (str): Whether to convert the images to other color models.
             If None, the images are not altered. When computing for 'Y',
             the images are assumed to be in BGR order. Options are 'Y' and
@@ -38,8 +38,8 @@ class SSIM(BaseMetric):
     """
 
     def __init__(self,
-                 input_order: str = 'CHW',
                  crop_border: int = 0,
+                 input_order: str = 'CHW',
                  convert_to: Optional[str] = None,
                  channel_order: str = 'rgb',
                  **kwargs) -> None:
