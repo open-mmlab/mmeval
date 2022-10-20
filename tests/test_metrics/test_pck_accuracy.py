@@ -89,13 +89,17 @@ class TestMpiiPCKAccuracy(TestCase):
             keypoints[0, i] = [0.5 * i, 0.5 * i]
             keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
             keypoints_visible[0, (2 * i) % 8] = False
+            bbox_size = np.random.random((1, 2)) * 20 * i
             head_size = np.random.random((1, 2)) * 10 * i
+            torso_size = np.random.random((1, 2)) * 15 * i
 
             prediction = {'coords': keypoints}
             groundtruth = {
                 'coords': keypoints + 1.0,
                 'mask': keypoints_visible,
+                'bbox_size': bbox_size,
                 'head_size': head_size,
+                'torso_size': torso_size
             }
 
             self.predictions.append(prediction)
@@ -144,7 +148,7 @@ class TestJhmdbPCKAccuracy(TestCase):
             keypoints = np.zeros((1, num_keypoints, 2))
             keypoints[0, i] = [0.5 * i, 0.5 * i]
             keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
-            # keypoints_visible[0, (2 * i) % 8] = False
+            keypoints_visible[0, (2 * i) % 8] = False
             bbox_size = np.random.random((1, 2)) * 20 * i
             head_size = np.random.random((1, 2)) * 10 * i
             torso_size = np.random.random((1, 2)) * 15 * i
