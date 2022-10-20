@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 import numpy as np
-from typing import TYPE_CHECKING, List, Optional, Sequence, Union, overload
+from typing import TYPE_CHECKING, List, Optional, Sequence, Tuple, overload
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.core.dispatcher import dispatch
@@ -35,11 +35,11 @@ class EndPointError(BaseMetric):
 
         >>> import numpy as np
         >>> predictions = np.array(
-                [[[10., 5.], [0.1, 3.]],
-                [[3., 15.2], [2.4, 4.5]]])
+        ...     [[[10., 5.], [0.1, 3.]],
+        ...     [[3., 15.2], [2.4, 4.5]]])
         >>> labels = np.array(
-                [[[10.1, 4.8], [10, 3.]],
-                [[6., 10.2], [2.0, 4.1]]])
+        ...     [[[10.1, 4.8], [10, 3.]],
+        ...     [[6., 10.2], [2.0, 4.1]]])
         >>> valid_masks = np.array([[1., 1.], [1., 0.3]])
         >>> epe(predictions, labels, valid_masks)
         {'EPE': 5.318186230865093}
@@ -48,11 +48,11 @@ class EndPointError(BaseMetric):
 
         >>> import torch
         >>> predictions = torch.Tensor(
-                [[[10., 5.], [0.1, 3.]],
-                [[3., 15.2], [2.4, 4.5]]])
+        ...     [[[10., 5.], [0.1, 3.]],
+        ...     [[3., 15.2], [2.4, 4.5]]])
         >>> labels = torch.Tensor(
-                [[[10.1, 4.8], [10, 3.]],
-                [[6., 10.2], [2.0, 4.1]]])
+        ...     [[[10.1, 4.8], [10, 3.]],
+        ...     [[6., 10.2], [2.0, 4.1]]])
         >>> valid_masks = torch.Tensor([[1., 1.], [1., 0.3]])
         >>> epe(predictions, labels, valid_masks)
         {'EPE': 5.3181863}
@@ -81,19 +81,8 @@ class EndPointError(BaseMetric):
                 shape (H, W). If it is None, this function will automatically
                 generate an all-ones array. Defaults to None.
         """
-        if valid_masks is None:
-            if isinstance(predictions, Sequence):
-                valid_masks = [
-                    np.ones_like(predictions[0][..., 0])
-                    for _ in range(len(predictions))
-                ]
-            elif isinstance(predictions, np.ndarray):
-                valid_masks = np.ones_like(predictions[..., 0])
-            elif isinstance(predictions, torch.Tensor):
-                valid_masks = torch.ones_like(predictions[..., 0])
 
-        for prediction, label, valid_mask in zip(predictions, labels,
-                                                 valid_masks):
+        for idx, (prediction, label) in enumerate(zip(predictions, labels)):
             assert prediction.shape == label.shape, 'The shape of ' \
                 '`prediction` and `label` should be the same, but got: ' \
                 f'{prediction.shape} and {label.shape}'
@@ -101,48 +90,62 @@ class EndPointError(BaseMetric):
             assert prediction.shape[-1] == 2, 'The last dimension of ' \
                 f'`prediction` should be 2, but got: {prediction.shape[-1]}'
 
-            epe = self._end_point_error(prediction, label, valid_mask)
+            if valid_masks is not None:
+                valid_mask = valid_masks[idx]
+            else:
+                valid_mask = None
+            epe = self.end_point_error_map(prediction, label, valid_mask)
             self._results.append(epe)
 
     @overload  # type: ignore
     @dispatch
-    def _end_point_error(self, prediction: np.ndarray, label: np.ndarray,
-                         valid_mask: np.ndarray) -> np.ndarray:
+    def end_point_error_map(
+            self,
+            prediction: np.ndarray,
+            label: np.ndarray,
+            valid_mask: Optional[np.ndarray] = None) -> Tuple[np.ndarray, int]:
         """Calculate end point error map.
 
         Args:
             prediction (np.ndarray): Prediction with shape (H, W, 2).
             label (np.ndarray): Ground truth with shape (H, W, 2).
-            valid_mask (np.ndarray): Valid mask with shape (H, W).
+            valid_mask (np.ndarray, optional): Valid mask with shape (H, W).
 
         Returns:
-            np.ndarray: End point error map with shape (H, W)
+            Tuple: The mean of end point error and the numbers of valid labels.
         """
+        if valid_mask is None:
+            valid_mask = np.ones_like(prediction[..., 0])
         epe_map = np.sqrt(np.sum((prediction - label)**2, axis=-1))
         val = valid_mask.reshape(-1) >= 0.5
         epe = epe_map.reshape(-1)[val]
-        return epe
+        return epe.mean(), int(val.sum())
 
     @dispatch
-    def _end_point_error(
-            self, prediction: 'torch.Tensor', label: 'torch.Tensor',
-            valid_mask: Union['torch.Tensor', np.ndarray]) -> np.ndarray:
+    def end_point_error_map(
+            self,
+            prediction: 'torch.Tensor',
+            label: 'torch.Tensor',
+            valid_mask: Optional['torch.Tensor'] = None
+    ) -> Tuple[np.ndarray, int]:
         """Calculate end point error map.
 
         Args:
             prediction (torch.Tensor): Prediction with shape (H, W, 2).
             label (torch.Tensor): Ground truth with shape (H, W, 2).
-            valid_mask (torch.Tensor): Valid mask with shape (H, W).
+            valid_mask (torch.Tensor, optional): Valid mask with shape (H, W).
 
         Returns:
-            np.ndarray: End point error map with shape (H, W)
+            Tuple: The mean of end point error and the numbers of valid labels.
         """
+        if valid_mask is None:
+            valid_mask = torch.ones_like(prediction[..., 0])
         epe_map = torch.sqrt(torch.sum((prediction - label)**2, dim=-1))
         val = valid_mask.reshape(-1) >= 0.5
         epe = epe_map.reshape(-1)[val]
-        return epe.cpu().numpy()
+        return epe.mean().cpu().numpy(), int(val.sum())
 
-    def compute_metric(self, results: List[np.ndarray]) -> dict:
+    def compute_metric(self, results: List[Tuple[np.ndarray, int]]) -> dict:
         """Compute the EndPointError metric.
 
         This method would be invoked in `BaseMetric.compute` after distributed
@@ -158,6 +161,7 @@ class EndPointError(BaseMetric):
 
                 - EPE, the mean end point error of all pairs.
         """
-        epe_all = np.concatenate(results)
-        metric_results = dict(EPE=np.mean(epe_all))
+        epe_overall = sum(res[0] * res[1] for res in results)
+        valid_pixels = sum(res[1] for res in results)
+        metric_results = {'EPE': epe_overall / valid_pixels}
         return metric_results
