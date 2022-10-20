@@ -125,8 +125,8 @@ class EndPointError(BaseMetric):
 
     @dispatch
     def _end_point_error(
-            self, prediction: torch.Tensor, label: torch.Tensor,
-            valid_mask: Union[torch.Tensor, np.ndarray]) -> np.ndarray:
+            self, prediction: 'torch.Tensor', label: 'torch.Tensor',
+            valid_mask: Union['torch.Tensor', np.ndarray]) -> np.ndarray:
         """Calculate end point error map.
 
         Args:
