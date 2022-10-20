@@ -14,7 +14,7 @@ from typing import Dict, List, Optional, Sequence, Union
 from mmeval.core.base_metric import BaseMetric
 
 try:
-    from mmeval.utils.coco_warpper import COCO, COCOeval
+    from mmeval.metrics.utils.coco_warpper import COCO, COCOeval
     HAS_COCOAPI = True
 except ImportError:
     HAS_COCOAPI = False

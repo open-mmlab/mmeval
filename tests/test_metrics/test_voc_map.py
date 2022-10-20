@@ -75,6 +75,9 @@ def test_metric_invalid_usage():
     with pytest.raises(AssertionError):
         VOCMeanAP(eval_mode='xxx')
 
+    with pytest.raises(AssertionError):
+        VOCMeanAP(iou_thrs=1)
+
     with pytest.raises(RuntimeError):
         voc_map = VOCMeanAP()
         voc_map.num_classes
