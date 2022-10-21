@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 from .accuracy import Accuracy
-from .coco import CocoDetectionMetric
+from .coco_detection import CocoDetectionMetric
 from .mean_iou import MeanIoU
 from .oid_map import OIDMeanAP
 from .voc_map import VOCMeanAP
