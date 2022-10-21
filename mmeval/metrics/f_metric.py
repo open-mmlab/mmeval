@@ -24,7 +24,7 @@ class F1Metric(BaseMetric):
               unweighted mean.
             If mode is a list, then metrics in mode will be calculated
             separately. Defaults to 'micro'.
-        cared_classes (list[int]): The indices of the labels particpated in
+        cared_classes (list[int]): The indices of the labels participated in
             the metric computing. If both ``cared_classes`` and
             ``ignored_classes`` are empty, all classes will be taken into
             account. Defaults to []. Note: ``cared_classes`` and
