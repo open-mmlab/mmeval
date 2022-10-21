@@ -129,7 +129,7 @@ class F1Metric(BaseMetric):
     @overload  # type: ignore
     @dispatch
     def _compute_tp_fp_fn(self, predictions: Sequence['torch.Tensor'],
-                          labels: Sequence['torch.Tensor']):
+                          labels: Sequence['torch.Tensor']) -> tuple:
         """Compute tp, fp and fn from predictions and labels."""
         preds = torch.cat(predictions).long().flatten().cpu()
         gts = torch.cat(labels).long().flatten().cpu()
