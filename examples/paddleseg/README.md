@@ -12,9 +12,9 @@ with the following changes:
 - Using `MMEval.MeanIoU`.
 - Support multi-gpus evaluation.
 
-## Usage:
+## Usage
 
-1. Following the install steps in [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.6/docs/install.md).
+1. Following the installation steps in [PaddleSeg](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.6/docs/install.md).
 
 2. Run evaluation
 
@@ -28,7 +28,7 @@ python ppseg_mmeval.py --config <config_path> --model_path <model_path> --launch
 
 ## Results
 
-We tested this evaluation script on [fastfcn_resnet50_os8_ade20k_480x480_120k](https://github.com/PaddlePaddle/PaddleSeg/tree/release/2.6/configs/fastfcn) and got the same evaluate results as the [val.py](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.6/val.py) in PaddleSeg.
+We tested this evaluation script on [fastfcn_resnet50_os8_ade20k_480x480_120k](https://github.com/PaddlePaddle/PaddleSeg/tree/release/2.6/configs/fastfcn) and got the same evaluation results as the [val.py](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.6/val.py) in PaddleSeg.
 
 |                                                                               Config                                                                                |                                                         Weights                                                          |  mIoU  |  aAcc  | Kappa  | mDice  |
 | :-----------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: | :----: | :----: | :----: | :----: |
