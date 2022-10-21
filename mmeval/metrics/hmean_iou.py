@@ -34,7 +34,7 @@ class HmeanIoU(BaseMetric):
 
     - Filter the prediction polygon:
 
-      - Scores is smaller than minimum prediction score threshold.
+      - Score is smaller than minimum prediction score threshold.
       - The proportion of the area that intersects with gt ignored polygon is
         greater than ignore_precision_thr.
 
@@ -109,7 +109,7 @@ class HmeanIoU(BaseMetric):
         """Process one batch of data and predictions.
 
         Args:
-            batch_pred_polygons (Sequence[Sequence]): A batch of
+            batch_pred_polygons (Sequence[Sequence[np.ndarray]]): A batch of
                 prediction polygons, where each element is a sequence of
                 polygons. Each polygon is represented in the form of [x1, y1,
                 x2, y2, ...].
@@ -120,7 +120,7 @@ class HmeanIoU(BaseMetric):
                 ground truth polygons, where each element is a sequence of
                 polygons. Each polygon is represented in the form of [x1, y1,
                 x2, y2, ...].
-            batch_gt_ignore_flags (Sequence[np.ndarray]): A batch of
+            batch_gt_ignore_flags (Sequence): A batch of
                 boolean flags indicating whether to ignore the corresponding
                 ground truth polygon. Each element is a sequence of flags.
         """
