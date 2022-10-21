@@ -181,11 +181,7 @@ class F1Metric(BaseMetric):
             keys are 'micro_f1' and 'macro_f1'.
         """
 
-        preds = []
-        gts = []
-        for result in results:
-            preds.append(result[0])
-            gts.append(result[1])
+        preds, gts = zip(*results)
 
         tp, fp, fn = self._compute_tp_fp_fn(preds, gts)
 
