@@ -36,6 +36,19 @@ class SSIM(BaseMetric):
         channel_order (str): The channel order of image. Choices are 'rgb' and
             'bgr'. Default: 'rgb'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+
+        >>> from mmeval import SSIM
+        >>> ssim = SSIM(input_order='CHW', convert_to='Y', channel_order='rgb')
+
+    Use NumPy implementation:
+
+        >>> import numpy as np
+        >>> gts = np.ones((3, 32, 32))
+        >>> preds = np.ones((3, 32, 32))
+        >>> ssim(preds, labels)
+        {'ssim': 0.9987801}
     """
 
     def __init__(self,
