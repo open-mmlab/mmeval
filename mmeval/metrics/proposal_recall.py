@@ -12,7 +12,7 @@ from mmeval.utils import is_list_of
 class ProposalRecall(BaseMetric):
     """Proposals recall evaluation metric.
 
-    Faster than coco.proposal metric
+    The speed of calculating recall is faster than COCO Detection metric.
 
     Args:
         iou_thrs (float | List[float], optional): IoU thresholds.
@@ -91,9 +91,22 @@ class ProposalRecall(BaseMetric):
 
     def process_proposals(self, predictions: List[dict],
                           groundtruths: List[dict]) -> Tuple[List, List, int]:
-        """Concat box and score, and sort.
+        """Process the proposals(bboxes) in predictions and groundtruths.
+
+        Args:
+             predictions (List[dict]): A list of dict. Each dict is the
+                detection result of an image. Same as
+                :class:`ProposalRecall.add`.
+             groundtruths (list[dict]): Same as :class:`ProposalRecall.add`.
 
         Returns:
+            tuple (proposal_preds, proposal_gts, num_gts):
+
+            - proposal_preds (List[numpy.ndarray]): The sorted proposals of
+              the prediction.
+            - proposal_gts (List[numpy.ndarray]): The proposals of the
+              groundtruths.
+            - num_gts (int): The total groundtruth numbers.
         """
         proposal_preds = []
         proposal_gts = []
@@ -122,6 +135,22 @@ class ProposalRecall(BaseMetric):
 
     def calculate_recall(self, predictions: List[dict],
                          groundtruths: List[dict], pool: Optional[Pool]):
+        """Calculate recall.
+
+        Args:
+            predictions (List[dict]): A list of dict. Each dict is the
+                detection result of an image. Same as
+                :class:`ProposalRecall.add`.
+            groundtruths (List[dict]): A list of dict. Each dict is the
+                ground truth of an image. Same as
+                :class:`ProposalRecall.add`.
+            pool (Optional[Pool]): A instance of :class:`multiprocessing.Pool`.
+                If None, do not use multiprocessing.
+
+        Returns:
+            numpy.ndarry: Shape (len(proposal_nums), len(iou_thrs)),
+            the recall results.
+        """
         proposal_preds, proposal_gts, num_gts = self.process_proposals(
             predictions=predictions, groundtruths=groundtruths)
 
@@ -154,6 +183,24 @@ class ProposalRecall(BaseMetric):
     def _calculate_ious(pred_proposals: np.ndarray, gt_proposals: np.ndarray,
                         proposal_nums: np.ndarray,
                         use_legacy_coordinate: bool):
+        """Calculate the IoUs under different proposal numbers on an image.
+
+        Args:
+            pred_proposals (numpy.ndarray): Predicted proposals of this
+                image, with shape (M, 4).
+            gt_proposals (numpy.ndarray): Ground truth proposals of this
+                image, with shape (M, 4).
+            proposal_nums (numpy.ndarry): Numbers of proposals to be evaluated.
+            use_legacy_coordinate (bool): Refer to :class:`ProposalRecall`.
+
+        Returns:
+            numpy.ndarray: Shape (len(proposal_nums), N),
+            IoUs under different proposal numbers on an image.
+
+        Note:
+            This method should be a staticmethod to avoid resource competition
+            during multiple processes.
+        """
         # Step 1. calculate all proposal ious
         if gt_proposals is None or gt_proposals.shape[0] == 0:
             ious = np.zeros((0, pred_proposals.shape[0]), dtype=np.float32)
@@ -185,7 +232,7 @@ class ProposalRecall(BaseMetric):
         return _ious
 
     def compute_metric(self, results: list) -> dict:
-        """Compute the VOCMeanAP metric.
+        """Compute the ProposalRecall metric.
 
         Args:
             results (List[tuple]): A list of tuple. Each tuple is the
@@ -193,13 +240,8 @@ class ProposalRecall(BaseMetric):
                 been synced across all ranks.
 
         Returns:
-            dict: The computed metric, with the following keys:
-
-            - mAP, the averaged across all IoU thresholds and all class.
-            - mAP@{IoU}, the mAP of the specified IoU threshold.
-            - mAP@{scale_range}, the mAP of the specified scale range.
-            - classwise_result, the evaluation results of each class.
-              This would be returned if ``self.classwise_result`` is True.
+            dict: The computed metric. The keys are the names of
+            the proposal numbers, and the values are corresponding results.
         """
         predictions, groundtruths = zip(*results)
 
