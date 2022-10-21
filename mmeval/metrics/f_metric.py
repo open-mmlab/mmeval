@@ -150,7 +150,7 @@ class F1Metric(BaseMetric):
 
     @dispatch
     def _compute_tp_fp_fn(self, predictions: Sequence[Union[np.ndarray, int]],
-                          labels: Sequence[Union[np.ndarray, int]]):
+                          labels: Sequence[Union[np.ndarray, int]]) -> tuple:
         """Compute tp, fp and fn from predictions and labels."""
         preds = np.concatenate(predictions, axis=0).astype(np.int64).flatten()
         gts = np.concatenate(labels, axis=0).astype(np.int64).flatten()
