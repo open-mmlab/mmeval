@@ -4,17 +4,19 @@ from typing import Optional, Union
 
 
 def _convert_input_type_range(img: np.ndarray) -> np.ndarray:
-    """Convert the type and range of the input image.
-    It converts the input image to np.float32 type and range of [0, 1].
-    It is mainly used for pre-processing the input image in colorspace
-    conversion functions such as rgb2ycbcr and ycbcr2rgb.
+    """Convert the type and range of the input image. It converts the input
+    image to np.float32 type and range of [0, 1]. It is mainly used for pre-
+    processing the input image in colorspace conversion functions such as
+    rgb2ycbcr and ycbcr2rgb.
+
     Args:
         img (ndarray): The input image. It accepts:
             1. np.uint8 type with range [0, 255];
             2. np.float32 type with range [0, 1].
+
     Returns:
         (ndarray): The converted image with type of np.float32 and range of
-            [0, 1].
+        [0, 1].
     """
     img_type = img.dtype
     img = img.astype(np.float32)
@@ -38,6 +40,7 @@ def _convert_output_type_range(
     range [0, 1].
     It is mainly used for post-processing images in colorspace conversion
     functions such as rgb2ycbcr and ycbcr2rgb.
+
     Args:
         img (ndarray): The image to be converted with np.float32 type and
             range [0, 255].
@@ -45,8 +48,9 @@ def _convert_output_type_range(
             converts the image to np.uint8 type with range [0, 255]. If
             dst_type is np.float32, it converts the image to np.float32 type
             with range [0, 1].
+
     Returns:
-        (ndarray): The converted image with desired type and range.
+        (np.ndarray): The converted image with desired type and range.
     """
     if dst_type not in (np.uint8, np.float32):
         raise TypeError('The dst_type should be np.float32 or np.uint8, '
@@ -68,14 +72,16 @@ def rgb2ycbcr(img: np.ndarray, y_only: bool = False) -> np.ndarray:
     It differs from a similar function in cv2.cvtColor: `RGB <-> YCrCb`.
     In OpenCV, it implements a JPEG conversion. See more details in
     https://en.wikipedia.org/wiki/YCbCr#JPEG_conversion.
+
     Args:
         img (ndarray): The input image. It accepts:
             1. np.uint8 type with range [0, 255];
             2. np.float32 type with range [0, 1].
         y_only (bool): Whether to only return Y channel. Default: False.
+
     Returns:
-        ndarray: The converted YCbCr image. The output image has the same type
-        and range as input image.
+        np.ndarray: The converted YCbCr image. The output image has the same
+        type and range as input image.
     """
     img_type = img.dtype
     img = _convert_input_type_range(img)
@@ -99,14 +105,16 @@ def bgr2ycbcr(img: np.ndarray, y_only: bool = False) -> np.ndarray:
     It differs from a similar function in cv2.cvtColor: `BGR <-> YCrCb`.
     In OpenCV, it implements a JPEG conversion. See more details in
     https://en.wikipedia.org/wiki/YCbCr#JPEG_conversion.
+
     Args:
         img (ndarray): The input image. It accepts:
             1. np.uint8 type with range [0, 255];
             2. np.float32 type with range [0, 1].
         y_only (bool): Whether to only return Y channel. Default: False.
+
     Returns:
-        ndarray: The converted YCbCr image. The output image has the same type
-        and range as input image.
+        np.ndarray: The converted YCbCr image. The output image has the same
+        type and range as input image.
     """
     img_type = img.dtype
     img = _convert_input_type_range(img)
@@ -126,11 +134,13 @@ def reorder_image(img: np.array, input_order='HWC'):
     If the input_order is (h, w), return (h, w, 1);
     If the input_order is (c, h, w), return (h, w, c);
     If the input_order is (h, w, c), return as it is.
+
     Args:
         img (np.ndarray): Input image.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             If the input image shape is (h, w), input_order will not have
             effects. Default: 'HWC'.
+
     Returns:
         np.ndarray: Reordered image.
     """
@@ -155,6 +165,7 @@ def img_transform(img: np.ndarray,
     """Image transform.
 
     Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
+
     Args:
         img (np.ndarray): Images with range [0, 255].
         crop_border (int): Cropped pixels in each edges of an image. These
@@ -166,6 +177,7 @@ def img_transform(img: np.ndarray,
             the images are assumed to be in BGR order. Options are 'Y' and
             None. Default: None.
         channel_order (str): The channel order of image. Default: 'rgb'
+
     Returns:
         np.array: The transformation results.
     """
