@@ -313,4 +313,19 @@ def test_list_dir_or_file():
 
 
 def test_load():
-    pass
+    # invalid file format
+    with pytest.raises(TypeError, match='Unsupported format'):
+        fileio.load('filename.txt')
+
+    # file is not a valid input
+    with pytest.raises(
+            TypeError, match='"file" must be a filepath str or a file-object'):
+        fileio.load(123, file_format='json')
+
+    test_data_dir = osp.dirname(osp.dirname(__file__))
+    for filename in [
+            'data/handler.json', 'data/handler.pkl', 'data/handler.yaml'
+    ]:
+        filepath = osp.join(test_data_dir, filename)
+        content = fileio.load(filepath)
+        assert content == {'cat': 1, 'dog': 2, 'panda': 3}
