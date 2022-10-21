@@ -15,8 +15,8 @@ class MSE(BaseMetric):
 
     Examples:
         >>> from mmeval import MSE
-        >>> mse = MSE()
         >>> import numpy as np
+        >>> mse = MSE()
         >>> preds = [np.ones((32, 32, 3))]
         >>> gts = [np.ones((32, 32, 3)) * 2]
         >>> mask = np.ones((32, 32, 3)) * 2

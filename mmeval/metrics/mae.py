@@ -15,8 +15,8 @@ class MAE(BaseMetric):
 
     Examples:
         >>> from mmeval import MAE
-        >>> mae = MAE()
         >>> import numpy as np
+        >>> mae = MAE()
         >>> preds = [np.ones((32, 32, 3))]
         >>> gts = [np.ones((32, 32, 3)) * 2]
         >>> mask = np.ones((32, 32, 3)) * 2
