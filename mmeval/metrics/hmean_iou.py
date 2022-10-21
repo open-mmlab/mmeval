@@ -8,17 +8,11 @@ from mmeval.metrics.utils import (compute_hmean, poly_intersection, poly_iou,
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
-    import scipy
-    from scipy.sparse import csr_matrix
-    from scipy.sparse.csgraph import maximum_bipartite_matching
+    import scipy.sparse as scipy_sparse
+    import shapely.geometry as geometry
     from shapely.geometry import Polygon
 else:
-    scipy = try_import('scipy')
     scipy_sparse = try_import('scipy.sparse')
-    if scipy_sparse is not None:
-        csr_matrix = scipy_sparse.csr_matrix
-        maximum_bipartite_matching = \
-            scipy_sparse.csgraph.maximum_bipartite_matching
     geometry = try_import('shapely.geometry')
     if geometry is not None:
         Polygon = geometry.Polygon
@@ -62,6 +56,7 @@ class HmeanIoU(BaseMetric):
             pred polygons if both of them are never matched before. It was used
             in academia. Defaults to 'vanilla'.
         **kwargs: Keyword arguments passed to :class:`BaseMetric`.
+
     Examples:
 
         >>> from mmeval import HmeanIoU
@@ -69,9 +64,9 @@ class HmeanIoU(BaseMetric):
         >>> hmeaniou = HmeanIoU(pred_score_thrs=dict(start=0.5, stop=0.7, step=0.1))  # noqa
         >>> gt_polygons = [[np.array([0, 0, 1, 0, 1, 1, 0, 1])]]
         >>> pred_polygons = [[
-                np.array([0, 0, 1, 0, 1, 1, 0, 1]),
-                np.array([0, 0, 1, 0, 1, 1, 0, 1]),
-            ]]
+        ...     np.array([0, 0, 1, 0, 1, 1, 0, 1]),
+        ...     np.array([0, 0, 1, 0, 1, 1, 0, 1]),
+        ... ]]
         >>> pred_scores = [np.array([1, 0.5])]
         >>> gt_ignore_flags = [[False]]
         >>> hmeaniou(pred_polygons, pred_scores, gt_polygons, gt_ignore_flags)
@@ -90,11 +85,11 @@ class HmeanIoU(BaseMetric):
         strategy: str = 'vanilla',
         **kwargs,
     ) -> None:
-        if strategy == 'max_matching' and scipy is None:
+        if strategy == 'max_matching' and scipy_sparse is None:
             raise RuntimeError(
                 'scipy is not installed, please run "pip install scipy" to use'
                 ' HmeanIoUMetric with "max_matching" strategy.')
-        if 'Polygon' not in globals():
+        if geometry is None:
             raise RuntimeError(
                 'shapely is not installed, please run "pip install shapely" to'
                 ' use HmeanIoUMetric.')
@@ -212,8 +207,8 @@ class HmeanIoU(BaseMetric):
         Returns:
             int: The hits by max matching policy.
         """
-        csr_matched_metric = csr_matrix(iou_metric)
-        matched_preds = maximum_bipartite_matching(
+        csr_matched_metric = scipy_sparse.csr_matrix(iou_metric)
+        matched_preds = scipy_sparse.csgraph.maximum_bipartite_matching(
             csr_matched_metric, perm_type='row')
         # -1 denotes unmatched pred polygons
         return np.sum(matched_preds != -1).item()
