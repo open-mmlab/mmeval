@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
+from collections import OrderedDict
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
@@ -101,8 +102,8 @@ class ProposalRecall(BaseMetric):
         for prediction, groundtruth in zip(predictions, groundtruths):
             # process prediction
             proposal_pred = prediction['bboxes']
-            scores = prediction.get('scores')
-            if scores:
+            scores = prediction.get('scores', None)
+            if scores is not None:
                 sort_idx = np.argsort(scores)[::-1]
                 proposal_pred = proposal_pred[sort_idx, :]
             prop_num = min(proposal_pred.shape[0],
@@ -120,31 +121,39 @@ class ProposalRecall(BaseMetric):
         return proposal_preds, proposal_gts, num_gts
 
     def calculate_recall(self, predictions: List[dict],
-                         groundtruths: List[dict], class_index: int,
-                         pool: Optional[Pool]):
+                         groundtruths: List[dict], pool: Optional[Pool]):
         proposal_preds, proposal_gts, num_gts = self.process_proposals(
             predictions=predictions, groundtruths=groundtruths)
 
         if pool is not None:
-            ious = pool.starmap(self._calculate_ious,
-                                zip(proposal_preds, proposal_gts))
+            num_images = len(proposal_preds)
+            ious = pool.starmap(
+                self._calculate_ious,
+                zip(proposal_preds, proposal_gts,
+                    [self.proposal_nums] * num_images,
+                    [self.use_legacy_coordinate] * num_images))
         else:
             ious = []
             for img_idx in range(len(proposal_preds)):
                 _iou = self._calculate_ious(proposal_preds[img_idx],
-                                            proposal_gts[img_idx])
+                                            proposal_gts[img_idx],
+                                            self.proposal_nums,
+                                            self.use_legacy_coordinate)
                 ious.append(_iou)
 
         ious = np.concatenate(ious, axis=1)
         ious = np.fliplr(np.sort(ious, axis=1))
-        recalls = np.zeros(
-            (self.proposal_nums.size, self.iou_thrs.size))  # type:ignore
+        recalls = np.zeros((
+            len(self.proposal_nums),  # type:ignore
+            len(self.iou_thrs)))  # type:ignore
         for i, thr in enumerate(self.iou_thrs):  # type:ignore
             recalls[:, i] = (ious >= thr).sum(axis=1) / float(num_gts)
         return recalls
 
-    def _calculate_ious(self, pred_proposals: np.ndarray,
-                        gt_proposals: np.ndarray):
+    @staticmethod
+    def _calculate_ious(pred_proposals: np.ndarray, gt_proposals: np.ndarray,
+                        proposal_nums: np.ndarray,
+                        use_legacy_coordinate: bool):
         # Step 1. calculate all proposal ious
         if gt_proposals is None or gt_proposals.shape[0] == 0:
             ious = np.zeros((0, pred_proposals.shape[0]), dtype=np.float32)
@@ -152,12 +161,11 @@ class ProposalRecall(BaseMetric):
             ious = calculate_overlaps(
                 gt_proposals,
                 pred_proposals,
-                use_legacy_coordinate=self.use_legacy_coordinate)
+                use_legacy_coordinate=use_legacy_coordinate)
         # Step 2. initialize the ious array and calculate based on proposal_num
-        _ious = np.zeros(
-            (self.proposal_nums.size, gt_proposals.shape[0]),  # type:ignore
-            dtype=np.float32)  # type:ignore
-        for i, proposal_num in enumerate(self.proposal_nums):  # type:ignore
+        _ious = np.zeros((proposal_nums.size, gt_proposals.shape[0]),
+                         dtype=np.float32)  # type:ignore
+        for i, proposal_num in enumerate(proposal_nums):
             pred_ious = ious[:, :proposal_num].copy()
             gt_ious = np.zeros(ious.shape[0])
 
@@ -176,7 +184,7 @@ class ProposalRecall(BaseMetric):
             _ious[i, :] = gt_ious
         return _ious
 
-    def compute_metric(self, results: list) -> dict:  # type:ignore
+    def compute_metric(self, results: list) -> dict:
         """Compute the VOCMeanAP metric.
 
         Args:
@@ -201,5 +209,15 @@ class ProposalRecall(BaseMetric):
         else:
             pool = None  # type: ignore
 
+        recalls = self.calculate_recall(predictions, groundtruths, pool)
+        ar = recalls.mean(axis=1)
         if pool is not None:
             pool.close()
+
+        eval_results = OrderedDict()
+        results_list = []
+        for i, num in enumerate(self.proposal_nums):  # type:ignore
+            eval_results[f'AR@{num}'] = ar[i]
+            results_list.append(np.concatenate([recalls[i], ar[None, i]]))
+        eval_results['proposal_result'] = results_list
+        return eval_results
