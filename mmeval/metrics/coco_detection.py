@@ -353,13 +353,7 @@ class CocoDetectionMetric(BaseMetric):
 
             for i in range(len(gt_bboxes)):
                 label = gt_labels[i]
-                bbox = gt_bboxes[i]
-                coco_bbox = [
-                    int(bbox[0]),
-                    int(bbox[1]),
-                    int(bbox[2] - bbox[0]),
-                    int(bbox[3] - bbox[1]),
-                ]
+                coco_bbox = self.xyxy2xywh(gt_bboxes[i])
                 ignore_flag = ignore_flags[i]
                 mask = gt_masks[i]
                 annotation = dict(
