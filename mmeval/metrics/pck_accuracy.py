@@ -1,11 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import logging
 import numpy as np
 from collections import OrderedDict
 from typing import Dict, List, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.core.dispatcher import logger
 from .utils import keypoint_pck_accuracy
+
+logger = logging.getLogger(__name__)
 
 
 class PCKAccuracy(BaseMetric):
