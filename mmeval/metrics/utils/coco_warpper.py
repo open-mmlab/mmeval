@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import pycocotools.mask as _mask_util
 from collections import defaultdict
+from pathlib import Path
 from pycocotools.coco import COCO as _COCO
 from pycocotools.cocoeval import COCOeval as _COCOeval
 from typing import Dict, Optional, Sequence, Union
@@ -17,7 +18,8 @@ class COCO(_COCO):
             Defaults to None.
     """
 
-    def __init__(self, annotation_file: Optional[str] = None) -> None:
+    def __init__(self,
+                 annotation_file: Optional[Union[str, Path]] = None) -> None:
         super().__init__(annotation_file=annotation_file)
         self.img_ann_map = self.imgToAnns
         self.cat_img_map = self.catToImgs

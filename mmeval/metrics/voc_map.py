@@ -1,12 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-# from mmeval.utils import is_list_of
-# TODO: update when fileio merged in mmeval
-from mmengine.utils import is_list_of
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
+from mmeval.utils import is_list_of
 
 
 def calculate_average_precision(recalls: np.ndarray,

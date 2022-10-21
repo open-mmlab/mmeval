@@ -3,8 +3,7 @@ import numpy as np
 import os.path as osp
 import pytest
 import tempfile
-# TODO: update
-from mmengine.fileio import dump
+from json import dump
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import CocoDetectionMetric
@@ -85,8 +84,8 @@ def _create_dummy_coco_json(json_name):
         [annotation_1, annotation_2, annotation_3, annotation_4],
         'categories': categories
     }
-
-    dump(fake_json, json_name)
+    with open(json_name, 'w') as f:
+        dump(fake_json, f)
 
 
 def _create_dummy_results():

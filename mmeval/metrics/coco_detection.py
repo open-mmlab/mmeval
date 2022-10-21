@@ -5,14 +5,12 @@ import os.path as osp
 import tempfile
 import warnings
 from collections import OrderedDict
-# from mmeval.utils import is_list_of
-# from mmeval.fileio import FileClient, dump, load
-# TODO: update when fileio merged in mmeval
-from mmengine.fileio import FileClient, dump, load
-from mmengine.utils import is_list_of
+from json import dump
 from typing import Dict, List, Optional, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
+from mmeval.fileio import get_local_path, load
+from mmeval.utils import is_list_of
 
 try:
     from mmeval.metrics.utils.coco_warpper import COCO, COCOeval
@@ -50,9 +48,8 @@ class CocoDetectionMetric(BaseMetric):
         outfile_prefix (str, optional): The prefix of json files. It includes
             the file path and the prefix of filename, e.g., "a/b/prefix".
             If not specified, a temp file will be created. Defaults to None.
-        file_client_args (dict): Arguments to instantiate a FileClient.
-            See :class:`mmeval.fileio.FileClient` for details.
-            Defaults to ``dict(backend='disk')``.
+        backend_args (dict, optional): Arguments to instantiate the
+            preifx of uri corresponding backend. Defaults to None.
         gt_mask_area (bool): Whether calculate GT mask area when not loading
             ann_file. If True, the GT instance area will be the mask area,
             else the bounding box area. It will not be used when loading
@@ -153,7 +150,7 @@ class CocoDetectionMetric(BaseMetric):
                  metric_items: Optional[Sequence[str]] = None,
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
-                 file_client_args: dict = dict(backend='disk'),
+                 backend_args: Optional[dict] = None,
                  gt_mask_area: bool = True,
                  **kwargs) -> None:
         if not HAS_COCOAPI:
@@ -203,8 +200,9 @@ class CocoDetectionMetric(BaseMetric):
         # initialize coco api with the converted dataset
         self._coco_api: Optional[COCO]  # type: ignore
         if ann_file is not None:
-            file_client = FileClient(**file_client_args)
-            with file_client.get_local_path(ann_file) as local_path:
+            with get_local_path(
+                    filepath=ann_file,
+                    backend_args=backend_args) as local_path:
                 self._coco_api = COCO(annotation_file=local_path)
         else:
             self._coco_api = None
@@ -291,11 +289,13 @@ class CocoDetectionMetric(BaseMetric):
         result_files = dict()
         result_files['bbox'] = f'{outfile_prefix}.bbox.json'
         result_files['proposal'] = f'{outfile_prefix}.bbox.json'
-        dump(bbox_json_results, result_files['bbox'])
+        with open(result_files['bbox'], 'w') as f:
+            dump(bbox_json_results, f)
 
         if segm_json_results is not None:
             result_files['segm'] = f'{outfile_prefix}.segm.json'
-            dump(segm_json_results, result_files['segm'])
+            with open(result_files['segm'], 'w') as f:
+                dump(segm_json_results, f)
 
         return result_files
 
@@ -355,10 +355,10 @@ class CocoDetectionMetric(BaseMetric):
                 label = gt_labels[i]
                 bbox = gt_bboxes[i]
                 coco_bbox = [
-                    bbox[0],
-                    bbox[1],
-                    bbox[2] - bbox[0],
-                    bbox[3] - bbox[1],
+                    int(bbox[0]),
+                    int(bbox[1]),
+                    int(bbox[2] - bbox[0]),
+                    int(bbox[3] - bbox[1]),
                 ]
                 ignore_flag = ignore_flags[i]
                 mask = gt_masks[i]
@@ -394,7 +394,8 @@ class CocoDetectionMetric(BaseMetric):
         if len(annotations) > 0:
             coco_json['annotations'] = annotations
         converted_json_path = f'{outfile_prefix}.gt.json'
-        dump(coco_json, converted_json_path)
+        with open(converted_json_path, 'w') as f:
+            dump(coco_json, f)
         return converted_json_path
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
