@@ -1,3 +1,6 @@
 coverage
+lmdb
+opencv-python
+parameterized
 pytest
 pytest-mpi
