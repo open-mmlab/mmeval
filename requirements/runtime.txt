@@ -1,2 +1,3 @@
 numpy
 plum-dispatch
+pyyaml
