@@ -50,7 +50,7 @@ def is_seq_of(seq: Any,
         bool: Return True if ``seq`` is valid else False.
 
     Examples:
-        >>> from mmengine.utils import is_seq_of
+        >>> from mmeval.utils import is_seq_of
         >>> seq = ['a', 'b', 'c']
         >>> is_seq_of(seq, str)
         True
