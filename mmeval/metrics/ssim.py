@@ -29,11 +29,12 @@ class SSIM(BaseMetric):
             pixels are not involved in the PSNR calculation. Default: 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             Default: 'HWC'.
-        convert_to (str): Whether to convert the images to other color models.
-            If None, the images are not altered. When computing for 'Y',
-            the images are assumed to be in BGR order. Options are 'Y' and
-            None. Default: None.
-        channel_order (str): The channel order of image. Default: 'rgb'.
+        convert_to (str, optional): Whether to convert the images to other
+            color models. If None, the images are not altered. When computing
+            for 'Y', the images are assumed to be in BGR order. Options are
+            'Y' and None. Default: None.
+        channel_order (str): The channel order of image. Choices are 'rgb' and
+            'bgr'. Default: 'rgb'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
     """
 

@@ -16,12 +16,27 @@ class SNR(BaseMetric):
             pixels are not involved in the PSNR calculation. Default: 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             Default: 'HWC'.
-        convert_to (str): Whether to convert the images to other color models.
-            If None, the images are not altered. When computing for 'Y',
-            the images are assumed to be in BGR order. Options are 'Y' and
-            None. Default: None.
-        channel_order (str): The channel order of image. Default: 'rgb'.
+        convert_to (str, optional): Whether to convert the images to other
+            color models. If None, the images are not altered. When computing
+            for 'Y', the images are assumed to be in BGR order. Options are
+            'Y' and None. Default: None.
+        channel_order (str): The channel order of image. Choices are 'rgb' and
+            'bgr'. Default: 'rgb'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+
+        >>> from mmeval import SNR
+        >>> snr = SNR(crop_border=1, input_order='CHW',
+                      convert_to='Y', channel_order='rgb')
+
+    Use NumPy implementation:
+
+        >>> import numpy as np
+        >>> gts = np.ones((3, 32, 32))
+        >>> preds = np.ones((3, 32, 32))
+        >>> snr(preds, labels)
+        {'snr': 26.290039980499536}
     """
 
     def __init__(self,
