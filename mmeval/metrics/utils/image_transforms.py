@@ -10,12 +10,12 @@ def _convert_input_type_range(img: np.ndarray) -> np.ndarray:
     rgb2ycbcr and ycbcr2rgb.
 
     Args:
-        img (ndarray): The input image. It accepts:
+        img (np.ndarray): The input image. It accepts:
             1. np.uint8 type with range [0, 255];
             2. np.float32 type with range [0, 1].
 
     Returns:
-        (ndarray): The converted image with type of np.float32 and range of
+        (np.ndarray): The converted image with type of np.float32 and range of
         [0, 1].
     """
     img_type = img.dtype
@@ -42,7 +42,7 @@ def _convert_output_type_range(
     functions such as rgb2ycbcr and ycbcr2rgb.
 
     Args:
-        img (ndarray): The image to be converted with np.float32 type and
+        img (np.ndarray): The image to be converted with np.float32 type and
             range [0, 255].
         dst_type (np.uint8 | np.float32): If dst_type is np.uint8, it
             converts the image to np.uint8 type with range [0, 255]. If
@@ -74,7 +74,7 @@ def rgb2ycbcr(img: np.ndarray, y_only: bool = False) -> np.ndarray:
     https://en.wikipedia.org/wiki/YCbCr#JPEG_conversion.
 
     Args:
-        img (ndarray): The input image. It accepts:
+        img (np.ndarray): The input image. It accepts:
             1. np.uint8 type with range [0, 255];
             2. np.float32 type with range [0, 1].
         y_only (bool): Whether to only return Y channel. Default: False.
@@ -107,7 +107,7 @@ def bgr2ycbcr(img: np.ndarray, y_only: bool = False) -> np.ndarray:
     https://en.wikipedia.org/wiki/YCbCr#JPEG_conversion.
 
     Args:
-        img (ndarray): The input image. It accepts:
+        img (np.ndarray): The input image. It accepts:
             1. np.uint8 type with range [0, 255];
             2. np.float32 type with range [0, 1].
         y_only (bool): Whether to only return Y channel. Default: False.
