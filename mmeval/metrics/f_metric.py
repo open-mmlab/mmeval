@@ -177,8 +177,8 @@ class F1Metric(BaseMetric):
 
         Returns:
             dict[str, float]: The f1 scores. The keys are the names of the
-                metrics, and the values are corresponding results. Possible
-                keys are 'micro_f1' and 'macro_f1'.
+            metrics, and the values are corresponding results. Possible
+            keys are 'micro_f1' and 'macro_f1'.
         """
 
         preds = []
