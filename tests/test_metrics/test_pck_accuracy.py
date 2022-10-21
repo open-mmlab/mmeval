@@ -178,6 +178,7 @@ class TestJhmdbPCKAccuracy(TestCase):
         jhmdb_pck_metric = JhmdbPCKAccuracy(thr=0.5, norm_item='bbox')
         pckh_results = jhmdb_pck_metric(self.predictions, self.groundtruths)
         target = {
+            'PCK@0.5': 1.0,
             'Head PCK': 1.0,
             'Sho PCK': 1.0,
             'Elb PCK': 1.0,
@@ -188,3 +189,18 @@ class TestJhmdbPCKAccuracy(TestCase):
             'Mean PCK': 1.0,
         }
         self.assertDictEqual(pckh_results, target)
+
+        # test normalized by 'torso_size'
+        jhmdb_tpck_metric = JhmdbPCKAccuracy(thr=0.2, norm_item='torso')
+        tpck_results = jhmdb_tpck_metric(self.predictions, self.groundtruths)
+        target = {
+            'Head tPCK': 1.0,
+            'Sho tPCK': 1.0,
+            'Elb tPCK': 1.0,
+            'Wri tPCK': 1.0,
+            'Hip tPCK': 1.0,
+            'Knee tPCK': 1.0,
+            'Ank tPCK': 1.0,
+            'Mean tPCK': 1.0,
+        }
+        self.assertDictEqual(tpck_results, target)

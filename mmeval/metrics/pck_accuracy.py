@@ -4,6 +4,7 @@ from collections import OrderedDict
 from typing import Dict, List, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
+from mmeval.core.dispatcher import logger
 from .utils import keypoint_pck_accuracy
 
 
@@ -34,24 +35,18 @@ class PCKAccuracy(BaseMetric):
 
         >>> from mmeval import PCKAccuracy
         >>> import numpy as np
-        >>> predictions = [
-                dict(
-                    coords=np.array([
-                        [0, 0], [1, 1], [2, 2],[3, 3], [4, 4]
-                    ]).reshape(1, -1, 2)
-                )
-            ]
-        >>> groundtruths = [
-                dict(
-                    coords=np.array([
-                        [0, 0], [1, 1], [2, 2],[3, 3], [4, 4]
-                    ]).reshape(1, -1, 2),
-                    mask=np.array([[1, 1, 0, 1, 1]]).astype(bool),
-                    bbox_size=np.array([[0.5, 0.5]])
-                )
-            ]
-        >>> pck = PCKAccuracy(thr=0.5, norm_item='bbox')
-        >>> pck(predictions, groundtruths)
+        >>> num_keypoints = 15
+        >>> keypoints = np.random.random((1, num_keypoints, 2)) * 10
+        >>> predictions = [{'coords': keypoints}]
+        >>> keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
+        >>> bbox_size = np.random.random((1, 2)) * 10
+        >>> groundtruths = [{
+        ... 'coords': keypoints,
+        ... 'mask': keypoints_visible,
+        ... 'bbox_size': bbox_size,
+        ... }]
+        >>> pckh_metric = PCKAccuracy(thr=0.5, norm_item='bbox')
+        >>> pckh_metric(predictions, groundtruths)
         OrderedDict([('PCK@0.5', 1.0)])
     """
 
@@ -61,9 +56,10 @@ class PCKAccuracy(BaseMetric):
                  **kwargs) -> None:
         super().__init__(**kwargs)
         self.thr = thr
-        self.norm_item = norm_item if isinstance(norm_item,
-                                                 (tuple,
-                                                  list)) else [norm_item]
+        if isinstance(norm_item, str):
+            norm_item = [norm_item]
+        self.norm_item = norm_item
+
         allow_normalized_items = ['bbox', 'head', 'torso']
         for item in self.norm_item:
             if item not in allow_normalized_items:
@@ -82,21 +78,16 @@ class PCKAccuracy(BaseMetric):
 
                     - coords (np.ndarray, [1, K, D]): predicted keypoints
                         coordinates
-
             groundtruths (Sequence[dict]): The ground truth labels.
                 Each groundtruth dict has the following keys:
 
                     - coords (np.ndarray, [1, K, D]): ground truth keypoints
                         coordinates
-
                     - mask(np.ndarray, [1, K]): ground truth keypoints_visible
-
                     - bbox_size(np.ndarray, optional, [1, 2]): ground truth
                         bbox size
-
                     - head_size(np.ndarray, optional, [1, 2]): ground truth
                         head size
-
                     - torso_size(np.ndarray, optional, [1, 2]): ground truth
                         torso size
         """
@@ -113,8 +104,6 @@ class PCKAccuracy(BaseMetric):
             Dict[str, float]: The computed metrics. The keys are the names of
             the metrics, and the values are the corresponding results.
         """
-        from mmeval.core.dispatcher import logger
-
         # split gt and prediction list
         preds, gts = zip(*results)
 
@@ -182,6 +171,26 @@ class MpiiPCKAccuracy(PCKAccuracy):
             Valid items include 'bbox', 'head', 'torso', which correspond
             to 'PCK', 'PCKh' and 'tPCK' respectively. Default: ``'head'``.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+
+        >>> from mmeval import MpiiPCKAccuracy
+        >>> import numpy as np
+        >>> num_keypoints = 16
+        >>> keypoints = np.random.random((1, num_keypoints, 2)) * 10
+        >>> predictions = [{'coords': keypoints}]
+        >>> keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
+        >>> head_size = np.random.random((1, 2)) * 10
+        >>> groundtruths = [{
+        ... 'coords': keypoints + 1.0,
+        ... 'mask': keypoints_visible,
+        ... 'head_size': head_size,
+        ... }]
+        >>> mpii_pckh_metric = MpiiPCKAccuracy(thr=0.3, norm_item='head')
+        >>> mpii_pckh_metric(predictions, groundtruths)
+        OrderedDict([('Head', 100.0), ('Shoulder', 100.0), ('Elbow', 100.0),
+        ('Wrist', 100.0), ('Hip', 100.0), ('Knee', 100.0), ('Ankle', 100.0),
+        ('PCKh', 100.0), ('PCKh@0.1', 100.0)])
     """
 
     def __init__(self,
@@ -200,8 +209,6 @@ class MpiiPCKAccuracy(PCKAccuracy):
             Dict[str, float]: The computed metrics. The keys are the names of
             the metrics, and the values are corresponding results.
         """
-        from mmeval.core.dispatcher import logger
-
         # split gt and prediction list
         preds, gts = zip(*results)
 
@@ -295,6 +302,26 @@ class JhmdbPCKAccuracy(PCKAccuracy):
             Valid items include 'bbox', 'head', 'torso', which correspond
             to 'PCK', 'PCKh' and 'tPCK' respectively. Default: ``'bbox'``.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+
+        >>> from mmeval import JhmdbPCKAccuracy
+        >>> import numpy as np
+        >>> num_keypoints = 15
+        >>> keypoints = np.random.random((1, num_keypoints, 2)) * 10
+        >>> predictions = [{'coords': keypoints}]
+        >>> keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
+        >>> torso_size = np.random.random((1, 2)) * 10
+        >>> groundtruths = [{
+        ... 'coords': keypoints,
+        ... 'mask': keypoints_visible,
+        ... 'torso_size': torso_size,
+        ... }]
+        >>> jhmdb_pckh_metric = JhmdbPCKAccuracy(thr=0.2, norm_item='torso')
+        >>> jhmdb_pckh_metric(predictions, groundtruths)
+        OrderedDict([('Head tPCK', 1.0), ('Sho tPCK', 1.0), ('Elb tPCK', 1.0),
+        ('Wri tPCK', 1.0), ('Hip tPCK', 1.0), ('Knee tPCK', 1.0),
+        ('Ank tPCK', 1.0), ('Mean tPCK', 1.0)])
     """
 
     def __init__(self,
@@ -313,8 +340,6 @@ class JhmdbPCKAccuracy(PCKAccuracy):
             Dict[str, float]: The computed metrics. The keys are the names of
             the metrics, and the values are corresponding results.
         """
-        from mmeval.core.dispatcher import logger
-
         # split gt and prediction list
         preds, gts = zip(*results)
 
@@ -348,7 +373,6 @@ class JhmdbPCKAccuracy(PCKAccuracy):
                 'Mean': pck
             }
 
-            del metric_results[f'PCK@{self.thr}']
             for stats_name, stat in stats.items():
                 metric_results[f'{stats_name} PCK'] = stat
 
