@@ -25,7 +25,7 @@ class F1Metric(BaseMetric):
             If mode is a list, then metrics in mode will be calculated
             separately. Defaults to 'micro'.
         cared_classes (list[int]): The indices of the labels particpated in
-            the metirc computing. If both ``cared_classes`` and
+            the metric computing. If both ``cared_classes`` and
             ``ignored_classes`` are empty, all classes will be taken into
             account. Defaults to []. Note: ``cared_classes`` and
             ``ignored_classes`` cannot be specified together.
@@ -34,9 +34,6 @@ class F1Metric(BaseMetric):
             ``ignored_classes`` are empty, all classes will be taken into
             account. Defaults to []. Note: ``cared_classes`` and
             ``ignored_classes`` cannot be specified together.
-        collect_device (str): Device name used for collecting results from
-            different ranks during distributed training. Must be 'cpu' or
-            'gpu'. Defaults to 'cpu'.
         **kwargs: Keyword arguments passed to :class:`BaseMetric`.
 
     Warning:
