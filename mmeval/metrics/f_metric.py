@@ -124,8 +124,6 @@ class F1Metric(BaseMetric):
                 sequences of non-negative integer labels.
         """
         for prediction, label in zip(predictions, labels):
-            prediction = np.array(prediction, dtype=np.int64).flatten()
-            label = np.array(label, dtype=np.int64).flatten()
             self._results.append((prediction, label))
 
     @overload  # type: ignore
@@ -133,8 +131,8 @@ class F1Metric(BaseMetric):
     def _compute_tp_fp_fn(self, predictions: Sequence['torch.Tensor'],
                           labels: Sequence['torch.Tensor']):
         """Compute tp, fp and fn from predictions and labels."""
-        preds = torch.cat(predictions)
-        gts = torch.cat(labels)
+        preds = torch.cat(predictions).long().flatten().cpu()
+        gts = torch.cat(labels).long().flatten().cpu()
 
         assert preds.max() < self.num_classes
         assert gts.max() < self.num_classes
@@ -154,8 +152,8 @@ class F1Metric(BaseMetric):
     def _compute_tp_fp_fn(self, predictions: Sequence[Union[np.ndarray, int]],
                           labels: Sequence[Union[np.ndarray, int]]):
         """Compute tp, fp and fn from predictions and labels."""
-        preds = np.concatenate(predictions, axis=0)
-        gts = np.concatenate(labels, axis=0)
+        preds = np.concatenate(predictions, axis=0).astype(np.int64).flatten()
+        gts = np.concatenate(labels, axis=0).astype(np.int64).flatten()
 
         assert preds.max() < self.num_classes  # type: ignore
         assert gts.max() < self.num_classes  # type: ignore
