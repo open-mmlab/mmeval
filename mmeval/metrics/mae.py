@@ -12,6 +12,17 @@ class MAE(BaseMetric):
 
     Args:
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+        >>> from mmeval import MAE
+        >>> mae = MAE()
+        >>> import numpy as np
+        >>> preds = [np.ones((32, 32, 3))]
+        >>> gts = [np.ones((32, 32, 3)) * 2]
+        >>> mask = np.ones((32, 32, 3)) * 2
+        >>> mask[:16] *= 0
+        >>> mae(preds, gts, [mask])
+        {'mae': 0.003921568627}
     """
 
     def __init__(self, **kwargs) -> None:
@@ -19,14 +30,14 @@ class MAE(BaseMetric):
 
     def add(self, preds: Sequence[np.ndarray], gts: Sequence[np.ndarray], masks: Sequence[np.ndarray] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add MAE score of batch to ``self._results``
+
         Args:
             preds (Sequence[np.ndarray]): Predictions of the model.
             gts (Sequence[np.ndarray]): The ground truth images.
             masks (Sequence[np.ndarray]): Mask images.
         """
 
-        for i, data in enumerate(zip(preds, gts)):
-            pred, gt = data
+        for i, (pred, gt) in enumerate(zip(preds, gts)):
             assert gt.shape == pred.shape, (
                 f'Image shapes are different: {gt.shape}, {pred.shape}.')
             if masks is None:
@@ -39,9 +50,11 @@ class MAE(BaseMetric):
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
+
         Args:
             results (List[np.float32]): A list that consisting the MAE score.
                 This list has already been synced across all ranks.
+
         Returns:
             Dict[str, float]: The computed MAE metric.
         """
@@ -58,6 +71,7 @@ class MAE(BaseMetric):
             gt (np.ndarray): Images with range [0, 255].
             pred (np.ndarray): Images with range [0, 255].
             mask (np.ndarray): Mask of evaluation.
+
         Returns:
             np.float32: MAE result.
         """
