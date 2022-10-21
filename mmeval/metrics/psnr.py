@@ -22,6 +22,16 @@ class PSNR(BaseMetric):
             None. Default: None.
         channel_order (str): The channel order of image. Default: 'rgb'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+        >>> from mmeval import PSNR
+        >>> psnr = PSNR(crop_border=0, input_order='CHW',
+                      convert_to='Y', channel_order='rgb')
+        >>> import numpy as np
+        >>> gts = np.ones((3, 32, 32))
+        >>> preds = np.ones((3, 32, 32))
+        >>> psnr(preds, labels)
+        {'psnr': 49.45272242415597}
     """
 
     def __init__(self,
@@ -52,6 +62,7 @@ class PSNR(BaseMetric):
 
     def add(self, preds: Sequence[np.ndarray], gts: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add PSNR score of batch to ``self._results``
+
         Args:
             preds (Sequence[np.ndarray]): Predictions of the model.
             gts (Sequence[np.ndarray]): The ground truth images.
@@ -86,9 +97,11 @@ class PSNR(BaseMetric):
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
+
         Args:
             results (List[np.float64]): A list that consisting the PSNR score.
                 This list has already been synced across all ranks.
+
         Returns:
             Dict[str, float]: The computed PSNR metric.
         """
@@ -100,9 +113,11 @@ class PSNR(BaseMetric):
         """Calculate PSNR (Peak Signal-to-Noise Ratio).
 
         Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
+
         Args:
             gt (np.ndarray): Images with range [0, 255].
             pred (np.ndarray): Images with range [0, 255].
+
         Returns:
             np.float64: PSNR result.
         """
