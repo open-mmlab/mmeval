@@ -11,7 +11,6 @@ from mmeval.core.base_metric import BaseMetric
 from .utils.ava_evaluation import object_detection_evaluation as det_eval
 from .utils.ava_evaluation import standard_fields
 
-
 logger = logging.getLogger(__name__)
 
 
@@ -210,9 +209,9 @@ def ava_eval(result_file: str,
         pascal_evaluator.add_single_ground_truth_image_info(
             image_key, {
                 standard_fields.InputDataFields.groundtruth_boxes:
-                    np.array(gt_boxes[image_key], dtype=float),
+                np.array(gt_boxes[image_key], dtype=float),
                 standard_fields.InputDataFields.groundtruth_classes:
-                    np.array(gt_labels[image_key], dtype=int)
+                np.array(gt_labels[image_key], dtype=int)
             })
     if verbose:
         logger.info('Convert groundtruth')
@@ -226,11 +225,11 @@ def ava_eval(result_file: str,
         pascal_evaluator.add_single_detected_image_info(
             image_key, {
                 standard_fields.DetectionResultFields.detection_boxes:
-                    np.array(boxes[image_key], dtype=float),
+                np.array(boxes[image_key], dtype=float),
                 standard_fields.DetectionResultFields.detection_classes:
-                    np.array(labels[image_key], dtype=int),
+                np.array(labels[image_key], dtype=int),
                 standard_fields.DetectionResultFields.detection_scores:
-                    np.array(scores[image_key], dtype=float)
+                np.array(scores[image_key], dtype=float)
             })
     if verbose:
         logger.info('convert detections')
@@ -268,7 +267,7 @@ class AVAMeanAP(BaseMetric):
         if custom_classes is not None:
             self.custom_classes = [0] + custom_classes
 
-    def add(self, predictions: dict) -> None:
+    def add(self, predictions: dict) -> None:  # type: ignore
         """
         Args:
             predictions (dict): A dict which contains the following keys:
