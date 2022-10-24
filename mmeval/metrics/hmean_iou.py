@@ -46,7 +46,7 @@ class HmeanIoU(BaseMetric):
 
     Args:
         match_iou_thr (float): IoU threshold for a match. Defaults to 0.5.
-        ignore_precision_thr (float): Precision threshold when prediction and\
+        ignore_precision_thr (float): Precision threshold when prediction and
             gt ignored polygons are matched. Defaults to 0.5.
         pred_score_thrs (dict): Best prediction score threshold searching
             space. Defaults to dict(start=0.3, stop=0.9, step=0.1).
