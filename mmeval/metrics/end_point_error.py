@@ -1,0 +1,156 @@
+# Copyright (c) OpenMMLab. All rights reserved.
+
+import numpy as np
+from typing import TYPE_CHECKING, List, Optional, Sequence, Union, overload
+
+from mmeval.core.base_metric import BaseMetric
+from mmeval.core.dispatcher import dispatch
+from mmeval.utils import try_import
+
+if TYPE_CHECKING:
+    import torch
+else:
+    torch = try_import('torch')
+
+
+class EndPointError(BaseMetric):
+    """EndPointError evaluation metric.
+
+    EndPointError is a widely used evaluation metric for optical flow
+    estimation.
+
+    This metric supports 2 kinds of inputs, i.e. `numpy.ndarray` and
+    `torch.Tensor`, and the implementation for the calculation depends on
+    the inputs type.
+
+    Args:
+        **kwargs: Keyword arguments passed to :class:`BaseMetric`.
+
+    Examples:
+
+        >>> from mmeval import EndPointError
+        >>> epe = EndPointError()
+
+    Use NumPy implementation:
+
+        >>> import numpy as np
+        >>> predictions = np.array([[[10., 5.], [0.1, 3.]], [[3., 15.2], [2.4, 4.5]]])
+        >>> labels = np.array([[[10.1, 4.8], [10, 3.]], [[6., 10.2], [2.0, 4.1]]])
+        >>> valid_masks = np.array([[1., 1.], [1., 0.3]])
+        >>> epe(predictions, labels, valid_masks)
+        {'EPE': 5.318186230865093}
+
+    Use PyTorch implementation:
+
+        >>> import torch
+        >>> predictions = torch.Tensor([[[10., 5.], [0.1, 3.]], [[3., 15.2], [2.4, 4.5]]])
+        >>> labels = torch.Tensor([[[10.1, 4.8], [10, 3.]], [[6., 10.2], [2.0, 4.1]]])
+        >>> valid_masks = torch.Tensor([[1., 1.], [1., 0.3]])
+        >>> epe(predictions, labels, valid_masks)
+        {'EPE': 5.3181863}
+
+    Accumulate batch:
+
+        >>> for i in range(10):
+        ...     predictions = torch.randn(10, 10, 2)
+        ...     labels = torch.randn(10, 10, 2)
+        ...     epe.add(predictions, labels)
+        >>> epe.compute()  # doctest: +SKIP
+    """
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+
+    def add(self, predictions: Sequence, labels: Sequence,
+            valid_masks: Optional[Sequence] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
+        """Process one batch of predictions and labels.
+
+        Args:
+            predictions (Sequence): Predicted sequence of flow map with
+                shape (H, W, 2).
+            labels (Sequence): The ground truth sequence of flow map with
+                shape (H, W, 2).
+            valid_masks (Sequence): The Sequence of valid mask for labels with
+                shape (H, W). If it is None, this function will automatically
+                generate an all-ones array. Defaults to None.
+        """
+        if valid_masks is None:
+            if isinstance(predictions, Sequence):
+                valid_masks = [
+                    np.ones_like(predictions[0][..., 0])
+                    for _ in range(len(predictions))
+                ]
+            elif isinstance(predictions, np.ndarray):
+                valid_masks = np.ones_like(predictions[..., 0])
+            elif isinstance(predictions, torch.Tensor):
+                valid_masks = torch.ones_like(predictions[..., 0])
+
+        for prediction, label, valid_mask in zip(predictions, labels,
+                                                 valid_masks):
+            assert prediction.shape == label.shape, 'The shape of ' \
+                '`prediction` and `label` should be the same, but got: ' \
+                f'{prediction.shape} and {label.shape}'
+
+            assert prediction.shape[-1] == 2, 'The last dimension of ' \
+                f'`prediction` should be 2, but got: {prediction.shape[-1]}'
+
+            epe = self._end_point_error(prediction, label, valid_mask)
+            self._results.append(epe)
+
+    @overload  # type: ignore
+    @dispatch
+    def _end_point_error(self, prediction: np.ndarray, label: np.ndarray,
+                         valid_mask: np.ndarray) -> np.ndarray:
+        """Calculate end point error map
+
+        Args:
+            prediction (np.ndarray): Prediction with shape (H, W, 2).
+            label (np.ndarray): Ground truth with shape (H, W, 2).
+            valid_mask (np.ndarray): Valid mask with shape (H, W).
+        
+        Returns:
+            np.ndarray: End point error map with shape (H, W)
+        """
+        epe_map = np.sqrt(np.sum((prediction - label)**2, axis=-1))
+        val = valid_mask.reshape(-1) >= 0.5
+        epe = epe_map.reshape(-1)[val]
+        return epe
+
+    @dispatch
+    def _end_point_error(
+            self, prediction: torch.Tensor, label: torch.Tensor,
+            valid_mask: Union[torch.Tensor, np.ndarray]) -> np.ndarray:
+        """Calculate end point error map
+
+        Args:
+            prediction (torch.Tensor): Prediction with shape (H, W, 2).
+            label (torch.Tensor): Ground truth with shape (H, W, 2).
+            valid_mask (torch.Tensor): Valid mask with shape (H, W).
+        
+        Returns:
+            np.ndarray: End point error map with shape (H, W)
+        """
+        epe_map = torch.sqrt(torch.sum((prediction - label)**2, dim=-1))
+        val = valid_mask.reshape(-1) >= 0.5
+        epe = epe_map.reshape(-1)[val]
+        return epe.cpu().numpy()
+
+    def compute_metric(self, results: List[np.ndarray]) -> dict:
+        """Compute the EndPointError metric.
+
+        This method would be invoked in `BaseMetric.compute` after distributed
+        synchronization.
+
+        Args:
+            results (List[np.ndarray]): This list has already been synced
+                across all ranks. This is a list of `np.ndarray`, which is
+                the end point error map between the prediction and the label.
+
+        Returns:
+            Dict: The computed metric, with following key:
+
+                - EPE, the mean end point error of all pairs.
+        """
+        epe_all = np.concatenate(results)
+        metric_results = dict(EPE=np.mean(epe_all))
+        return metric_results
