@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 import numpy as np
-from typing import (TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple,
+from typing import (TYPE_CHECKING, Any, Dict, List, Optional, Sequence, Tuple,
                     Union, overload)
 
 from mmeval.core.base_metric import BaseMetric
@@ -21,17 +21,42 @@ BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[Union[int, float]]],
                            Union[int, Sequence[int]]]
 
 
-def _precision_recall_f1_support(pred_positive, gt_positive, average):
-    """Calculate base classification task metrics, such as  precision, recall,
+def _precision_recall_f1_support(pred_positive: Union[np.ndarray,
+                                                      'torch.Tensor'],
+                                 gt_positive: Union[np.ndarray,
+                                                    'torch.Tensor'],
+                                 average: Optional[str]) -> Tuple:
+    """Calculate base classification task metrics, such as precision, recall,
     f1_score, support.
 
-    Inputs of `pred_positive` and `gt_positive` should be both
-    `torch.tensor` with `torch.int64` dtype or `numpy.ndarray`
-    with `numpy.int64` dtype.
+    Args:
+        pred_positive (Union[np.ndarray, 'torch.Tensor']): A tensor or
+            np.ndarray that indicates the one-hot mapping of positive
+            labels in prediction.
+        pred_positive (Union[np.ndarray, 'torch.Tensor']): A tensor or
+            np.ndarray that indicates the one-hot mapping of positive
+            labels in ground truth.
+            of tuples that consisting the prediction and label. This list
+            has already been synced across all ranks.
+        average (str, optional): The average method. If None, the scores
+            for each class are returned. And it supports two average modes:
 
-    And should be both with shape of (M, N):
-        - M: Number of samples.
-        - N: Number of classes.
+                - `"macro"`: Calculate metrics for each category, and calculate
+                  the mean value over all categories.
+                - `"micro"`: Calculate metrics globally by counting the total
+                  true positives, false negatives and false positives.
+
+    Returns:
+        Tuple: The results of precision, recall, f1_score and support
+            respectively, and the data type depends on the inputs and the
+            average type.
+
+    Notes:
+        Inputs of `pred_positive` and `gt_positive` should be both
+        `torch.tensor` with `torch.int64` dtype or `numpy.ndarray`
+        with `numpy.int64` dtype. And should be both with shape of (M, N):
+            - M: Number of samples.
+            - N: Number of classes.
     """
     average_options = ['micro', 'macro', None]
     assert average in average_options, 'Invalid `average` argument, ' \
@@ -190,11 +215,11 @@ class SingleLabelMetric(BaseMetric):
         for pred, target in zip(preds, targets):
             self._results.append((pred, target))
 
-    def _format_metric_results(self, results: List[List]) -> Dict:
+    def _format_metric_results(self, results: Sequence) -> Dict:
         """Format the given metric results into a dictionary.
 
         Args:
-            results_per_topk (list): A list of per topk and thrs accuracy.
+            results (Sequence): A list of per topk and thrs metrics.
 
         Returns:
             dict: The formatted dictionary.
@@ -242,7 +267,7 @@ class SingleLabelMetric(BaseMetric):
     @overload  # type: ignore
     @dispatch
     def _compute_metric(self, preds: Sequence['torch.Tensor'],
-                        targets: Sequence['torch.Tensor']) -> List[List]:
+                        targets: Sequence['torch.Tensor']) -> List[Any]:
         """A PyTorch implementation that computes the accuracy metric."""
         preds = torch.stack(preds)
         targets = torch.stack(targets)
@@ -261,8 +286,8 @@ class SingleLabelMetric(BaseMetric):
             gt_positive = F.one_hot(targets.flatten().to(torch.int64),
                                     self.num_classes)
             pred_positive = F.one_hot(preds.to(torch.int64), self.num_classes)
-            return _precision_recall_f1_support(pred_positive, gt_positive,
-                                                self.average)
+            return _precision_recall_f1_support(  # type: ignore
+                pred_positive, gt_positive, self.average)
         else:
             # For pred score, calculate on all thresholds.
             num_classes = preds.shape[1]
@@ -293,7 +318,7 @@ class SingleLabelMetric(BaseMetric):
     @dispatch
     def _compute_metric(
             self, preds: Sequence[Union[int, Sequence[Union[int, float]]]],
-            targets: Sequence[Union[int, Sequence[int]]]) -> List[List]:
+            targets: Sequence[Union[int, Sequence[int]]]) -> List[Any]:
         """A Builtin implementation that computes the metric."""
 
         return self._compute_metric([np.array(pred) for pred in preds],
@@ -301,7 +326,7 @@ class SingleLabelMetric(BaseMetric):
 
     @dispatch
     def _compute_metric(self, preds: Sequence[Union[np.ndarray, np.int64]],
-                        targets: Sequence[np.int64]) -> List[List]:
+                        targets: Sequence[np.int64]) -> List[Any]:
         """A NumPy implementation that computes the metric."""
         preds = np.stack(preds)
         targets = np.stack(targets)
@@ -321,8 +346,8 @@ class SingleLabelMetric(BaseMetric):
 
             pred_positive = np.eye(self.num_classes, dtype=np.int64)[preds]
 
-            return _precision_recall_f1_support(pred_positive, gt_positive,
-                                                self.average)
+            return _precision_recall_f1_support(  # type: ignore
+                pred_positive, gt_positive, self.average)
         else:
             # For pred score, calculate on all thresholds.
             num_classes = preds.shape[1]
