@@ -2,10 +2,12 @@
 
 from .accuracy import Accuracy
 from .coco_detection import CocoDetectionMetric
+from .f_metric import F1Metric
 from .mean_iou import MeanIoU
 from .oid_map import OIDMeanAP
 from .voc_map import VOCMeanAP
 
 __all__ = [
-    'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'CocoDetectionMetric'
+    'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'F1Metric',
+    'CocoDetectionMetric'
 ]
