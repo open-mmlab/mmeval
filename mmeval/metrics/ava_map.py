@@ -256,6 +256,7 @@ class AVAMeanAP(BaseMetric):
         custom_classes (list(int), optional): A subset of class ids
         from origin dataset.
     """
+
     def __init__(self,
                  ann_file: str,
                  label_file: str,
