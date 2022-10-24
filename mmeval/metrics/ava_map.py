@@ -5,7 +5,7 @@ import numpy as np
 import os
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, TextIO, Tuple
+from typing import List, Optional, TextIO
 
 from mmeval.core.base_metric import BaseMetric
 from .utils.ava_evaluation import object_detection_evaluation as det_eval
@@ -153,7 +153,6 @@ def read_labelmap(labelmap_file: TextIO) -> tuple:
 
 
 def ava_eval(result_file: str,
-             result_type: str,
              label_file: str,
              ann_file: str,
              exclude_file: Optional[str] = None,
@@ -162,7 +161,6 @@ def ava_eval(result_file: str,
     """
     Args:
         result_file (str): The dumped results file path.
-        result_type (str):  The result type, currently we only support `mAP`.
         label_file (str): The label file path.
         ann_file (str): The annotation file path.
         exclude_file (str, optional): The excluded timestamp file path.
@@ -174,8 +172,6 @@ def ava_eval(result_file: str,
     Returns:
         dict: The evaluation results.
     """
-    assert result_type in ['mAP']
-
     categories, class_whitelist = read_labelmap(open(label_file))
     if custom_classes is not None:
         custom_classes = custom_classes[1:]
@@ -246,23 +242,32 @@ def ava_eval(result_file: str,
 
 
 class AVAMeanAP(BaseMetric):
-    """AVA evaluation metric."""
+    """AVA evaluation metric.
 
+    This metric computes mAP using the ava evaluation toolkit provided
+    by the author.
+
+    Args:
+        ann_file (str): The annotation file path.
+        label_file (str): The label file path.
+        exclude_file (str, optional): The excluded timestamp file path.
+        Defaults to None.
+        num_classes (int): Number of classes. Defaults to 81.
+        custom_classes (list(int), optional): A subset of class ids
+        from origin dataset.
+    """
     def __init__(self,
                  ann_file: str,
                  label_file: str,
                  exclude_file: Optional[str] = None,
-                 options: Tuple[str] = ('mAP', ),
                  num_classes: int = 81,
                  custom_classes: Optional[List[int]] = None,
                  **kwargs) -> None:
         super().__init__(**kwargs)
-        assert len(options) == 1
         self.ann_file = ann_file
         self.exclude_file = exclude_file
         self.label_file = label_file
         self.num_classes = num_classes
-        self.options = options
         self.custom_classes = custom_classes
         if custom_classes is not None:
             self.custom_classes = [0] + custom_classes
@@ -278,13 +283,19 @@ class AVAMeanAP(BaseMetric):
         self._results.append(predictions)
 
     def compute_metric(self, results: list) -> dict:
+        """
+        Args:
+            results: A list of detection results.
+
+        Returns:
+            dict: The computed ava metric.
+        """
         time_now = datetime.now().strftime('%Y%m%d_%H%M%S')
         temp_file = f'AVA_{time_now}_result.csv'
         results2csv(results, temp_file, self.custom_classes)
 
         eval_results = ava_eval(
             temp_file,
-            self.options[0],
             self.label_file,
             self.ann_file,
             self.exclude_file,
