@@ -40,7 +40,7 @@ class EndPointError(BaseMetric):
         >>> labels = np.array(
         ...     [[[10.1, 4.8], [10, 3.]],
         ...     [[6., 10.2], [2.0, 4.1]]])
-        >>> valid_masks = np.array([[1., 1.], [1., 0.3]])
+        >>> valid_masks = np.array([[1., 1.], [1., 0.]])
         >>> epe(predictions, labels, valid_masks)
         {'EPE': 5.318186230865093}
 
@@ -53,7 +53,7 @@ class EndPointError(BaseMetric):
         >>> labels = torch.Tensor(
         ...     [[[10.1, 4.8], [10, 3.]],
         ...     [[6., 10.2], [2.0, 4.1]]])
-        >>> valid_masks = torch.Tensor([[1., 1.], [1., 0.3]])
+        >>> valid_masks = torch.Tensor([[1., 1.], [1., 0.]])
         >>> epe(predictions, labels, valid_masks)
         {'EPE': 5.3181863}
 
@@ -79,7 +79,7 @@ class EndPointError(BaseMetric):
                 shape (H, W, 2).
             valid_masks (Sequence): The Sequence of valid mask for labels with
                 shape (H, W). If it is None, this function will automatically
-                generate an all-ones array. Defaults to None.
+                generate a map filled with 1. Defaults to None.
         """
 
         for idx, (prediction, label) in enumerate(zip(predictions, labels)):
