@@ -23,8 +23,24 @@ BATCH_POLYS = Sequence[Sequence[np.ndarray]]
 class HmeanIoU(BaseMetric):
     """HmeanIoU metric.
 
-    This method computes the hmean iou metric of polygons, which is done in the
-    following steps:
+    This method computes the hmean iou metric of polygons, and accepts
+    parameters orgnaized as follows:
+
+    - batch_pred_polygons (Sequence[Sequence[np.ndarray]]): A batch of
+      prediction polygons, where each element is a sequence of
+      polygons. Each polygon is represented in the form of [x1, y1,
+      x2, y2, ...].
+    - batch_pred_scores (Sequence): A batch of prediction scores, where each
+      element is a sequence of scores.
+    - batch_pred_polygons (Sequence[Sequence[np.ndarray]]): A batch of
+      ground truth polygons, where each element is a sequence of
+      polygons. Each polygon is represented in the form of [x1, y1,
+      x2, y2, ...].
+    - batch_gt_ignore_flags (Sequence): A batch of boolean flags indicating
+      whether to ignore the corresponding ground truth polygon. Each element is
+      a sequence of flags.
+
+    The evaluation is done in the following steps:
 
     - Filter the prediction polygon:
 
