@@ -5,7 +5,7 @@ import numpy as np
 import os
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, TextIO
+from typing import List, Optional, TextIO, Sequence
 
 from mmeval.core.base_metric import BaseMetric
 from .utils.ava_evaluation import object_detection_evaluation as det_eval
@@ -20,26 +20,27 @@ def results2csv(results: List[dict],
     """Dump the results to a csv file.
 
     Args:
-        results (list[dict]): A list of detection results.
+        results (list[list[dict]]): A list of batched detection results.
         out_file (str): The output csv file path.
         custom_classes (list[int], optional): A subset of class ids
             from origin dataset.
     """
     csv_results = []
-    for res in results:
-        video_id, timestamp = res['video_id'], res['timestamp']
-        outputs = res['outputs']
-        for label, _ in enumerate(outputs):
-            for bbox in outputs[label]:
-                bbox_ = tuple(bbox.tolist())
-                if custom_classes is not None:
-                    actual_label = custom_classes[label + 1]
-                else:
-                    actual_label = label + 1
-                csv_results.append((
-                    video_id,
-                    timestamp,
-                ) + bbox_[:4] + (actual_label, ) + bbox_[4:])
+    for batched_res in results:
+        for res in batched_res:
+            video_id, timestamp = res['video_id'], res['timestamp']
+            outputs = res['outputs']
+            for label in range(len(outputs)):
+                for bbox in outputs[label]:
+                    bbox_ = tuple(bbox.tolist())
+                    if custom_classes is not None:
+                        actual_label = custom_classes[label + 1]
+                    else:
+                        actual_label = label + 1
+                    csv_results.append((
+                        video_id,
+                        timestamp,
+                    ) + bbox_[:4] + (actual_label, ) + bbox_[4:])
 
     # save space for float
     def to_str(item):
@@ -264,13 +265,11 @@ class AVAMeanAP(BaseMetric):
         >>> label_file = './tests/test_metrics/ava_action_list.txt'
         >>> num_classes = 4
         >>> ava_metric = AVAMeanAP(ann_file=ann_file, label_file=label_file,
-        >>>                      num_classes=4)
+        >>>                        num_classes=4)
         >>>
         >>> predictions = [{
-        >>>    'video_id':
-        >>>    '3reY9zJKhqN',
-        >>>    'timestamp':
-        >>>    1774,
+        >>>    'video_id': '3reY9zJKhqN',
+        >>>    'timestamp': 1774,
         >>>    'outputs': [
         >>>        np.array([[0.362, 0.156, 0.969, 0.666, 0.106],
         >>>                  [0.442, 0.083, 0.721, 0.947, 0.162]]),
@@ -279,11 +278,9 @@ class AVAMeanAP(BaseMetric):
         >>>        np.array([[0.417, 0.167, 0.843, 0.939, 0.015],
         >>>                  [0.35, 0.421, 0.57, 0.689, 0.427]])
         >>>    ]
-        >>>}, {
-        >>>    'video_id':
-        >>>    'HmR8SmNIoxu',
-        >>>    'timestamp':
-        >>>    1384,
+        >>> }, {
+        >>>    'video_id': 'HmR8SmNIoxu',
+        >>>    'timestamp': 1384,
         >>>    'outputs': [
         >>>        np.array([[0.256, 0.338, 0.726, 0.799, 0.563],
         >>>                  [0.071, 0.256, 0.64, 0.75, 0.297]]),
@@ -292,11 +289,9 @@ class AVAMeanAP(BaseMetric):
         >>>        np.array([[0.051, 0.005, 0.975, 0.942, 0.424],
         >>>                  [0.347, 0.05, 0.97, 0.944, 0.396]])
         >>>    ]
-        >>>}, {
-        >>>    'video_id':
-        >>>    '5HNXoce1raG',
-        >>>    'timestamp':
-        >>>    1097,
+        >>> }, {
+        >>>    'video_id': '5HNXoce1raG',
+        >>>    'timestamp': 1097,
         >>>    'outputs': [
         >>>        np.array([[0.39, 0.087, 0.833, 0.616, 0.447],
         >>>                  [0.461, 0.212, 0.627, 0.527, 0.036]]),
@@ -305,9 +300,8 @@ class AVAMeanAP(BaseMetric):
         >>>        np.array([[0.206, 0.456, 0.564, 0.725, 0.685],
         >>>                  [0.106, 0.445, 0.782, 0.673, 0.367]])
         >>>    ]
-        >>>}]
-        >>> for prediction in predictions:
-        >>>     ava_metric.add(prediction)
+        >>> }]
+        >>> ava_metric(predictions)
         >>> ava_metric.compute()
         {'mAP@0.5IOU': 0.027777778}
     """
@@ -328,11 +322,12 @@ class AVAMeanAP(BaseMetric):
         if custom_classes is not None:
             self.custom_classes = [0] + custom_classes
 
-    def add(self, predictions: dict) -> None:  # type: ignore
+    def add(self, predictions: Sequence[dict]) -> None:  # type: ignore
         """Add detection results to the results list.
 
         Args:
-            predictions (dict): A dict which contains the following keys:
+            predictions (Sequence[dict]): A list of prediction dict which
+                contains the following keys:
                 - `video_id`: The id of the video, e.g., `3reY9zJKhqN`.
                 - `timestamp`: The timestamp of the video e.g., `1774`.
                 - `outputs`: A list bbox results of each class.

@@ -90,17 +90,13 @@ def test_ava_map(result, result_custom):
     label_file = osp.join(data_prefix, 'ava_action_list.txt')
 
     ava_metric = AVAMeanAP(ann_file, label_file=label_file, num_classes=4)
-    for prediction in result:
-        ava_metric.add(prediction)
-    res = ava_metric.compute()
+    res = ava_metric(result)
     assert_array_almost_equal(res['mAP@0.5IOU'], 0.027777778)
 
     # custom classes
     ava_metric = AVAMeanAP(
         ann_file, label_file=label_file, num_classes=3, custom_classes=[1, 3])
-    for prediction in result_custom:
-        ava_metric.add(prediction)
-    res = ava_metric.compute()
+    res = ava_metric(result_custom)
     assert_array_almost_equal(res['mAP@0.5IOU'], 0.04166667)
 
 
