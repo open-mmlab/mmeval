@@ -200,8 +200,8 @@ class VOCMeanAP(BaseMetric):
             Defaults to 4.
         drop_class_ap (bool): Whether to drop the class without ground truth
             when calculating the average precision for each class.
-        classwise (bool): Whether to return the computed
-            results of each class. Defaults to False.
+        classwise (bool): Whether to return the computed results of each
+            class. Defaults to False.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
