@@ -65,14 +65,14 @@ def read_csv(csv_file: TextIO, class_whitelist: Optional[set] = None) -> tuple:
 
     Returns:
         boxes (dict): A dictionary mapping each unique image key (string) to
-            a list of boxes, given as coordinates [y1, x1, y2, x2].
+        a list of boxes, given as coordinates [y1, x1, y2, x2].
         labels (dict): A dictionary mapping each unique image key (string) to
-            a list of integer class labels, matching the corresponding box
-            in `boxes`.
+        a list of integer class labels, matching the corresponding box
+        in `boxes`.
         scores (dict): A dictionary mapping each unique image key (string)
-            to a list of score values labels, matching the corresponding
-            label in `labels`. If scores are not provided in the csv,
-            then they will default to 1.0.
+        to a list of score values labels, matching the corresponding
+        label in `labels`. If scores are not provided in the csv,
+        then they will default to 1.0.
     """
     entries = defaultdict(list)
     boxes = defaultdict(list)
@@ -115,7 +115,7 @@ def read_exclusions(exclusions_file: TextIO) -> set:
 
     Returns:
         excluded (set): A set of strings containing excluded image keys, e.g.
-            "aaaaaaaaaaa,0904" or an empty set if exclusions file is None.
+        "aaaaaaaaaaa,0904" or an empty set if exclusions file is None.
     """
     excluded = set()
     if exclusions_file:
@@ -135,8 +135,8 @@ def read_labelmap(labelmap_file: TextIO) -> tuple:
 
     Returns:
         labelmap (list): The label map in the form used by the
-            object_detection_evaluation module - a list of
-            {"id": integer, "name": classname } dicts.
+        object_detection_evaluation module - a list of
+        {"id": integer, "name": classname } dicts.
         class_ids (set): A set containing all of the valid class id integers.
     """
     labelmap = []
