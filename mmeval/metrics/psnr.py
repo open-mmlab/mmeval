@@ -13,14 +13,14 @@ class PSNR(BaseMetric):
 
     Args:
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the PSNR calculation. Default to 0.
+            pixels are not involved in the PSNR calculation. Defaults to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
-            Default to 'CHW'.
+            Defaults to 'CHW'.
         convert_to (str): Whether to convert the images to other color models.
             If None, the images are not altered. When computing for 'Y',
             the images are assumed to be in BGR order. Options are 'Y' and
-            None. Default to None.
-        channel_order (str): The channel order of image. Default to 'rgb'.
+            None. Defaults to None.
+        channel_order (str): The channel order of image. Defaults to 'rgb'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -110,20 +110,21 @@ class PSNR(BaseMetric):
         return {'psnr': float(np.array(results).mean())}
 
     @staticmethod
-    def _compute_psnr(gt: np.ndarray, pred: np.ndarray) -> np.float64:
+    def _compute_psnr(groundtruth: np.ndarray,
+                      prediction: np.ndarray) -> np.float64:
         """Calculate PSNR (Peak Signal-to-Noise Ratio).
 
         Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
 
         Args:
-            gt (np.ndarray): Images with range [0, 255].
-            pred (np.ndarray): Images with range [0, 255].
+            groundtruth (np.ndarray): Images with range [0, 255].
+            prediction (np.ndarray): Images with range [0, 255].
 
         Returns:
             np.float64: PSNR result.
         """
 
-        mse_value = ((gt - pred)**2).mean()
+        mse_value = ((groundtruth - prediction)**2).mean()
         if mse_value == 0:
             result = float('inf')
         else:

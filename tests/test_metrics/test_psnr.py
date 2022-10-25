@@ -56,6 +56,5 @@ def test_psnr_init():
 def test_psnr(metric_kwargs, img1, img2, results):
     psnr = PSNR(**metric_kwargs)
     psnr_results = psnr(img1, img2)
-    print(psnr_results)
     assert isinstance(psnr_results, dict)
     np.testing.assert_almost_equal(psnr_results['psnr'], results)

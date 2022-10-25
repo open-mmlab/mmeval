@@ -4,10 +4,11 @@ from typing import Optional, Union
 
 
 def _convert_input_type_range(img: np.ndarray) -> np.ndarray:
-    """Convert the type and range of the input image. It converts the input
-    image to np.float32 type and range of [0, 1]. It is mainly used for pre-
-    processing the input image in colorspace conversion functions such as
-    rgb2ycbcr and ycbcr2rgb.
+    """Convert the type and range of the input image.
+
+    It converts the input image to np.float32 type and range of [0, 1]. It is
+    mainly used for pre-processing the input image in colorspace
+    conversion functions such as rgb2ycbcr and ycbcr2rgb.
 
     Args:
         img (np.ndarray): The input image. It accepts:
@@ -15,7 +16,7 @@ def _convert_input_type_range(img: np.ndarray) -> np.ndarray:
             2. np.float32 type with range [0, 1].
 
     Returns:
-        (np.ndarray): The converted image with type of np.float32 and range of
+        np.ndarray: The converted image with type of np.float32 and range of
         [0, 1].
     """
     img_type = img.dtype
@@ -50,7 +51,7 @@ def _convert_output_type_range(
             with range [0, 1].
 
     Returns:
-        (np.ndarray): The converted image with desired type and range.
+        np.ndarray: The converted image with desired type and range.
     """
     if dst_type not in (np.uint8, np.float32):
         raise TypeError('The dst_type should be np.float32 or np.uint8, '
@@ -77,7 +78,7 @@ def rgb2ycbcr(img: np.ndarray, y_only: bool = False) -> np.ndarray:
         img (np.ndarray): The input image. It accepts:
             1. np.uint8 type with range [0, 255];
             2. np.float32 type with range [0, 1].
-        y_only (bool): Whether to only return Y channel. Default: False.
+        y_only (bool): Whether to only return Y channel. Defaults to False.
 
     Returns:
         np.ndarray: The converted YCbCr image. The output image has the same
@@ -110,7 +111,7 @@ def bgr2ycbcr(img: np.ndarray, y_only: bool = False) -> np.ndarray:
         img (np.ndarray): The input image. It accepts:
             1. np.uint8 type with range [0, 255];
             2. np.float32 type with range [0, 1].
-        y_only (bool): Whether to only return Y channel. Default: False.
+        y_only (bool): Whether to only return Y channel. Defaults to False.
 
     Returns:
         np.ndarray: The converted YCbCr image. The output image has the same
@@ -139,7 +140,7 @@ def reorder_image(img: np.array, input_order='HWC'):
         img (np.ndarray): Input image.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             If the input image shape is (h, w), input_order will not have
-            effects. Default: 'HWC'.
+            effects. Defaults to 'HWC'.
 
     Returns:
         np.ndarray: Reordered image.
@@ -162,21 +163,20 @@ def img_transform(img: np.ndarray,
                   input_order: str = 'HWC',
                   convert_to: Optional[str] = None,
                   channel_order: str = 'rgb'):
-    """Image transform.
-
-    Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
+    """Image transformations contains Crop, Reorder to 'HWC' and Convert to
+    'Y'.
 
     Args:
         img (np.ndarray): Images with range [0, 255].
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the PSNR calculation. Default: 0.
+            pixels are not involved in the PSNR calculation. Defaults to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
-            Default: 'HWC'.
+            Defaults to 'HWC'.
         convert_to (str): Whether to convert the images to other color models.
             If None, the images are not altered. When computing for 'Y',
             the images are assumed to be in BGR order. Options are 'Y' and
-            None. Default: None.
-        channel_order (str): The channel order of image. Default: 'rgb'
+            None. Defaults to None.
+        channel_order (str): The channel order of image. Defaults to 'rgb'
 
     Returns:
         np.array: The transformation results.
