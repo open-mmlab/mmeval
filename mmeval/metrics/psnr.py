@@ -13,14 +13,14 @@ class PSNR(BaseMetric):
 
     Args:
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the PSNR calculation. Default: 0.
+            pixels are not involved in the PSNR calculation. Default to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
-            Default: 'CHW'.
+            Default to 'CHW'.
         convert_to (str): Whether to convert the images to other color models.
             If None, the images are not altered. When computing for 'Y',
             the images are assumed to be in BGR order. Options are 'Y' and
-            None. Default: None.
-        channel_order (str): The channel order of image. Default: 'rgb'.
+            None. Default to None.
+        channel_order (str): The channel order of image. Default to 'rgb'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -60,12 +60,12 @@ class PSNR(BaseMetric):
         self.convert_to = convert_to
         self.channel_order = channel_order
 
-    def add(self, preds: Sequence[np.ndarray], gts: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add PSNR score of batch to ``self._results``
 
         Args:
-            preds (Sequence[np.ndarray]): Predictions of the model.
-            gts (Sequence[np.ndarray]): The ground truth images.
+            predictions (Sequence[np.ndarray]): Predictions of the model.
+            groundtruths (Sequence[np.ndarray]): The ground truth images.
             channel_order (Optional[str]): The channel order of the input
                 samples. If not passed, will set as :attr:`self.channel_order`.
                 Defaults to None.
@@ -74,23 +74,24 @@ class PSNR(BaseMetric):
         if channel_order is None:
             channel_order = self.channel_order
 
-        for pred, gt in zip(preds, gts):
-            assert gt.shape == pred.shape, (
-                f'Image shapes are different: {gt.shape}, {pred.shape}.')
-            gt = img_transform(
-                gt,
+        for prediction, groundtruth in zip(predictions, groundtruths):
+            assert groundtruth.shape == prediction.shape, (
+                f'Image shapes are different: \
+                    {groundtruth.shape}, {prediction.shape}.')
+            groundtruth = img_transform(
+                groundtruth,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
                 channel_order=self.channel_order)
-            pred = img_transform(
-                pred,
+            prediction = img_transform(
+                prediction,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
                 channel_order=self.channel_order)
 
-            self._results.append(self._compute_psnr(gt, pred))
+            self._results.append(self._compute_psnr(groundtruth, prediction))
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the PSNR metric.

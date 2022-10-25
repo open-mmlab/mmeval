@@ -8,7 +8,7 @@ from mmeval.core import BaseMetric
 class MAE(BaseMetric):
     """Mean Absolute Error metric for image.
 
-    mean(abs(a-b))
+    Formula: mean(abs(a-b)).
 
     Args:
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
@@ -28,22 +28,26 @@ class MAE(BaseMetric):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def add(self, preds: Sequence[np.ndarray], gts: Sequence[np.ndarray], masks: Sequence[np.ndarray] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], masks: Sequence[np.ndarray] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add MAE score of batch to ``self._results``
 
         Args:
-            preds (Sequence[np.ndarray]): Predictions of the model.
-            gts (Sequence[np.ndarray]): The ground truth images.
+            predictions (Sequence[np.ndarray]): Predictions of the model.
+            groundtruths (Sequence[np.ndarray]): The ground truth images.
             masks (Sequence[np.ndarray]): Mask images.
         """
 
-        for i, (pred, gt) in enumerate(zip(preds, gts)):
-            assert gt.shape == pred.shape, (
-                f'Image shapes are different: {gt.shape}, {pred.shape}.')
+        for i, (prediction,
+                groundtruth) in enumerate(zip(predictions, groundtruths)):
+            assert groundtruth.shape == prediction.shape, (
+                f'Image shapes are different: \
+                    {groundtruth.shape}, {prediction.shape}.')
             if masks is None:
-                self._results.append(self._compute_mae(gt, pred))
+                self._results.append(
+                    self._compute_mae(groundtruth, prediction))
             else:
-                self._results.append(self._compute_mae(gt, pred, masks[i]))
+                self._results.append(
+                    self._compute_mae(groundtruth, prediction, masks[i]))
 
     def compute_metric(self, results: List[np.float32]) -> Dict[str, float]:
         """Compute the MAE metric.
