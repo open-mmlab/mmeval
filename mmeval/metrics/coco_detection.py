@@ -19,7 +19,7 @@ except ImportError:
     HAS_COCOAPI = False
 
 
-class CocoDetectionMetric(BaseMetric):
+class COCODetectionMetric(BaseMetric):
     """COCO object detection task evaluation metric.
 
     Evaluate AR, AP, and mAP for detection tasks including proposal/box
@@ -35,7 +35,7 @@ class CocoDetectionMetric(BaseMetric):
         iou_thrs (float | List[float], optional): IoU threshold to compute AP
             and AR. If not specified, IoUs from 0.5 to 0.95 will be used.
             Defaults to None.
-        classwise_result (bool): Whether to return the computed
+        classwise (bool): Whether to return the computed
             results of each class. Defaults to False.
         proposal_nums (Sequence[int]): Numbers of proposals to be evaluated.
             Defaults to (100, 300, 1000).
@@ -48,9 +48,9 @@ class CocoDetectionMetric(BaseMetric):
         outfile_prefix (str, optional): The prefix of json files. It includes
             the file path and the prefix of filename, e.g., "a/b/prefix".
             If not specified, a temp file will be created. Defaults to None.
-        gt_mask_area (bool): Whether calculate GT mask area when not loading
-            ann_file. If True, the GT instance area will be the mask area,
-            else the bounding box area. It will not be used when loading
+        gt_mask_area (bool): Whether to calculate GT mask area when not
+            loading ann_file. If True, the GT instance area will be the mask
+            area, else the bounding box area. It will not be used when loading
             ann_file. Defaults to True.
         backend_args (dict, optional): Arguments to instantiate the
             preifx of uri corresponding backend. Defaults to None.
@@ -58,7 +58,7 @@ class CocoDetectionMetric(BaseMetric):
 
     Examples:
         >>> import numpy as np
-        >>> from mmeval import CocoDetectionMetric
+        >>> from mmeval import COCODetectionMetric
         >>> try:
         >>>     from mmeval.metrics.utils.coco_wrapper import mask_util
         >>> except ImportError as e:
@@ -69,7 +69,7 @@ class CocoDetectionMetric(BaseMetric):
         ...     'CLASSES': tuple([str(i) for i in range(num_classes)])
         ... }
         >>>
-        >>> coco_det_metric = CocoDetectionMetric(
+        >>> coco_det_metric = COCODetectionMetric(
         ...     dataset_meta=fake_dataset_metas,
         ...     metric=['bbox', 'segm']
         ... )
@@ -145,7 +145,7 @@ class CocoDetectionMetric(BaseMetric):
                  ann_file: Optional[str] = None,
                  metric: Union[str, List[str]] = 'bbox',
                  iou_thrs: Union[float, Sequence[float], None] = None,
-                 classwise_result: bool = False,
+                 classwise: bool = False,
                  proposal_nums: Sequence[int] = (100, 300, 1000),
                  metric_items: Optional[Sequence[str]] = None,
                  format_only: bool = False,
@@ -169,7 +169,7 @@ class CocoDetectionMetric(BaseMetric):
                     f"'proposal_fast', but got {metric}.")
 
         # do class wise evaluation, default False
-        self.classwise_result = classwise_result
+        self.classwise = classwise
 
         # proposal_nums used to compute recall or precision.
         self.proposal_nums = list(proposal_nums)
@@ -576,7 +576,7 @@ class CocoDetectionMetric(BaseMetric):
                 coco_eval.evaluate()
                 coco_eval.accumulate()
                 coco_eval.summarize()
-                if self.classwise_result:  # Compute per-category AP
+                if self.classwise:  # Compute per-category AP
                     # Compute per-category AP
                     # from https://github.com/facebookresearch/detectron2/
                     precisions = coco_eval.eval['precision']

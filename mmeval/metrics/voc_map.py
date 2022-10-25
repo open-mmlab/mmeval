@@ -200,7 +200,7 @@ class VOCMeanAP(BaseMetric):
             Defaults to 4.
         drop_class_ap (bool): Whether to drop the class without ground truth
             when calculating the average precision for each class.
-        classwise_result (bool): Whether to return the computed
+        classwise (bool): Whether to return the computed
             results of each class. Defaults to False.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
@@ -241,7 +241,7 @@ class VOCMeanAP(BaseMetric):
                  use_legacy_coordinate: bool = False,
                  nproc: int = 4,
                  drop_class_ap: bool = True,
-                 classwise_result: bool = False,
+                 classwise: bool = False,
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -275,7 +275,7 @@ class VOCMeanAP(BaseMetric):
         self.nproc = nproc
         self.use_legacy_coordinate = use_legacy_coordinate
         self.drop_class_ap = drop_class_ap
-        self.classwise_result = classwise_result
+        self.classwise = classwise
 
         self.num_iou = len(self.iou_thrs)
         self.num_scale = len(self.scale_ranges)
@@ -565,8 +565,8 @@ class VOCMeanAP(BaseMetric):
             - mAP, the averaged across all IoU thresholds and all class.
             - mAP@{IoU}, the mAP of the specified IoU threshold.
             - mAP@{scale_range}, the mAP of the specified scale range.
-            - classwise_result, the evaluation results of each class.
-              This would be returned if ``self.classwise_result`` is True.
+            - classwise, the evaluation results of each class.
+              This would be returned if ``self.classwise`` is True.
         """
         predictions, groundtruths = zip(*results)
 
@@ -608,7 +608,7 @@ class VOCMeanAP(BaseMetric):
             pool.close()
 
         eval_results = self._aggregate_results(results_per_class)
-        if self.classwise_result:
+        if self.classwise:
             eval_results['classwise_result'] = results_per_class
 
         return eval_results
