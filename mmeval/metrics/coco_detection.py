@@ -144,7 +144,7 @@ class CocoDetectionMetric(BaseMetric):
     def __init__(self,
                  ann_file: Optional[str] = None,
                  metric: Union[str, List[str]] = 'bbox',
-                 iou_thrs: Optional[Union[float, Sequence[float]]] = None,
+                 iou_thrs: Union[float, Sequence[float], None] = None,
                  classwise_result: bool = False,
                  proposal_nums: Sequence[int] = (100, 300, 1000),
                  metric_items: Optional[Sequence[str]] = None,
