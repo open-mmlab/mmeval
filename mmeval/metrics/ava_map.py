@@ -5,7 +5,7 @@ import numpy as np
 import os
 from collections import defaultdict
 from datetime import datetime
-from typing import List, Optional, TextIO, Sequence
+from typing import List, Optional, Sequence, TextIO
 
 from mmeval.core.base_metric import BaseMetric
 from .utils.ava_evaluation import object_detection_evaluation as det_eval
