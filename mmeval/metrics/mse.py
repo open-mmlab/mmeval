@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-from typing import Dict, List, Sequence
+from typing import Dict, List, Optional, Sequence
 
 from mmeval.core import BaseMetric
 
@@ -28,13 +28,13 @@ class MSE(BaseMetric):
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
-    def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], masks: Sequence[np.ndarray] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], masks: Optional[Sequence[np.ndarray]] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add MSE score of batch to ``self._results``
 
         Args:
             predictions (Sequence[np.ndarray]): Predictions of the model.
             groundtruths (Sequence[np.ndarray]): The ground truth images.
-            masks (Sequence[np.ndarray]): Mask images.
+            masks (Sequence[np.ndarray], optional): Mask images.
         """
 
         for i, (prediction,
@@ -66,24 +66,24 @@ class MSE(BaseMetric):
         return {'mse': float(np.array(results).mean())}
 
     @staticmethod
-    def _compute_mse(gt: np.ndarray,
-                     pred: np.ndarray,
-                     mask: np.ndarray = None) -> np.float32:
+    def _compute_mse(groundtruth: np.ndarray,
+                     prediction: np.ndarray,
+                     mask: Optional[np.ndarray] = None) -> np.float32:
         """Calculate MSE (Mean Squared Error).
 
         Args:
-            gt (np.ndarray): Images with range [0, 255].
-            pred (np.ndarray): Images with range [0, 255].
-            mask (np.ndarray): Mask of evaluation.
+            groundtruth (np.ndarray): Images with range [0, 255].
+            prediction (np.ndarray): Images with range [0, 255].
+            mask (np.ndarray, optional): Mask of evaluation.
 
         Returns:
             np.float32: MSE result.
         """
 
-        gt = gt / 255.
-        pred = pred / 255.
+        groundtruth = groundtruth / 255.
+        prediction = prediction / 255.
 
-        diff = gt - pred
+        diff = groundtruth - prediction
         diff *= diff
 
         if mask is not None:
