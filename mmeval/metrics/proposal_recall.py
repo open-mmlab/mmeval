@@ -54,7 +54,7 @@ class ProposalRecall(BaseMetric):
     """
 
     def __init__(self,
-                 iou_thrs: Optional[Union[float, Sequence[float]]] = None,
+                 iou_thrs: Union[float, Sequence[float], None] = None,
                  proposal_nums: Union[int, Sequence[int]] = (100, 300, 1000),
                  use_legacy_coordinate: bool = False,
                  nproc: int = 4,
