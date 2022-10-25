@@ -33,7 +33,7 @@ def _precision_recall_f1_support(pred_positive: Union[np.ndarray,
         pred_positive (Union[np.ndarray, 'torch.Tensor']): A tensor or
             np.ndarray that indicates the one-hot mapping of positive
             labels in prediction.
-        pred_positive (Union[np.ndarray, 'torch.Tensor']): A tensor or
+        gt_positive (Union[np.ndarray, 'torch.Tensor']): A tensor or
             np.ndarray that indicates the one-hot mapping of positive
             labels in ground truth.
             of tuples that consisting the prediction and label. This list
@@ -41,15 +41,15 @@ def _precision_recall_f1_support(pred_positive: Union[np.ndarray,
         average (str, optional): The average method. If None, the scores
             for each class are returned. And it supports two average modes:
 
-                - `"macro"`: Calculate metrics for each category, and calculate
-                  the mean value over all categories.
-                - `"micro"`: Calculate metrics globally by counting the total
-                  true positives, false negatives and false positives.
+            - `"macro"`: Calculate metrics for each category, and calculate
+              the mean value over all categories.
+            - `"micro"`: Calculate metrics globally by counting the total
+              true positives, false negatives and false positives.
 
     Returns:
-        Tuple: The results of precision, recall, f1_score and support
-            respectively, and the data type depends on the inputs and the
-            average type.
+        Tuple: The results of precision, recall, f1_score, and support
+        respectively, and the data type depends on the inputs and the
+        average type.
 
     Notes:
         Inputs of `pred_positive` and `gt_positive` should be both
@@ -102,9 +102,9 @@ class SingleLabelMetric(BaseMetric):
     """A collection of metrics for single-label multi-class classification task
     based on confusion matrix.
 
-    It includes precision, recall, f1-score and support. Comparing with
-    :class:`Accuracy`, these metrics doesn't support topk, but supports
-    various average mode.
+    It includes precision, recall, f1-score, and support. Comparing with
+    :class:`Accuracy`, these metrics don't support topk, but supports
+    various average modes.
 
     Args:
         thrs (Sequence[float | None] | float | None): Predictions with scores
@@ -113,28 +113,29 @@ class SingleLabelMetric(BaseMetric):
         items (Sequence[str]): The detailed metric items to evaluate. Here is
             the available options:
 
-                - `"precision"`: The ratio tp / (tp + fp) where tp is the
-                  number of true positives and fp the number of false
-                  positives.
-                - `"recall"`: The ratio tp / (tp + fn) where tp is the number
-                  of true positives and fn the number of false negatives.
-                - `"f1-score"`: The f1-score is the harmonic mean of the
-                  precision and recall.
-                - `"support"`: The total number of occurrences of each category
-                  in the target.
+            - `"precision"`: The ratio tp / (tp + fp) where tp is the
+                number of true positives and fp the number of false
+                positives.
+            - `"recall"`: The ratio tp / (tp + fn) where tp is the number
+                of true positives and fn the number of false negatives.
+            - `"f1-score"`: The f1-score is the harmonic mean of the
+                precision and recall.
+            - `"support"`: The total number of occurrences of each category
+                in the target.
 
             Defaults to ('precision', 'recall', 'f1-score').
         average (str, optional): The average method. If None, the scores
             for each class are returned. And it supports two average modes:
 
-                - `"macro"`: Calculate metrics for each category, and calculate
-                  the mean value over all categories.
-                - `"micro"`: Calculate metrics globally by counting the total
-                  true positives, false negatives and false positives.
+            - `"macro"`: Calculate metrics for each category, and calculate
+                the mean value over all categories.
+            - `"micro"`: Calculate metrics globally by counting the total
+                true positives, false negatives and false positives.
 
             Defaults to "macro".
         num_classes (int, optional): Number of classes, only need for predictions
             without scores. Defaults to None.
+        **kwargs: Keyword arguments passed to :class:`BaseMetric`.
 
     Examples:
 
@@ -145,16 +146,16 @@ class SingleLabelMetric(BaseMetric):
 
         >>> import numpy as np
         >>> preds = np.asarray([0, 2, 1, 3])
-        >>> targets = np.asarray([0, 1, 2, 3])
-        >>> single_lable_metic(preds, targets)
+        >>> labels = np.asarray([0, 1, 2, 3])
+        >>> single_lable_metic(preds, labels)
         {'precision': 50.0, 'recall': 50.0, 'f1-score': 50.0}
 
     Use PyTorch implementation:
 
         >>> import torch
         >>> preds = torch.Tensor([0, 2, 1, 3])
-        >>> targets = torch.Tensor([0, 1, 2, 3])
-        >>> single_lable_metic(preds, targets)
+        >>> labels = torch.Tensor([0, 1, 2, 3])
+        >>> single_lable_metic(preds, labels)
         {'precision': 50.0, 'recall': 50.0, 'f1-score': 50.0}
 
     Computing with `micro` average mode:
@@ -164,17 +165,17 @@ class SingleLabelMetric(BaseMetric):
             [0.1, 0.3, 0.4, 0.2],
             [0.3, 0.4, 0.2, 0.1],
             [0.0, 0.0, 0.1, 0.9]])
-        >>> targets = np.asarray([0, 1, 2, 3])
+        >>> labels = np.asarray([0, 1, 2, 3])
         >>> single_lable_metic = SingleLabelMetric(average='micro')
-        >>> single_lable_metic(preds, targets)
+        >>> single_lable_metic(preds, labels)
         {'precision_micro': 50.0, 'recall_micro': 50.0, 'f1-score_micro': 50.0} # noqa
 
     Accumulate batch:
 
         >>> for i in range(10):
-        ...     targets = torch.randint(0, 4, size=(100, ))
-        ...     predicts = torch.randint(0, 4, size=(100, ))
-        ...     single_lable_metic.add(predicts, targets)
+        ...     preds = torch.randint(0, 4, size=(100, ))
+        ...     labels = torch.randint(0, 4, size=(100, ))
+        ...     single_lable_metic.add(preds, labels)
         >>> single_lable_metic.compute()  # doctest: +SKIP
     """
 
@@ -204,16 +205,16 @@ class SingleLabelMetric(BaseMetric):
         self.average = average
         self.num_classes = num_classes
 
-    def add(self, preds: Sequence, targets: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence, labels: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to `self._results`.
 
         Args:
-            preds (Sequence): Predictions from the model. It can be
+            predictions (Sequence): Predictions from the model. It can be
                 labels (N, ), or scores of every class (N, C).
-            targets (Sequence): The ground truth labels. It should be (N, ).
+            labels (Sequence): The ground truth labels. It should be (N, ).
         """
-        for pred, target in zip(preds, targets):
-            self._results.append((pred, target))
+        for pred, label in zip(predictions, labels):
+            self._results.append((pred, label))
 
     def _format_metric_results(self, results: Sequence) -> Dict:
         """Format the given metric results into a dictionary.
@@ -266,24 +267,24 @@ class SingleLabelMetric(BaseMetric):
 
     @overload  # type: ignore
     @dispatch
-    def _compute_metric(self, preds: Sequence['torch.Tensor'],
-                        targets: Sequence['torch.Tensor']) -> List[Any]:
+    def _compute_metric(self, predictions: Sequence['torch.Tensor'],
+                        labels: Sequence['torch.Tensor']) -> List[Any]:
         """A PyTorch implementation that computes the accuracy metric."""
-        preds = torch.stack(preds)
-        targets = torch.stack(targets)
+        preds = torch.stack(predictions)
+        labels = torch.stack(labels)
 
         # cannot be raised in current implementation because
         # `add` method will guarantee the equal length.
         # However length check should remain somewhere.
-        assert preds.shape[0] == targets.shape[0], \
+        assert preds.shape[0] == labels.shape[0], \
             'Number of samples does not match between preds' \
-            f'({preds.shape[0]}) and targets ({targets.shape[0]}).'
+            f'({preds.shape[0]}) and labels ({labels.shape[0]}).'
 
         if preds.ndim == 1:
             assert self.num_classes is not None, \
                 'Please specify `num_classes` in `self` if the `preds`'\
-                'is targets instead of scores.'
-            gt_positive = F.one_hot(targets.flatten().to(torch.int64),
+                'is labels instead of scores.'
+            gt_positive = F.one_hot(labels.flatten().to(torch.int64),
                                     self.num_classes)
             pred_positive = F.one_hot(preds.to(torch.int64), self.num_classes)
             return _precision_recall_f1_support(  # type: ignore
@@ -299,7 +300,7 @@ class SingleLabelMetric(BaseMetric):
             pred_score = pred_score.flatten()
             pred_label = pred_label.flatten()
 
-            gt_positive = F.one_hot(targets.flatten().to(torch.int64),
+            gt_positive = F.one_hot(labels.flatten().to(torch.int64),
                                     num_classes)
 
             results = []
@@ -317,32 +318,34 @@ class SingleLabelMetric(BaseMetric):
     @overload
     @dispatch
     def _compute_metric(
-            self, preds: Sequence[Union[int, Sequence[Union[int, float]]]],
-            targets: Sequence[Union[int, Sequence[int]]]) -> List[Any]:
+            self, predictions: Sequence[Union[int, Sequence[Union[int,
+                                                                  float]]]],
+            labels: Sequence[Union[int, Sequence[int]]]) -> List[Any]:
         """A Builtin implementation that computes the metric."""
 
-        return self._compute_metric([np.array(pred) for pred in preds],
-                                    [np.int64(target) for target in targets])
+        return self._compute_metric([np.array(pred) for pred in predictions],
+                                    [np.int64(label) for label in labels])
 
     @dispatch
-    def _compute_metric(self, preds: Sequence[Union[np.ndarray, np.int64]],
-                        targets: Sequence[np.int64]) -> List[Any]:
+    def _compute_metric(self, predictions: Sequence[Union[np.ndarray,
+                                                          np.int64]],
+                        labels: Sequence[np.int64]) -> List[Any]:
         """A NumPy implementation that computes the metric."""
-        preds = np.stack(preds)
-        targets = np.stack(targets)
+        preds = np.stack(predictions)
+        labels = np.stack(labels)
 
         # cannot be raised in current implementation because
         # `add` method will guarantee the equal length.
         # However length check should remain somewhere.
-        assert preds.shape[0] == targets.shape[0], \
+        assert preds.shape[0] == labels.shape[0], \
             'Number of samples does not match between preds' \
-            f'({preds.shape[0]}) and targets ({targets.shape[0]}).'
+            f'({preds.shape[0]}) and labels ({labels.shape[0]}).'
 
         if preds.ndim == 1:
             assert self.num_classes is not None, \
                 'Please specify `num_classes` in `self` if the `preds`'\
-                'is targets instead of scores.'
-            gt_positive = np.eye(self.num_classes, dtype=np.int64)[targets]
+                'is labels instead of scores.'
+            gt_positive = np.eye(self.num_classes, dtype=np.int64)[labels]
 
             pred_positive = np.eye(self.num_classes, dtype=np.int64)[preds]
 
@@ -358,7 +361,7 @@ class SingleLabelMetric(BaseMetric):
             pred_score = preds.max(axis=1)
             pred_label = preds.argmax(axis=1)
 
-            gt_positive = np.eye(num_classes, dtype=np.int64)[targets]
+            gt_positive = np.eye(num_classes, dtype=np.int64)[labels]
 
             results = []
             for thr in self.thrs:
@@ -396,7 +399,7 @@ class SingleLabelMetric(BaseMetric):
         Returns:
             Dict[str, float]: The computed accuracy metric.
         """
-        preds = [res[0] for res in results]
-        targets = [res[1] for res in results]
-        metric_results = self._compute_metric(preds, targets)
+        predictions = [res[0] for res in results]
+        labels = [res[1] for res in results]
+        metric_results = self._compute_metric(predictions, labels)
         return self._format_metric_results(metric_results)
