@@ -27,10 +27,10 @@ class PCKAccuracy(BaseMetric):
         - number of keypoint dimensions: D (typically D = 2)
 
     Args:
-        thr(float): Threshold of PCK calculation. Default: 0.2.
+        thr(float): Threshold of PCK calculation. Defaults to 0.2.
         norm_item (str | Sequence[str]): The item used for normalization.
             Valid items include 'bbox', 'head', 'torso', which correspond
-            to 'PCK', 'PCKh' and 'tPCK' respectively. Default: ``'bbox'``.
+            to 'PCK', 'PCKh' and 'tPCK' respectively. Defaults to ``'bbox'``.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -78,20 +78,20 @@ class PCKAccuracy(BaseMetric):
             predictions (Sequence[dict]): Predictions from the model.
                 Each prediction dict has the following keys:
 
-                    - coords (np.ndarray, [1, K, D]): predicted keypoints
-                        coordinates
+                - coords (np.ndarray, [1, K, D]): predicted keypoints
+                    coordinates
             groundtruths (Sequence[dict]): The ground truth labels.
                 Each groundtruth dict has the following keys:
 
-                    - coords (np.ndarray, [1, K, D]): ground truth keypoints
-                        coordinates
-                    - mask(np.ndarray, [1, K]): ground truth keypoints_visible
-                    - bbox_size(np.ndarray, optional, [1, 2]): ground truth
-                        bbox size
-                    - head_size(np.ndarray, optional, [1, 2]): ground truth
-                        head size
-                    - torso_size(np.ndarray, optional, [1, 2]): ground truth
-                        torso size
+                - coords (np.ndarray, [1, K, D]): ground truth keypoints
+                    coordinates
+                - mask (np.ndarray, [1, K]): ground truth keypoints_visible
+                - bbox_size (np.ndarray, optional, [1, 2]): ground truth
+                    bbox size
+                - head_size (np.ndarray, optional, [1, 2]): ground truth
+                    head size
+                - torso_size (np.ndarray, optional, [1, 2]): ground truth
+                    torso size
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             self._results.append((prediction, groundtruth))
@@ -168,10 +168,10 @@ class MpiiPCKAccuracy(PCKAccuracy):
         - number of keypoint dimensions: D (typically D = 2)
 
     Args:
-        thr(float): Threshold of PCK calculation. Default: 0.5.
+        thr(float): Threshold of PCK calculation. Defaults to 0.5.
         norm_item (str | Sequence[str]): The item used for normalization.
             Valid items include 'bbox', 'head', 'torso', which correspond
-            to 'PCK', 'PCKh' and 'tPCK' respectively. Default: ``'head'``.
+            to 'PCK', 'PCKh' and 'tPCK' respectively. Defaults to ``'head'``.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -299,10 +299,10 @@ class JhmdbPCKAccuracy(PCKAccuracy):
         - number of keypoint dimensions: D (typically D = 2)
 
     Args:
-        thr(float): Threshold of PCK calculation. Default: 0.05.
+        thr(float): Threshold of PCK calculation. Defaults to 0.5.
         norm_item (str | Sequence[str]): The item used for normalization.
             Valid items include 'bbox', 'head', 'torso', which correspond
-            to 'PCK', 'PCKh' and 'tPCK' respectively. Default: ``'bbox'``.
+            to 'PCK', 'PCKh' and 'tPCK' respectively. Defaults to ``'bbox'``.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
