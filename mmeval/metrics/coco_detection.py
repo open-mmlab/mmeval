@@ -308,6 +308,7 @@ class CocoDetectionMetric(BaseMetric):
             outfile_prefix (str): The filename prefix of the json files. If the
                 prefix is "somepath/xxx", the json file will be named
                 "somepath/xxx.gt.json".
+
         Returns:
             str: The filename of the json file.
         """
