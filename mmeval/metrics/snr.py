@@ -61,19 +61,19 @@ class SNR(BaseMetric):
         self.channel_order = channel_order
         self.convert_to = convert_to
 
-    def add(self, preds: Sequence[np.ndarray], gts: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:   # type: ignore # yapf: disable # noqa: E501
         """Add SNR score of batch to ``self._results``
 
         Args:
-            preds (Sequence[np.ndarray]): Predictions of the model.
-            gts (Sequence[np.ndarray]): The ground truth images.
+            predictions (Sequence[np.ndarray]): Predictions of the model.
+            groundtruths (Sequence[np.ndarray]): The ground truth images.
             channel_order (Optional[str]): The channel order of the input
                 samples. If not passed, will set as :attr:`self.channel_order`.
                 Defaults to None.
         """
         channel_order = self.channel_order \
             if channel_order is None else channel_order
-        for pred, gt in zip(preds, gts):
+        for pred, gt in zip(predictions, groundtruths):
             assert gt.shape == pred.shape, (
                 f'Image shapes are different: {gt.shape}, {pred.shape}.')
             gt = img_transform(
