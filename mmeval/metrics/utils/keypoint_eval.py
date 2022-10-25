@@ -21,8 +21,8 @@ def _calc_distances(preds: np.ndarray, gts: np.ndarray, mask: np.ndarray,
             Typical value is heatmap_size.
 
     Returns:
-        np.ndarray[K, N]: The normalized distances. \
-            If target keypoints are missing, the distance is -1.
+        np.ndarray[K, N]: The normalized distances.
+        If target keypoints are missing, the distance is -1.
     """
     N, K, _ = preds.shape
     # set mask=0 when norm_factor==0
@@ -49,8 +49,8 @@ def _distance_acc(distances: np.ndarray, thr: float = 0.5) -> float:
         thr (float): Threshold of the distances.
 
     Returns:
-        float: Percentage of distances below the threshold. \
-            If all target keypoints are missing, return -1.
+        float: Percentage of distances below the threshold.
+        If all target keypoints are missing, return -1.
     """
     distance_valid = distances != -1
     num_distance_valid = distance_valid.sum()

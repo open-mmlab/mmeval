@@ -43,12 +43,12 @@ class PCKAccuracy(BaseMetric):
         >>> keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
         >>> bbox_size = np.random.random((1, 2)) * 10
         >>> groundtruths = [{
-        ... 'coords': keypoints,
-        ... 'mask': keypoints_visible,
-        ... 'bbox_size': bbox_size,
+        ...     'coords': keypoints,
+        ...     'mask': keypoints_visible,
+        ...     'bbox_size': bbox_size,
         ... }]
-        >>> pckh_metric = PCKAccuracy(thr=0.5, norm_item='bbox')
-        >>> pckh_metric(predictions, groundtruths)
+        >>> pck_metric = PCKAccuracy(thr=0.5, norm_item='bbox')
+        >>> pck_metric(predictions, groundtruths)
         OrderedDict([('PCK@0.5', 1.0)])
     """
 
@@ -79,19 +79,19 @@ class PCKAccuracy(BaseMetric):
                 Each prediction dict has the following keys:
 
                 - coords (np.ndarray, [1, K, D]): predicted keypoints
-                    coordinates
+                coordinates
             groundtruths (Sequence[dict]): The ground truth labels.
                 Each groundtruth dict has the following keys:
 
                 - coords (np.ndarray, [1, K, D]): ground truth keypoints
-                    coordinates
+                coordinates
                 - mask (np.ndarray, [1, K]): ground truth keypoints_visible
                 - bbox_size (np.ndarray, optional, [1, 2]): ground truth
-                    bbox size
+                bbox size
                 - head_size (np.ndarray, optional, [1, 2]): ground truth
-                    head size
+                head size
                 - torso_size (np.ndarray, optional, [1, 2]): ground truth
-                    torso size
+                torso size
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             self._results.append((prediction, groundtruth))
@@ -184,9 +184,9 @@ class MpiiPCKAccuracy(PCKAccuracy):
         >>> keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
         >>> head_size = np.random.random((1, 2)) * 10
         >>> groundtruths = [{
-        ... 'coords': keypoints + 1.0,
-        ... 'mask': keypoints_visible,
-        ... 'head_size': head_size,
+        ...     'coords': keypoints + 1.0,
+        ...     'mask': keypoints_visible,
+        ...     'head_size': head_size,
         ... }]
         >>> mpii_pckh_metric = MpiiPCKAccuracy(thr=0.3, norm_item='head')
         >>> mpii_pckh_metric(predictions, groundtruths)
@@ -315,9 +315,9 @@ class JhmdbPCKAccuracy(PCKAccuracy):
         >>> keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
         >>> torso_size = np.random.random((1, 2)) * 10
         >>> groundtruths = [{
-        ... 'coords': keypoints,
-        ... 'mask': keypoints_visible,
-        ... 'torso_size': torso_size,
+        ...     'coords': keypoints,
+        ...     'mask': keypoints_visible,
+        ...     'torso_size': torso_size,
         ... }]
         >>> jhmdb_pckh_metric = JhmdbPCKAccuracy(thr=0.2, norm_item='torso')
         >>> jhmdb_pckh_metric(predictions, groundtruths)
