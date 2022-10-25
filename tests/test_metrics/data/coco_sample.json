@@ -1,0 +1,379 @@
+{
+    "images": [
+        {
+            "file_name": "fake1.jpg",
+            "height": 256,
+            "width": 256,
+            "id": 0
+        },
+        {
+            "file_name": "fake2.jpg",
+            "height": 256,
+            "width": 256,
+            "id": 1
+        },
+        {
+            "file_name": "fake3.jpg",
+            "height": 256,
+            "width": 256,
+            "id": 2
+        },
+        {
+            "file_name": "fake4.jpg",
+            "height": 256,
+            "width": 256,
+            "id": 3
+        }
+    ],
+    "annotations": [
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 400.00,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 1,
+            "image_id": 0,
+            "iscrowd": 0,
+            "ignore": 0,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 400.00,
+            "score": 1.0,
+            "category_id": 2,
+            "id": 2,
+            "image_id": 0,
+            "iscrowd": 1,
+            "ignore": 0,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 400.00,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 3,
+            "image_id": 1,
+            "iscrowd": 0,
+            "ignore": 0,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 400.00,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 4,
+            "image_id": 1,
+            "iscrowd": 0,
+            "ignore": 1,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 0.0,
+            "score": 1.0,
+            "category_id": 2,
+            "id": 5,
+            "image_id": 1,
+            "iscrowd": 0,
+            "ignore": 0,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 100.0,
+            "score": 1.0,
+            "category_id": 3,
+            "id": 6,
+            "image_id": 1,
+            "iscrowd": 0,
+            "ignore": 0,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 0.0,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 7,
+            "image_id": 3,
+            "iscrowd": 0,
+            "ignore": 0,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 0.1,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 8,
+            "image_id": 3,
+            "iscrowd": 0,
+            "ignore": 0,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 0.1,
+            "score": 1.0,
+            "category_id": 4,
+            "id": 9,
+            "image_id": 3,
+            "iscrowd": 0,
+            "ignore": 0,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        },
+        {
+            "bbox": [
+                0,
+                0,
+                20,
+                20
+            ],
+            "area": 0.1,
+            "score": 1.0,
+            "category_id": 1,
+            "id": 10,
+            "image_id": 3,
+            "iscrowd": 0,
+            "ignore": 0,
+            "segmentation": [
+                [
+                    0,
+                    0,
+                    10,
+                    0,
+                    10,
+                    10,
+                    0,
+                    10,
+                    0,
+                    0
+                ]
+            ]
+        }
+    ],
+    "categories": [
+        {
+            "id": 1,
+            "name": "0",
+            "supercategory": "none"
+        },
+        {
+            "id": 2,
+            "name": "1",
+            "supercategory": "none"
+        },
+        {
+            "id": 3,
+            "name": "2",
+            "supercategory": "none"
+        },
+        {
+            "id": 4,
+            "name": "3",
+            "supercategory": "none"
+        },
+        {
+            "id": 5,
+            "name": "4",
+            "supercategory": "none"
+        },
+        {
+            "id": 6,
+            "name": "5",
+            "supercategory": "none"
+        },
+        {
+            "id": 7,
+            "name": "6",
+            "supercategory": "none"
+        },
+        {
+            "id": 8,
+            "name": "7",
+            "supercategory": "none"
+        },
+        {
+            "id": 9,
+            "name": "8",
+            "supercategory": "none"
+        },
+        {
+            "id": 10,
+            "name": "9",
+            "supercategory": "none"
+        },
+        {
+            "id": 11,
+            "name": "10",
+            "supercategory": "none"
+        }
+    ],
+    "licenses": [],
+    "info": null
+}
