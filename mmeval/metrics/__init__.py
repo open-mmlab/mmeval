@@ -7,9 +7,9 @@ from .f_metric import F1Metric
 from .hmean_iou import HmeanIoU
 from .mean_iou import MeanIoU
 from .oid_map import OIDMeanAP
+from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .single_label import SingleLabelMetric
 from .voc_map import VOCMeanAP
-from .pck_accuracy import PCKAccuracy, MpiiPCKAccuracy, JhmdbPCKAccuracy
 
 __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
