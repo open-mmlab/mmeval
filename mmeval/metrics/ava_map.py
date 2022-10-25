@@ -20,37 +20,32 @@ def results2csv(results: List[dict],
     """Dump the results to a csv file.
 
     Args:
-        results (list[list[dict]]): A list of batched detection results.
+        results (list[dict]): A list of detection results.
         out_file (str): The output csv file path.
         custom_classes (list[int], optional): A subset of class ids
             from origin dataset.
     """
     csv_results = []
-    for batched_res in results:
-        for res in batched_res:
-            video_id, timestamp = res['video_id'], res['timestamp']
-            outputs = res['outputs']
-            for label in range(len(outputs)):
-                for bbox in outputs[label]:
-                    bbox_ = tuple(bbox.tolist())
-                    if custom_classes is not None:
-                        actual_label = custom_classes[label + 1]
-                    else:
-                        actual_label = label + 1
-                    csv_results.append((
-                        video_id,
-                        timestamp,
-                    ) + bbox_[:4] + (actual_label, ) + bbox_[4:])
+    for res in results:
+        video_id, timestamp = res['video_id'], res['timestamp']
+        outputs = res['outputs']
+        for label in range(len(outputs)):
+            for bbox in outputs[label]:
+                bbox_ = [f'{i:.3f}' for i in bbox.tolist()]
+                if custom_classes is not None:
+                    actual_label = custom_classes[label + 1]
+                else:
+                    actual_label = label + 1
 
-    # save space for float
-    def to_str(item):
-        if isinstance(item, float):
-            return f'{item:.3f}'
-        return str(item)
+                row_result = [video_id, str(timestamp)]
+                row_result += bbox_[:4]
+                row_result += str(actual_label)
+                row_result += bbox_[4:]
+                csv_results.append(row_result)
 
     with open(out_file, 'w') as f:
         for csv_result in csv_results:
-            f.write(','.join(map(to_str, csv_result)))
+            f.write(','.join(csv_result))
             f.write('\n')
 
 
@@ -207,9 +202,9 @@ def ava_eval(result_file: str,
         pascal_evaluator.add_single_ground_truth_image_info(
             image_key, {
                 standard_fields.InputDataFields.groundtruth_boxes:
-                np.array(gt_boxes[image_key], dtype=float),
+                    np.array(gt_boxes[image_key], dtype=float),
                 standard_fields.InputDataFields.groundtruth_classes:
-                np.array(gt_labels[image_key], dtype=int)
+                    np.array(gt_labels[image_key], dtype=int)
             })
     if verbose:
         logger.info('Convert groundtruth')
@@ -223,11 +218,11 @@ def ava_eval(result_file: str,
         pascal_evaluator.add_single_detected_image_info(
             image_key, {
                 standard_fields.DetectionResultFields.detection_boxes:
-                np.array(boxes[image_key], dtype=float),
+                    np.array(boxes[image_key], dtype=float),
                 standard_fields.DetectionResultFields.detection_classes:
-                np.array(labels[image_key], dtype=int),
+                    np.array(labels[image_key], dtype=int),
                 standard_fields.DetectionResultFields.detection_scores:
-                np.array(scores[image_key], dtype=float)
+                    np.array(scores[image_key], dtype=float)
             })
     if verbose:
         logger.info('convert detections')
@@ -332,7 +327,8 @@ class AVAMeanAP(BaseMetric):
                 - `timestamp`: The timestamp of the video e.g., `1774`.
                 - `outputs`: A list bbox results of each class.
         """
-        self._results.append(predictions)
+        for prediction in predictions:
+            self._results.append(prediction)
 
     def compute_metric(self, results: list) -> dict:
         """Perform ava evaluation.
