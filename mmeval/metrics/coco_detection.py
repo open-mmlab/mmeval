@@ -150,8 +150,8 @@ class CocoDetectionMetric(BaseMetric):
                  metric_items: Optional[Sequence[str]] = None,
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
-                 backend_args: Optional[dict] = None,
                  gt_mask_area: bool = True,
+                 backend_args: Optional[dict] = None,
                  **kwargs) -> None:
         if not HAS_COCOAPI:
             raise RuntimeError('Failed to import `COCO` and `COCOeval` from '
