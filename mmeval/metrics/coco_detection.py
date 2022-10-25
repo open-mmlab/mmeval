@@ -13,7 +13,7 @@ from mmeval.fileio import get_local_path, load
 from mmeval.utils import is_list_of
 
 try:
-    from mmeval.metrics.utils.coco_warpper import COCO, COCOeval
+    from mmeval.metrics.utils.coco_wrapper import COCO, COCOeval
     HAS_COCOAPI = True
 except ImportError:
     HAS_COCOAPI = False
@@ -60,7 +60,7 @@ class CocoDetectionMetric(BaseMetric):
         >>> import numpy as np
         >>> from mmeval import CocoDetectionMetric
         >>> try:
-        >>>     from mmeval.metrics.utils.coco_warpper import mask_util
+        >>>     from mmeval.metrics.utils.coco_wrapper import mask_util
         >>> except ImportError as e:
         >>>     mask_util = None
         >>>
@@ -155,7 +155,7 @@ class CocoDetectionMetric(BaseMetric):
                  **kwargs) -> None:
         if not HAS_COCOAPI:
             raise RuntimeError('Failed to import `COCO` and `COCOeval` from '
-                               '`mmeval.utils.coco_warpper`. '
+                               '`mmeval.utils.coco_wrapper`. '
                                'Please try to install official pycocotools by '
                                '"pip install pycocotools"')
         super().__init__(**kwargs)
@@ -313,7 +313,7 @@ class CocoDetectionMetric(BaseMetric):
             str: The filename of the json file.
         """
         try:
-            from mmeval.metrics.utils.coco_warpper import mask_util
+            from mmeval.metrics.utils.coco_wrapper import mask_util
         except ImportError:
             mask_util = None
 

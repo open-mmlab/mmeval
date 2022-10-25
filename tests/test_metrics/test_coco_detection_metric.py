@@ -9,7 +9,7 @@ from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import CocoDetectionMetric
 from mmeval.utils import try_import
 
-coco_wrapper = try_import('mmeval.metrics.utils.coco_warpper')
+coco_wrapper = try_import('mmeval.metrics.utils.coco_wrapper')
 
 
 def _create_dummy_coco_json(json_name):
