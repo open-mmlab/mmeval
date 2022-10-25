@@ -1,40 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-from typing import Optional
-
-
-def calculate_average_precision(recalls: np.ndarray,
-                                precisions: np.ndarray,
-                                mode: str = 'area') -> float:
-    """Calculate average precision in the detection task.
-
-    Args:
-        recalls (ndarray): The recalls with shape (num_dets, ).
-        precisions (ndarray): The precisions with shape (num_dets, ).
-        mode (str): The average mode, should be 'area' or '11points'.
-            'area' means calculating the area under precision-recall curve.
-            '11points' means calculating the average precision of recalls at
-            [0, 0.1, ..., 1.0]. Defaults to 'area'.
-
-    Returns:
-        float: Calculated average precision.
-    """
-    assert mode in ['area', '11points']
-    if mode == 'area':
-        mrec = np.hstack((0, recalls, 1))
-        mpre = np.hstack((0, precisions, 0))
-        for i in range(mpre.shape[0] - 1, 0, -1):
-            mpre[i - 1] = np.maximum(mpre[i - 1], mpre[i])
-        ind = np.where(mrec[1:] != mrec[:-1])[0]
-        ap = np.sum((mrec[ind + 1] - mrec[ind]) * mpre[ind + 1])
-    else:
-        ap = 0.0
-        for thr in np.arange(0, 1 + 1e-3, 0.1):
-            precs = precisions[recalls >= thr]
-            prec = precs.max() if precs.size > 0 else 0
-            ap += prec
-        ap /= 11.0
-    return ap
 
 
 def calculate_bboxes_area(bboxes: np.ndarray,
@@ -63,38 +28,6 @@ def calculate_bboxes_area(bboxes: np.ndarray,
     bboxes_h = (bboxes[..., 3] - bboxes[..., 1] + extra_length)
     areas = bboxes_w * bboxes_h
     return areas
-
-
-def filter_by_bboxes_area(bboxes: np.ndarray,
-                          min_area: Optional[float],
-                          max_area: Optional[float],
-                          use_legacy_coordinate=False) -> np.ndarray:
-    """Filter the bboxes with an area range.
-
-    Args:
-        bboxes (numpy.ndarray): The bboxes with shape (n, 4) in 'xyxy' format.
-        min_area (Optional[float]): The minimum area. If None, does not filter
-            the minimum area.
-        max_area (Optional[float]): The maximum area. If None, does not filter
-            the maximum area.
-        use_legacy_coordinate (bool): Whether to use coordinate system in
-            mmdet v1.x. which means width, height should be
-            calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
-            Note when function is used in `VOCDataset`, it should be
-            True to align with the official implementation
-            `http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCdevkit_18-May-2011.tar`
-            Default: False.
-
-    Returns:
-        numpy.ndarray: A mask of ``bboxes`` identify which bbox are filtered.
-    """
-    bboxes_area = calculate_bboxes_area(bboxes, use_legacy_coordinate)
-    area_mask = np.ones_like(bboxes_area, dtype=bool)
-    if min_area is not None:
-        area_mask &= (bboxes_area >= min_area)
-    if max_area is not None:
-        area_mask &= (bboxes_area < max_area)
-    return area_mask
 
 
 def calculate_overlaps(bboxes1: np.ndarray,
