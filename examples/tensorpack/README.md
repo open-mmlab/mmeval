@@ -2,20 +2,18 @@
 
 This example provides an evaluation script that can be used to evaluate the model using `MMEval` in [TensorPack FasterRCNN Examples](https://github.com/tensorpack/tensorpack/tree/master/examples/FasterRCNN).
 
-This evaluation script is modified from
-
-- https://github.com/tensorpack/tensorpack/blob/master/examples/FasterRCNN/eval.py
+This evaluation script is modified from [tensorpack](https://github.com/tensorpack/tensorpack/blob/master/examples/FasterRCNN/eval.py)
 
 with the following changes:
 
-- Using `MMEval.CocoMetric`.
+- Using `MMEval.COCODetectionMetric`.
 - Support multi-gpus evaluation by MPI4Py.
 
 ## Usage
 
-1. Following the installation steps in [TensorPack](https://github.com/tensorpack/tensorpack) to install `TensorPack`.
+1. Follow the installation steps in [TensorPack](https://github.com/tensorpack/tensorpack) to install `TensorPack`.
 
-2. Following the dependencies install steps in [tensorpack/examples/FasterRCNN](https://github.com/tensorpack/tensorpack/tree/master/examples/FasterRCNN) and preapare coco dataset.
+2. Follow the dependencies install steps in [tensorpack/examples/FasterRCNN](https://github.com/tensorpack/tensorpack/tree/master/examples/FasterRCNN) and preapare the COCO dataset.
 
 3. Install mpi4py and mmeval.
 

@@ -1,8 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 # flake8: noqa
 
 import argparse
@@ -16,11 +13,12 @@ from data import get_eval_dataflow
 from dataset import DatasetRegistry, register_coco
 from eval import predict_image
 from modeling.generalized_rcnn import ResNetC4Model, ResNetFPNModel
+from mpi4py import MPI
 from tensorpack.predict import MultiTowerOfflinePredictor, PredictConfig
 from tensorpack.tfutils import SmartInit, get_tf_version_tuple
 from tensorpack.utils import logger
 
-from mmeval.metrics import CocoMetric  # type: ignore
+from mmeval.metrics import COCODetectionMetric  # type: ignore
 
 
 def xywh2xyxy(box):
@@ -28,7 +26,6 @@ def xywh2xyxy(box):
 
 
 def do_mmeval_evaluate(pred_config, dataset):
-    from mpi4py import MPI
     comm = MPI.COMM_WORLD
     size = comm.Get_size()
     rank = comm.Get_rank()
@@ -45,7 +42,7 @@ def do_mmeval_evaluate(pred_config, dataset):
     coco_dataset = DatasetRegistry.get(dataset)
     coco_api = coco_dataset.coco
 
-    coco_metric = CocoMetric(
+    coco_metric = COCODetectionMetric(
         ann_file=coco_dataset.annotation_file,
         metric=['bbox', 'segm'] if cfg.MODE_MASK else ['bbox'],
         proposal_nums=[1, 10, 100],
@@ -82,7 +79,7 @@ def do_mmeval_evaluate(pred_config, dataset):
             pred[k] = np.asarray(v)
 
         pred['img_id'] = img_id
-        coco_metric.add([pred], [None])
+        coco_metric.add_predictions([pred])
 
     return coco_metric.compute()
 
