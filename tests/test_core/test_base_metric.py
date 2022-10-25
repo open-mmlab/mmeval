@@ -100,7 +100,7 @@ def _test_metric_compute(rank, world_size, port, dist_collect_mode):
 
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
 @pytest.mark.skipif(
-    not torch.distributed.is_available(),
+    torch is None or not torch.distributed.is_available(),
     reason='torch.distributed is not available!')
 @pytest.mark.parametrize(
     argnames=['process_num', 'comm_port', 'dist_collect_mode'],
