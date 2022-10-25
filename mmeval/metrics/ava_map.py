@@ -23,7 +23,7 @@ def results2csv(results: List[dict],
         results (list[dict]): A list of detection results.
         out_file (str): The output csv file path.
         custom_classes (list[int], optional): A subset of class ids
-        from origin dataset.
+            from origin dataset.
     """
     csv_results = []
     for res in results:
@@ -61,18 +61,18 @@ def read_csv(csv_file: TextIO, class_whitelist: Optional[set] = None) -> tuple:
     Args:
         csv_file (TextIO): A file object.
         class_whitelist (set, optional): If provided, boxes corresponding
-        to (integer) class labels not in this set are skipped.
+            to (integer) class labels not in this set are skipped.
 
     Returns:
         boxes (dict): A dictionary mapping each unique image key (string) to
-        a list of boxes, given as coordinates [y1, x1, y2, x2].
+            a list of boxes, given as coordinates [y1, x1, y2, x2].
         labels (dict): A dictionary mapping each unique image key (string) to
-        a list of integer class labels, matching the corresponding box
-        in `boxes`.
+            a list of integer class labels, matching the corresponding box
+            in `boxes`.
         scores (dict): A dictionary mapping each unique image key (string)
-        to a list of score values labels, matching the corresponding
-        label in `labels`. If scores are not provided in the csv,
-        then they will default to 1.0.
+            to a list of score values labels, matching the corresponding
+            label in `labels`. If scores are not provided in the csv,
+            then they will default to 1.0.
     """
     entries = defaultdict(list)
     boxes = defaultdict(list)
@@ -111,11 +111,11 @@ def read_exclusions(exclusions_file: TextIO) -> set:
 
     Args:
         exclusions_file (TextIO): A file object containing a csv of
-        video-id,timestamp.
+            video-id,timestamp.
 
     Returns:
         excluded (set): A set of strings containing excluded image keys, e.g.
-        "aaaaaaaaaaa,0904" or an empty set if exclusions file is None.
+            "aaaaaaaaaaa,0904" or an empty set if exclusions file is None.
     """
     excluded = set()
     if exclusions_file:
@@ -135,8 +135,8 @@ def read_labelmap(labelmap_file: TextIO) -> tuple:
 
     Returns:
         labelmap (list): The label map in the form used by the
-        object_detection_evaluation module - a list of
-        {"id": integer, "name": classname } dicts.
+            object_detection_evaluation module - a list of
+            {"id": integer, "name": classname } dicts.
         class_ids (set): A set containing all of the valid class id integers.
     """
     labelmap = []
@@ -158,16 +158,17 @@ def ava_eval(result_file: str,
              exclude_file: Optional[str] = None,
              verbose: bool = True,
              custom_classes: Optional[List[int]] = None) -> dict:
-    """
+    """Perform ava evaluation.
+
     Args:
         result_file (str): The dumped results file path.
         label_file (str): The label file path.
         ann_file (str): The annotation file path.
         exclude_file (str, optional): The excluded timestamp file path.
         verbose (bool): Whether to print messages in the evaluation process.
-        Defaults to True.
+            Defaults to True.
         custom_classes (list(int), optional): A subset of class ids
-        from origin dataset.
+            from origin dataset.
 
     Returns:
         dict: The evaluation results.
@@ -251,10 +252,10 @@ class AVAMeanAP(BaseMetric):
         ann_file (str): The annotation file path.
         label_file (str): The label file path.
         exclude_file (str, optional): The excluded timestamp file path.
-        Defaults to None.
+            Defaults to None.
         num_classes (int): Number of classes. Defaults to 81.
         custom_classes (list(int), optional): A subset of class ids
-        from origin dataset.
+            from origin dataset.
     """
 
     def __init__(self,
@@ -274,7 +275,8 @@ class AVAMeanAP(BaseMetric):
             self.custom_classes = [0] + custom_classes
 
     def add(self, predictions: dict) -> None:  # type: ignore
-        """
+        """Add detection results to the results list.
+
         Args:
             predictions (dict): A dict which contains the following keys:
                 - `video_id`: The id of the video, e.g., `3reY9zJKhqN`.
@@ -286,7 +288,7 @@ class AVAMeanAP(BaseMetric):
     def compute_metric(self, results: list) -> dict:
         """
         Args:
-            results: A list of detection results.
+            results (list): A list of detection results.
 
         Returns:
             dict: The computed ava metric.
