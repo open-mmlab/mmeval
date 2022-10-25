@@ -28,7 +28,7 @@ class SNR(BaseMetric):
 
         >>> from mmeval import SNR
         >>> snr = SNR(crop_border=1, input_order='CHW',
-                      convert_to='Y', channel_order='rgb')
+        ...           convert_to='Y', channel_order='rgb')
         >>> import numpy as np
         >>> gts = np.ones((3, 32, 32))
         >>> preds = np.ones((3, 32, 32))
