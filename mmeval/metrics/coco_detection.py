@@ -48,12 +48,12 @@ class CocoDetectionMetric(BaseMetric):
         outfile_prefix (str, optional): The prefix of json files. It includes
             the file path and the prefix of filename, e.g., "a/b/prefix".
             If not specified, a temp file will be created. Defaults to None.
-        backend_args (dict, optional): Arguments to instantiate the
-            preifx of uri corresponding backend. Defaults to None.
         gt_mask_area (bool): Whether calculate GT mask area when not loading
             ann_file. If True, the GT instance area will be the mask area,
             else the bounding box area. It will not be used when loading
             ann_file. Defaults to True.
+        backend_args (dict, optional): Arguments to instantiate the
+            preifx of uri corresponding backend. Defaults to None.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
