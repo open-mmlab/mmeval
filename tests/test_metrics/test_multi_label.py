@@ -39,7 +39,7 @@ def test_metric_init_assertion():
     ]
 )
 def test_metric_inputs(metric_kwargs):
-    # test predictions with targets
+    # test predictions with labels
     multi_label_metric = MultiLabelMetric(num_classes=3, **metric_kwargs)
     assert isinstance(multi_label_metric, BaseMetric)
     results = multi_label_metric(
@@ -52,14 +52,14 @@ def test_metric_inputs(metric_kwargs):
     [1, 1, 2],  # label-format predictions
     [[1], [0, 1], [2]],  # label-format predictions
 ])
-@pytest.mark.parametrize('targets', [
-    [0, 1, 2],  # label-format targets
-    [[0, 1], [1], [2]],  # label-format targets
+@pytest.mark.parametrize('labels', [
+    [0, 1, 2],  # label-format labels
+    [[0, 1], [1], [2]],  # label-format labels
 ])
-def test_metric_interface_builtin(metric_kwargs, preds, targets):
+def test_metric_interface_builtin(metric_kwargs, preds, labels):
     """Test builtin inputs."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preds, targets)
+    results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
 
@@ -69,16 +69,16 @@ def test_metric_interface_builtin(metric_kwargs, preds, targets):
     # scores in Sequence
     [np.array([0.1, 0.9, 0.8]), np.array([0.5, 0.6, 0.8])],
 ])
-@pytest.mark.parametrize('targets', [
+@pytest.mark.parametrize('labels', [
     np.array([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a ndarray
     # one-hot encodings in Sequence
     [np.array([1, 0, 0]), np.array([0, 1, 0])],
     [np.array([0]), np.array([1])],  # label-format in Sequence
 ])
-def test_metric_interface_topk(metric_kwargs, preds, targets):
+def test_metric_interface_topk(metric_kwargs, preds, labels):
     """Test scores inputs with topk."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preds, targets)
+    results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
 
@@ -88,17 +88,17 @@ def test_metric_interface_topk(metric_kwargs, preds, targets):
     # scores in Sequence
     [torch.Tensor([0.1, 0.9, 0.8]), torch.Tensor([0.5, 0.6, 0.8])],
 ])
-@pytest.mark.parametrize('targets', [
+@pytest.mark.parametrize('labels', [
     torch.Tensor([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a Tensor
     # one-hot encodings in Sequence
     [torch.Tensor([1, 0, 0]), torch.Tensor([0, 1, 0])],
     [torch.Tensor([0]), torch.Tensor([1])],  # label-format in Sequence
 ])
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
-def test_metric_interface_torch_topk(metric_kwargs, preds, targets):
+def test_metric_interface_torch_topk(metric_kwargs, preds, labels):
     """Test scores inputs with topk in torch."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preds, targets)
+    results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
 
@@ -112,16 +112,16 @@ def test_metric_interface_torch_topk(metric_kwargs, preds, targets):
     [np.array([0, 1, 0]), np.array([1, 1, 0])],
     [np.array([1]), np.array([0, 1])],  # label-format in Sequence
 ])
-@pytest.mark.parametrize('targets', [
+@pytest.mark.parametrize('labels', [
     np.array([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a ndarray
     # one-hot encodings in Sequence
     [np.array([1, 0, 0]), np.array([0, 1, 0])],
     [np.array([0]), np.array([1])],  # label-format in Sequence
 ])
-def test_metric_interface(metric_kwargs, preds, targets):
+def test_metric_interface(metric_kwargs, preds, labels):
     """Test all kinds of inputs."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preds, targets)
+    results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
 
@@ -135,22 +135,22 @@ def test_metric_interface(metric_kwargs, preds, targets):
     [torch.Tensor([0, 1, 0]), torch.Tensor([1, 1, 0])],
     [torch.Tensor([1]), torch.Tensor([0, 1])],  # label-format in Sequence
 ])
-@pytest.mark.parametrize('targets', [
+@pytest.mark.parametrize('labels', [
     torch.Tensor([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a Tensor
     # one-hot encodings in Sequence
     [torch.Tensor([1, 0, 0]), torch.Tensor([0, 1, 0])],
     [torch.Tensor([0]), torch.Tensor([1])],  # label-format in Sequence
 ])
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
-def test_metric_interface_torch(metric_kwargs, preds, targets):
+def test_metric_interface_torch(metric_kwargs, preds, labels):
     """Test all kinds of inputs in torch."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
-    results = multi_label_metric(preds, targets)
+    results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
 
 @pytest.mark.parametrize(
-    argnames=['metric_kwargs', 'preds', 'targets', 'results'],
+    argnames=['metric_kwargs', 'preds', 'labels', 'results'],
     argvalues=[
         ({'num_classes': 4}, [0, 2, 1, 3], [0, 1, 2, 3], {'precision': 50.0, 'recall': 50.0, 'f1-score': 50.0}), # noqa
         (
@@ -177,23 +177,23 @@ def test_metric_interface_torch(metric_kwargs, preds, targets):
         )
     ]
 )
-def test_metric_accurate(metric_kwargs, preds, targets, results):
+def test_metric_accurate(metric_kwargs, preds, labels, results):
     """Test accurate."""
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
     assert multi_label_metric(
-        np.asarray(preds), np.asarray(targets)) == results
+        np.asarray(preds), np.asarray(labels)) == results
 
 
-def test_metric_accurate_is_label():
+def test_metric_accurate_is_onehot():
     """Test ambiguous cases when num_classes=2."""
     multi_label_metric = MultiLabelMetric(num_classes=2, items=('precision', 'recall')) # noqa
-    assert multi_label_metric.pred_is_label is False
-    assert multi_label_metric.target_is_label is False
-    assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 50.0, 'recall': 25.0} # noqa
-    multi_label_metric.pred_is_label = True
-    assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 50.0, 'recall': 50.0} # noqa
-    multi_label_metric.target_is_label = True
+    assert multi_label_metric.pred_is_onehot is False
+    assert multi_label_metric.label_is_onehot is False
     assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 100.0, 'recall': 100.0} # noqa
+    multi_label_metric.pred_is_onehot = True
+    assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 100.0, 'recall': 50.0} # noqa
+    multi_label_metric.label_is_onehot = True
+    assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 50.0, 'recall': 25.0} # noqa
 
 
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
@@ -211,20 +211,16 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
 
     preds = np.random.rand(length, classes_num)
-    targets = np.random.randint(0, classes_num, length)
+    labels = np.random.randint(0, classes_num, length)
 
-    np_acc_results = multi_label_metric(preds, targets)
+    np_acc_results = multi_label_metric(preds, labels)
 
     preds = torch.from_numpy(preds)
-    targets = torch.from_numpy(targets)
-    torch_acc_results = multi_label_metric(preds, targets)
+    labels = torch.from_numpy(labels)
+    torch_acc_results = multi_label_metric(preds, labels)
 
     assert np_acc_results.keys() == torch_acc_results.keys()
     for key in np_acc_results:
         # precision is different between numpy and torch
         np.testing.assert_allclose(
             np_acc_results[key], torch_acc_results[key], rtol=1e-5)
-
-
-if __name__ == '__main__':
-    pytest.main([__file__, '-v', '--capture=no'])

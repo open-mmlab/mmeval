@@ -38,14 +38,14 @@ def test_metric_interface(metric_kwargs):
 @pytest.mark.parametrize('preds', [
     [[0.1, 0.9], [0.5, 0.6]],  # builtin prediction scores
 ])
-@pytest.mark.parametrize('targets', [
-    [[1, 0], [0, 1]],  # builtin one-hot encodings targets
-    [[0, 1], [1]],  # builtin label-format targets
+@pytest.mark.parametrize('labels', [
+    [[1, 0], [0, 1]],  # builtin one-hot encodings labels
+    [[0, 1], [1]],  # builtin label-format labels
 ])
-def test_metric_input_builtin(preds, targets):
+def test_metric_input_builtin(preds, labels):
     """Test builtin inputs."""
     average_precision = AveragePrecision()
-    results = average_precision(preds, targets)
+    results = average_precision(preds, labels)
     assert isinstance(results, dict)
 
 
@@ -53,17 +53,17 @@ def test_metric_input_builtin(preds, targets):
     torch.tensor([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
     [torch.tensor([0.1, 0.9]), torch.tensor([0.5, 0.6])],  # scores in Sequence
 ])
-@pytest.mark.parametrize('targets', [
-    torch.tensor([[1, 0], [0, 1]]),  # one-hot encodings targets in a ndarray
-    # one-hot encodings targets in Sequence
+@pytest.mark.parametrize('labels', [
+    torch.tensor([[1, 0], [0, 1]]),  # one-hot encodings labels in a ndarray
+    # one-hot encodings labels in Sequence
     [torch.tensor([1, 0]), torch.tensor([0, 1])],
-    [torch.tensor([0]), torch.tensor([1])],  # label-format targets in Sequence
+    [torch.tensor([0]), torch.tensor([1])],  # label-format labels in Sequence
 ])
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
-def test_metric_input_torch(preds, targets):
+def test_metric_input_torch(preds, labels):
     """Test torch inputs."""
     average_precision = AveragePrecision()
-    results = average_precision(preds, targets)
+    results = average_precision(preds, labels)
     assert isinstance(results, dict)
 
 
@@ -71,21 +71,21 @@ def test_metric_input_torch(preds, targets):
     np.array([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
     [np.array([0.1, 0.9]), np.array([0.5, 0.6])],  # scores in Sequence
 ])
-@pytest.mark.parametrize('targets', [
-    np.array([[1, 0], [0, 1]]),  # one-hot encodings targets in a ndarray
-    # one-hot encodings targets in Sequence
+@pytest.mark.parametrize('labels', [
+    np.array([[1, 0], [0, 1]]),  # one-hot encodings labels in a ndarray
+    # one-hot encodings labels in Sequence
     [np.array([1, 0]), np.array([0, 1])],
-    [np.array([0]), np.array([1])],  # label-format targets in Sequence
+    [np.array([0]), np.array([1])],  # label-format labels in Sequence
 ])
-def test_metric_input_numpy(preds, targets):
+def test_metric_input_numpy(preds, labels):
     """Test numpy inputs."""
     average_precision = AveragePrecision()
-    results = average_precision(preds, targets)
+    results = average_precision(preds, labels)
     assert isinstance(results, dict)
 
 
 @pytest.mark.parametrize(
-    argnames=['metric_kwargs', 'preds', 'targets', 'results'],
+    argnames=['metric_kwargs', 'preds', 'labels', 'results'],
     argvalues=[
         (
             {},
@@ -109,11 +109,11 @@ def test_metric_input_numpy(preds, targets):
         )
     ]
 )
-def test_metric_accurate(metric_kwargs, preds, targets, results):
+def test_metric_accurate(metric_kwargs, preds, labels, results):
     """Test accurate."""
     average_precision = AveragePrecision(**metric_kwargs)
     _results = average_precision(
-        np.asarray(preds), np.asarray(targets))
+        np.asarray(preds), np.asarray(labels))
     for (k1, v1), (k2, v2) in zip(_results.items(), results.items()):
         assert k1 == k2
         assert np.allclose(v1, v2)
@@ -133,13 +133,13 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
     average_precision = AveragePrecision(**metric_kwargs)
 
     preds = np.random.rand(length, classes_num)
-    targets = np.random.randint(0, classes_num, length)
+    labels = np.random.randint(0, classes_num, length)
 
-    np_acc_results = average_precision(preds, targets)
+    np_acc_results = average_precision(preds, labels)
 
     preds = torch.from_numpy(preds)
-    targets = torch.from_numpy(targets)
-    torch_acc_results = average_precision(preds, targets)
+    labels = torch.from_numpy(labels)
+    torch_acc_results = average_precision(preds, labels)
 
     assert np_acc_results.keys() == torch_acc_results.keys()
     for key in np_acc_results:
