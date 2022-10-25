@@ -28,6 +28,29 @@ class ProposalRecall(BaseMetric):
             is less than or equal to 1, multiprocessing will not be used.
             Defaults to 4.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+        >>> import numpy as np
+        >>> from mmeval import ProposalRecall
+        >>>
+        >>> proposal_recall = ProposalRecall()
+        >>> def _gen_bboxes(num_bboxes, img_w=256, img_h=256):
+        ...     # random generate bounding boxes in 'xyxy' formart.
+        ...     x = np.random.rand(num_bboxes, ) * img_w
+        ...     y = np.random.rand(num_bboxes, ) * img_h
+        ...     w = np.random.rand(num_bboxes, ) * (img_w - x)
+        ...     h = np.random.rand(num_bboxes, ) * (img_h - y)
+        ...     return np.stack([x, y, x + w, y + h], axis=1)
+        >>>
+        >>> prediction = {
+        ...     'bboxes': _gen_bboxes(10),
+        ...     'scores': np.random.rand(10, ),
+        ... }
+        >>> groundtruth = {
+        ...     'bboxes': _gen_bboxes(10),
+        ... }
+        >>> proposal_recall(predictions=[prediction, ], groundtruths=[groundtruth, ])  # doctest: +ELLIPSIS  # noqa: E501
+        {'AR@100': ..., 'AR@300': ..., 'AR@1000': ...}
     """
 
     def __init__(self,
