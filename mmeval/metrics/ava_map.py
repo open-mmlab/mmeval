@@ -19,7 +19,7 @@ class AVAMeanAP(BaseMetric):
 
     AVA(Atomic Visual Action): https://research.google.com/ava.
 
-    Our metric computes mAP using the ava evaluation toolkit
+    This metric computes mAP using the ava evaluation toolkit
     provided by the author.
 
     Args:
@@ -32,6 +32,7 @@ class AVAMeanAP(BaseMetric):
             process. Defaults to True.
         custom_classes (list(int), optional): A subset of class ids
             from origin dataset.
+        **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
 
@@ -187,13 +188,13 @@ class AVAMeanAP(BaseMetric):
 
             - boxes (dict): A dictionary mapping each unique image key (string)
               to a list of boxes, given as coordinates [y1, x1, y2, x2].
-            - labels (dict): A dictionary mapping each unique image key (string)
-              to a list of integer class labels, matching the corresponding box
-              in `boxes`.
-            - scores (dict): A dictionary mapping each unique image key (string)
-              to a list of score values labels, matching the corresponding
-              label in `labels`. If scores are not provided in the csv,
-              then they will default to 1.0.
+            - labels (dict): A dictionary mapping each unique image key
+              (string) to a list of integer class labels, matching the
+              corresponding box in `boxes`.
+            - scores (dict): A dictionary mapping each unique image
+              key (string) to a list of score values labels, matching
+              the corresponding label in `labels`. If scores are not
+              provided in the csv, then they will default to 1.0.
         """
         entries = defaultdict(list)
         boxes = defaultdict(list)
