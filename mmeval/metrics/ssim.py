@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
 
 from mmeval.core import BaseMetric
 from mmeval.utils import try_import
-from .utils import img_transform
+from .utils import reorder_and_crop
 
 if TYPE_CHECKING:
     import cv2
@@ -100,13 +100,13 @@ class SSIM(BaseMetric):
         for pred, gt in zip(predictions, groundtruths):
             assert pred.shape == gt.shape, (
                 f'Image shapes are different: {pred.shape}, {gt.shape}.')
-            pred = img_transform(
+            pred = reorder_and_crop(
                 pred,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
                 channel_order=channel_order)
-            gt = img_transform(
+            gt = reorder_and_crop(
                 gt,
                 crop_border=self.crop_border,
                 input_order=self.input_order,

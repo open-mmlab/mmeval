@@ -7,9 +7,6 @@ from .f_metric import F1Metric
 from .hmean_iou import HmeanIoU
 from .mae import MAE
 from .mean_iou import MeanIoU
-from .oid_map import OIDMeanAP
-from .snr import SNR
-from .ssim import SSIM
 from .mse import MSE
 from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
