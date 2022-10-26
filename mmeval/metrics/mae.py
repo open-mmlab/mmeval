@@ -44,11 +44,10 @@ class MAE(BaseMetric):
                 f'Image shapes are different: \
                     {groundtruth.shape}, {prediction.shape}.')
             if masks is None:
-                self._results.append(
-                    self._compute_mae(groundtruth, prediction))
+                self._results.append(self.compute_mae(groundtruth, prediction))
             else:
                 self._results.append(
-                    self._compute_mae(groundtruth, prediction, masks[i]))
+                    self.compute_mae(groundtruth, prediction, masks[i]))
 
     def compute_metric(self, results: List[np.float32]) -> Dict[str, float]:
         """Compute the MAE metric.
@@ -67,9 +66,9 @@ class MAE(BaseMetric):
         return {'mae': float(np.array(results).mean())}
 
     @staticmethod
-    def _compute_mae(groundtruth: np.ndarray,
-                     prediction: np.ndarray,
-                     mask: Optional[np.ndarray] = None) -> np.float32:
+    def compute_mae(groundtruth: np.ndarray,
+                    prediction: np.ndarray,
+                    mask: Optional[np.ndarray] = None) -> np.float32:
         """Calculate MAE (Mean Absolute Error).
 
         Args:

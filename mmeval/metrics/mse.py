@@ -43,11 +43,10 @@ class MSE(BaseMetric):
                 f'Image shapes are different: \
                     {groundtruth.shape}, {prediction.shape}.')
             if masks is None:
-                self._results.append(
-                    self._compute_mse(groundtruth, prediction))
+                self._results.append(self.compute_mse(groundtruth, prediction))
             else:
                 self._results.append(
-                    self._compute_mse(groundtruth, prediction, masks[i]))
+                    self.compute_mse(groundtruth, prediction, masks[i]))
 
     def compute_metric(self, results: List[np.float32]) -> Dict[str, float]:
         """Compute the MSE metric.
@@ -66,9 +65,9 @@ class MSE(BaseMetric):
         return {'mse': float(np.array(results).mean())}
 
     @staticmethod
-    def _compute_mse(groundtruth: np.ndarray,
-                     prediction: np.ndarray,
-                     mask: Optional[np.ndarray] = None) -> np.float32:
+    def compute_mse(groundtruth: np.ndarray,
+                    prediction: np.ndarray,
+                    mask: Optional[np.ndarray] = None) -> np.float32:
         """Calculate MSE (Mean Squared Error).
 
         Args:

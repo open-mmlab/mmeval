@@ -158,11 +158,11 @@ def reorder_image(img: np.array, input_order='HWC'):
     return img
 
 
-def img_transform(img: np.ndarray,
-                  crop_border: int = 0,
-                  input_order: str = 'HWC',
-                  convert_to: Optional[str] = None,
-                  channel_order: str = 'rgb'):
+def reorder_and_crop(img: np.ndarray,
+                     crop_border: int = 0,
+                     input_order: str = 'HWC',
+                     convert_to: Optional[str] = None,
+                     channel_order: str = 'rgb'):
     """Image transformations contains Crop, Reorder to 'HWC' and Convert to
     'Y'.
 
