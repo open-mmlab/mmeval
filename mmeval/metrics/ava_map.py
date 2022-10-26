@@ -17,8 +17,10 @@ logger = logging.getLogger(__name__)
 class AVAMeanAP(BaseMetric):
     """AVA evaluation metric.
 
-    This metric computes mAP using the ava evaluation toolkit provided
-    by the author.
+    AVA(Atomic Visual Action): https://research.google.com/ava.
+
+    Our metric computes mAP using the ava evaluation toolkit
+    provided by the author.
 
     Args:
         ann_file (str): The annotation file path.
@@ -26,12 +28,16 @@ class AVAMeanAP(BaseMetric):
         exclude_file (str, optional): The excluded timestamp file path.
             Defaults to None.
         num_classes (int): Number of classes. Defaults to 81.
+        verbose (bool): Whether to print messages in the evaluation
+            process. Defaults to True.
         custom_classes (list(int), optional): A subset of class ids
             from origin dataset.
 
     Examples:
 
         >>> from mmeval import AVAMeanAP
+        >>> import numpy as np
+        >>>
         >>> ann_file = 'tests/test_metrics/ava_detection_gt.csv'
         >>> label_file = 'tests/test_metrics/ava_action_list.txt'
         >>> num_classes = 4
@@ -83,6 +89,7 @@ class AVAMeanAP(BaseMetric):
                  exclude_file: Optional[str] = None,
                  num_classes: int = 81,
                  custom_classes: Optional[List[int]] = None,
+                 verbose: bool = True,
                  **kwargs) -> None:
         super().__init__(**kwargs)
         self.ann_file = ann_file
@@ -90,6 +97,7 @@ class AVAMeanAP(BaseMetric):
         self.label_file = label_file
         self.num_classes = num_classes
         self.custom_classes = custom_classes
+        self.verbose = verbose
         if custom_classes is not None:
             self.custom_classes = [0] + custom_classes
 
@@ -101,7 +109,8 @@ class AVAMeanAP(BaseMetric):
                 contains the following keys:
                 - `video_id`: The id of the video, e.g., `3reY9zJKhqN`.
                 - `timestamp`: The timestamp of the video e.g., `1774`.
-                - `outputs`: A list bbox results of each class.
+                - `outputs`: A list bbox results of each class with the format
+                    of [x1, y1, x2, y2, score].
         """
         for prediction in predictions:
             self._results.append(prediction)
@@ -160,8 +169,8 @@ class AVAMeanAP(BaseMetric):
                     class_ids.add(class_id)
         return labelmap, class_ids
 
-    @staticmethod
-    def read_csv(csv_file: str,
+    def read_csv(self,
+                 csv_file: str,
                  class_whitelist: Optional[set] = None) -> tuple:
         """Loads boxes and class labels from a CSV file in the AVA format.
 
@@ -174,15 +183,17 @@ class AVAMeanAP(BaseMetric):
                 to (integer) class labels not in this set are skipped.
 
         Returns:
-            boxes (dict): A dictionary mapping each unique image key (string)
-            to a list of boxes, given as coordinates [y1, x1, y2, x2].
-            labels (dict): A dictionary mapping each unique image key (string)
-            to a list of integer class labels, matching the corresponding box
-            in `boxes`.
-            scores (dict): A dictionary mapping each unique image key (string)
-            to a list of score values labels, matching the corresponding
-            label in `labels`. If scores are not provided in the csv,
-            then they will default to 1.0.
+            tuple (boxes, labels, scores):
+
+            - boxes (dict): A dictionary mapping each unique image key (string)
+              to a list of boxes, given as coordinates [y1, x1, y2, x2].
+            - labels (dict): A dictionary mapping each unique image key (string)
+              to a list of integer class labels, matching the corresponding box
+              in `boxes`.
+            - scores (dict): A dictionary mapping each unique image key (string)
+              to a list of score values labels, matching the corresponding
+              label in `labels`. If scores are not provided in the csv,
+              then they will default to 1.0.
         """
         entries = defaultdict(list)
         boxes = defaultdict(list)
@@ -215,27 +226,29 @@ class AVAMeanAP(BaseMetric):
         logger.info('read file ' + csv_file)
         return boxes, labels, scores
 
-    def read_exclusions(self) -> set:
+    @staticmethod
+    def read_exclusions(exclude_file: str) -> set:
         """Reads a CSV file of excluded timestamps.
+
+        Args:
+            exclude_file (str): The path of exclude file.
 
         Returns:
             excluded (set): A set of strings containing excluded image keys,
             e.g. "aaaaaaaaaaa,0904" or an empty set if exclusions file is None.
         """
         excluded = set()
-        reader = csv.reader(open(self.exclude_file))  # type: ignore
+        reader = csv.reader(open(exclude_file))  # type: ignore
         for row in reader:
             assert len(row) == 2, f'Expected only 2 columns, got: {row}'
             excluded.add(f'{row[0]}, {int(row[1]): 04d}')
         return excluded
 
-    def ava_eval(self, result_file: str, verbose: bool = True) -> dict:
+    def ava_eval(self, result_file: str) -> dict:
         """Perform ava evaluation.
 
         Args:
             result_file (str): The dumped results file path.
-            verbose (bool): Whether to print messages in the evaluation
-                process. Defaults to True.
 
         Returns:
             dict: The evaluation results.
@@ -252,16 +265,16 @@ class AVAMeanAP(BaseMetric):
         # loading gt, do not need gt score
         gt_boxes, gt_labels, _ = self.read_csv(
             self.ann_file, class_whitelist=class_whitelist)
-        if verbose:
+        if self.verbose:
             logger.info('Reading detection results')
 
         if self.exclude_file is not None:
-            excluded_keys = self.read_exclusions()
+            excluded_keys = self.read_exclusions(self.exclude_file)
         else:
             excluded_keys = set()
 
         boxes, labels, scores = self.read_csv(result_file, class_whitelist)
-        if verbose:
+        if self.verbose:
             logger.info('Reading detection results')
 
         # Evaluation for mAP
@@ -269,7 +282,7 @@ class AVAMeanAP(BaseMetric):
 
         for image_key in gt_boxes:
             if image_key in excluded_keys:
-                if verbose:
+                if self.verbose:
                     logging.info(
                         'Found excluded timestamp in detections: %s.'
                         'It will be ignored.', image_key)
@@ -281,11 +294,11 @@ class AVAMeanAP(BaseMetric):
                     standard_fields.InputDataFields.groundtruth_classes:
                     np.array(gt_labels[image_key], dtype=int)
                 })
-        if verbose:
+        if self.verbose:
             logger.info('Convert groundtruth')
 
         for image_key in boxes:
-            if verbose and image_key in excluded_keys:
+            if self.verbose and image_key in excluded_keys:
                 logging.info(
                     'Found excluded timestamp in detections: %s.'
                     'It will be ignored.', image_key)
@@ -299,11 +312,11 @@ class AVAMeanAP(BaseMetric):
                     standard_fields.DetectionResultFields.detection_scores:
                     np.array(scores[image_key], dtype=float)
                 })
-        if verbose:
+        if self.verbose:
             logger.info('convert detections')
 
         metrics = pascal_evaluator.evaluate()
-        if verbose:
+        if self.verbose:
             logger.info('run_evaluator')
         for display_name in metrics:
             logger.info(f'{display_name}=\t{metrics[display_name]}')
