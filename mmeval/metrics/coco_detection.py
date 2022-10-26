@@ -435,6 +435,20 @@ class COCODetectionMetric(BaseMetric):
                 f'a sequence of dict, but got a sequence of {type(groundtruth)}.'   # noqa: E501
             self._results.append((prediction, groundtruth))
 
+    def add_predictions(self, predictions: Sequence[Dict]) -> None:
+        """Add predictions only.
+
+        If the `ann_file` has been passed, we can add predictions only.
+
+        Args:
+            predictions (Sequence[dict]): Refer to
+                :class:`COCODetectionMetric.add`.
+        """
+        assert self._coco_api is not None, 'The `ann_file` should be ' \
+            'passesd when use the `COCODetectionMetric.add_predictions` ' \
+            'method, otherwisw use the `COCODetectionMetric.add` instead!'
+        self.add(predictions, groundtruths=[{}] * len(predictions))
+
     def __call__(self, *args, **kwargs) -> Dict:
         """Stateless call for a metric compute."""
 

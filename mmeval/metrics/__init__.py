@@ -9,12 +9,14 @@ from .mae import MAE
 from .mean_iou import MeanIoU
 from .mse import MSE
 from .oid_map import OIDMeanAP
+from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .psnr import PSNR
 from .single_label import SingleLabelMetric
 from .voc_map import VOCMeanAP
 
 __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
-    'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric', 'PSNR',
-    'MAE', 'MSE'
+    'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric'
+    'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
+    'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'PSNR', 'MAE', 'MSE'
 ]
