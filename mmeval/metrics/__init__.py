@@ -13,11 +13,13 @@ from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .proposal_recall import ProposalRecall
 from .psnr import PSNR
 from .single_label import SingleLabelMetric
+from .snr import SNR
+from .ssim import SSIM
 from .voc_map import VOCMeanAP
 
 __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
-    'PSNR', 'MAE', 'MSE'
+    'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR'
 ]
