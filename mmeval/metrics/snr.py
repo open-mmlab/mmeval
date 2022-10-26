@@ -33,8 +33,8 @@ class SNR(BaseMetric):
         ...           convert_to='Y', channel_order='rgb')
         >>> gts = np.random.randint(0, 255, size=(3, 32, 32))
         >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
-        >>> snr(preds, gts)
-        {'snr': ...}  # doctest: +ELLIPSIS
+        >>> snr(preds, gts)  # doctest: +ELLIPSIS
+        {'snr': ...}
 
     Calculate SNR between 2 images:
 

@@ -45,8 +45,8 @@ class SSIM(BaseMetric):
         >>> ssim = SSIM(input_order='CHW', convert_to='Y', channel_order='rgb')
         >>> gts = np.random.randint(0, 255, size=(3, 32, 32))
         >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
-        >>> ssim(preds, gts)
-        {'ssim': ...}  # doctest: +ELLIPSIS
+        >>> ssim(preds, gts)  # doctest: +ELLIPSIS
+        {'ssim': ...}
 
     Calculate SSIM between 2 single channel images:
 
