@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-
 import copy
 import csv
 import json
@@ -7,7 +6,8 @@ import numpy as np
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-from .voc_map import VOCMeanAP, calculate_overlaps, filter_by_bboxes_area
+from mmeval.metrics.utils import calculate_overlaps
+from .voc_map import VOCMeanAP, filter_by_bboxes_area
 
 
 def _convert_hierarchy_tree(hierarchy_map: dict,

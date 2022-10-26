@@ -10,6 +10,7 @@ from .mean_iou import MeanIoU
 from .mse import MSE
 from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
+from .proposal_recall import ProposalRecall
 from .psnr import PSNR
 from .single_label import SingleLabelMetric
 from .voc_map import VOCMeanAP
@@ -17,5 +18,6 @@ from .voc_map import VOCMeanAP
 __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
-    'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'PSNR', 'MAE', 'MSE'
+    'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
+    'PSNR', 'MAE', 'MSE'
 ]
