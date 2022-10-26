@@ -1,6 +1,6 @@
 # 安装与使用
 
-### 安装
+## 安装
 
 MMEval 依赖 Python 3.6+，可以通过 pip 来安装 MMEval。安装 MMEval 的过程中会安装一些 MMEval 运行时的依赖库：
 
@@ -14,7 +14,7 @@ pip install mmeval
 pip install 'mmeval[all]'
 ```
 
-### 使用
+## 使用
 
 MMEval 中的评测指标提供两种使用方式，以 `Accuracy` 为例：
 
