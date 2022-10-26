@@ -70,10 +70,11 @@ class ProposalRecall(BaseMetric):
             iou_thrs = np.array(iou_thrs)
         else:
             raise TypeError(
-                '`iou_thrs` should be None, float, or a list of float')
+                '`iou_thrs` should be None, float, or a list of float, '
+                f'but got {iou_thrs}')
         self.iou_thrs = iou_thrs
 
-        if isinstance(proposal_nums, Sequence):
+        if isinstance(proposal_nums, (list, tuple)):
             proposal_nums = np.array(proposal_nums)
         elif isinstance(proposal_nums, int):
             proposal_nums = np.array([proposal_nums])
