@@ -327,7 +327,7 @@ class AVAMeanAP(BaseMetric):
         }
 
     def compute_metric(self, results: list) -> dict:
-        """Perform ava evaluation.
+        """Compute the AVA MeanAP.
 
         Args:
             results (list): A list of detection results.
