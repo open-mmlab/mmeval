@@ -108,7 +108,7 @@ class AVAMeanAP(BaseMetric):
         Args:
             predictions (Sequence[dict]): A list of prediction dict which
                 contains the following keys:
-                
+
                 - `video_id`: The id of the video, e.g., `3reY9zJKhqN`.
                 - `timestamp`: The timestamp of the video e.g., `1774`.
                 - `outputs`: A list bbox results of each class with the format
@@ -152,7 +152,7 @@ class AVAMeanAP(BaseMetric):
 
         Returns:
             tuple (labelmap, class_ids):
-            
+
             - labelmap (list): The label map in the form used by the
               object_detection_evaluation module - a list of
               {"id": integer, "name": classname } dicts.
