@@ -14,15 +14,24 @@ class MSE(BaseMetric):
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
+
         >>> from mmeval import MSE
         >>> import numpy as np
+        >>>
         >>> mse = MSE()
-        >>> preds = [np.ones((32, 32, 3))]
-        >>> gts = [np.ones((32, 32, 3)) * 2]
+        >>> gts = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> mse(preds, gts)  # doctest: +ELLIPSIS
+        {'mse': ...}
+
+    Calculate MSE between 2 images with mask:
+
+        >>> img1 = np.ones((32, 32, 3))
+        >>> img2 = np.ones((32, 32, 3)) * 2
         >>> mask = np.ones((32, 32, 3)) * 2
         >>> mask[:16] *= 0
-        >>> mse(preds, gts, [mask])
-        {'mse': 0.000015378700496}
+        >>> MSE.compute_mse(img1, img2, mask)
+        0.000015378700496
     """
 
     def __init__(self, **kwargs) -> None:
@@ -43,10 +52,10 @@ class MSE(BaseMetric):
                 f'Image shapes are different: \
                     {groundtruth.shape}, {prediction.shape}.')
             if masks is None:
-                self._results.append(self.compute_mse(groundtruth, prediction))
+                self._results.append(self.compute_mse(prediction, groundtruth))
             else:
                 self._results.append(
-                    self.compute_mse(groundtruth, prediction, masks[i]))
+                    self.compute_mse(prediction, groundtruth, masks[i]))
 
     def compute_metric(self, results: List[np.float32]) -> Dict[str, float]:
         """Compute the MSE metric.
@@ -65,22 +74,22 @@ class MSE(BaseMetric):
         return {'mse': float(np.array(results).mean())}
 
     @staticmethod
-    def compute_mse(groundtruth: np.ndarray,
-                    prediction: np.ndarray,
+    def compute_mse(prediction: np.ndarray,
+                    groundtruth: np.ndarray,
                     mask: Optional[np.ndarray] = None) -> np.float32:
         """Calculate MSE (Mean Squared Error).
 
         Args:
-            groundtruth (np.ndarray): Images with range [0, 255].
             prediction (np.ndarray): Images with range [0, 255].
+            groundtruth (np.ndarray): Images with range [0, 255].
             mask (np.ndarray, optional): Mask of evaluation.
 
         Returns:
             np.float32: MSE result.
         """
 
-        groundtruth = groundtruth / 255.
         prediction = prediction / 255.
+        groundtruth = groundtruth / 255.
 
         diff = groundtruth - prediction
         diff *= diff

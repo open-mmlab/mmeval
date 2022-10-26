@@ -14,15 +14,24 @@ class MAE(BaseMetric):
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
+
         >>> from mmeval import MAE
         >>> import numpy as np
+        >>>
         >>> mae = MAE()
-        >>> preds = [np.ones((32, 32, 3))]
-        >>> gts = [np.ones((32, 32, 3)) * 2]
+        >>> gts = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> mae(preds, gts)  # doctest: +ELLIPSIS
+        {'mae': ...}
+
+    Calculate MAE between 2 images with mask:
+
+        >>> img1 = np.ones((32, 32, 3))
+        >>> img2 = np.ones((32, 32, 3)) * 2
         >>> mask = np.ones((32, 32, 3)) * 2
         >>> mask[:16] *= 0
-        >>> mae(preds, gts, [mask])
-        {'mae': 0.003921568627}
+        >>> MAE.compute_mae(img1, img2, mask)
+        0.003921568627
     """
 
     def __init__(self, **kwargs) -> None:
@@ -44,10 +53,10 @@ class MAE(BaseMetric):
                 f'Image shapes are different: \
                     {groundtruth.shape}, {prediction.shape}.')
             if masks is None:
-                self._results.append(self.compute_mae(groundtruth, prediction))
+                self._results.append(self.compute_mae(prediction, groundtruth))
             else:
                 self._results.append(
-                    self.compute_mae(groundtruth, prediction, masks[i]))
+                    self.compute_mae(prediction, groundtruth, masks[i]))
 
     def compute_metric(self, results: List[np.float32]) -> Dict[str, float]:
         """Compute the MAE metric.
@@ -66,22 +75,22 @@ class MAE(BaseMetric):
         return {'mae': float(np.array(results).mean())}
 
     @staticmethod
-    def compute_mae(groundtruth: np.ndarray,
-                    prediction: np.ndarray,
+    def compute_mae(prediction: np.ndarray,
+                    groundtruth: np.ndarray,
                     mask: Optional[np.ndarray] = None) -> np.float32:
         """Calculate MAE (Mean Absolute Error).
 
         Args:
-            groundtruth (np.ndarray): Images with range [0, 255].
             prediction (np.ndarray): Images with range [0, 255].
+            groundtruth (np.ndarray): Images with range [0, 255].
             mask (np.ndarray, optional): Mask of evaluation.
 
         Returns:
             np.float32: MAE result.
         """
 
-        groundtruth = groundtruth / 255.
         prediction = prediction / 255.
+        groundtruth = groundtruth / 255.
 
         diff = groundtruth - prediction
         diff = abs(diff)

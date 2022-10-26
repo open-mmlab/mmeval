@@ -24,14 +24,22 @@ class PSNR(BaseMetric):
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
+
         >>> from mmeval import PSNR
         >>> import numpy as np
-        >>> psnr = PSNR(crop_border=0, input_order='CHW',
-        ...             convert_to='Y', channel_order='rgb')
-        >>> gts = np.ones((3, 32, 32))
-        >>> preds = np.ones((3, 32, 32))
-        >>> psnr(preds, labels)
-        {'psnr': 49.45272242415597}
+        >>>
+        >>> psnr = PSNR(input_order='CHW', convert_to='Y', channel_order='rgb')
+        >>> gts = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> psnr(preds, gts)  # doctest: +ELLIPSIS
+        {'psnr': ...}
+
+    Calculate PSNR between 2 single channel images:
+
+        >>> img1 = np.ones((32, 32))
+        >>> img2 = np.ones((32, 32))
+        >>> PSNR.compute_psnr(img1, img2)
+        49.45272242415597
     """
 
     def __init__(self,
@@ -91,7 +99,7 @@ class PSNR(BaseMetric):
                 convert_to=self.convert_to,
                 channel_order=self.channel_order)
 
-            self._results.append(self.compute_psnr(groundtruth, prediction))
+            self._results.append(self.compute_psnr(prediction, groundtruth))
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the PSNR metric.
@@ -110,15 +118,15 @@ class PSNR(BaseMetric):
         return {'psnr': float(np.array(results).mean())}
 
     @staticmethod
-    def compute_psnr(groundtruth: np.ndarray,
-                     prediction: np.ndarray) -> np.float64:
+    def compute_psnr(prediction: np.ndarray,
+                     groundtruth: np.ndarray) -> np.float64:
         """Calculate PSNR (Peak Signal-to-Noise Ratio).
 
         Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
 
         Args:
-            groundtruth (np.ndarray): Images with range [0, 255].
             prediction (np.ndarray): Images with range [0, 255].
+            groundtruth (np.ndarray): Images with range [0, 255].
 
         Returns:
             np.float64: PSNR result.
