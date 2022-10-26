@@ -40,12 +40,15 @@ class SSIM(BaseMetric):
     Examples:
 
         >>> from mmeval import SSIM
-        >>> ssim = SSIM(input_order='CHW', convert_to='Y', channel_order='rgb')
         >>> import numpy as np
-        >>> gts = np.ones((3, 32, 32)) * 2
-        >>> preds = np.ones((3, 32, 32))
-        >>> ssim(preds, labels)
-        {'ssim': 0.9987801}
+        >>>
+        >>> ssim = SSIM(input_order='CHW', convert_to='Y', channel_order='rgb')
+        >>> gts = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> ssim(preds, gts)
+        {'ssim': ...}  # doctest: +ELLIPSIS
+
+    Calculate SSIM between 2 single channel images:
 
         >>> img1 = np.ones((32, 32)) * 2
         >>> img2 = np.ones((32, 32))

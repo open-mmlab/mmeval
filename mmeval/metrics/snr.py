@@ -27,14 +27,19 @@ class SNR(BaseMetric):
     Examples:
 
         >>> from mmeval import SNR
+        >>> import numpy as np
+        >>>
         >>> snr = SNR(crop_border=1, input_order='CHW',
         ...           convert_to='Y', channel_order='rgb')
-        >>> import numpy as np
+        >>> gts = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
+        >>> snr(preds, gts)
+        {'snr': ...}  # doctest: +ELLIPSIS
+
+    Calculate SNR between 2 images:
+
         >>> gts = np.ones((3, 32, 32)) * 2
         >>> preds = np.ones((3, 32, 32))
-        >>> snr(preds, labels)
-        {'snr': 26.290039980499536}
-
         >>> SNR.compute_snr(preds, gts)
         6.020599913279624
     """
