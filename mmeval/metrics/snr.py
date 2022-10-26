@@ -21,7 +21,7 @@ class SNR(BaseMetric):
             for 'Y', the images are assumed to be in BGR order. Options are
             'Y' and None. Default: None.
         channel_order (str): The channel order of image. Choices are 'rgb' and
-            'bgr'. Default: 'rgb'.
+            'bgr'. Defaults to 'rgb'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
