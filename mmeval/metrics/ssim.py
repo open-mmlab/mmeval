@@ -42,10 +42,15 @@ class SSIM(BaseMetric):
         >>> from mmeval import SSIM
         >>> ssim = SSIM(input_order='CHW', convert_to='Y', channel_order='rgb')
         >>> import numpy as np
-        >>> gts = np.ones((3, 32, 32))
+        >>> gts = np.ones((3, 32, 32)) * 2
         >>> preds = np.ones((3, 32, 32))
         >>> ssim(preds, labels)
         {'ssim': 0.9987801}
+
+        >>> img1 = np.ones((32, 32)) * 2
+        >>> img2 = np.ones((32, 32))
+        >>> SSIM.compute_ssim(img1, img2)
+        0.913062377743969
     """
 
     def __init__(self,
@@ -107,8 +112,7 @@ class SSIM(BaseMetric):
 
             _ssim_score = []
             for i in range(pred.shape[2]):
-                _ssim_score.append(
-                    self._compute_ssim(pred[..., i], gt[..., i]))
+                _ssim_score.append(self.compute_ssim(pred[..., i], gt[..., i]))
             self._results.append(np.array(_ssim_score).mean())
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
@@ -128,7 +132,7 @@ class SSIM(BaseMetric):
         return {'ssim': float(np.array(results).mean())}
 
     @staticmethod
-    def _compute_ssim(img1: np.ndarray, img2: np.ndarray) -> np.float64:
+    def compute_ssim(img1: np.ndarray, img2: np.ndarray) -> np.float64:
         """Calculate SSIM (structural similarity) between two single channel
         image.
 

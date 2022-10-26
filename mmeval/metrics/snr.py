@@ -30,10 +30,13 @@ class SNR(BaseMetric):
         >>> snr = SNR(crop_border=1, input_order='CHW',
         ...           convert_to='Y', channel_order='rgb')
         >>> import numpy as np
-        >>> gts = np.ones((3, 32, 32))
+        >>> gts = np.ones((3, 32, 32)) * 2
         >>> preds = np.ones((3, 32, 32))
         >>> snr(preds, labels)
         {'snr': 26.290039980499536}
+
+        >>> SNR.compute_snr(preds, gts)
+        6.020599913279624
     """
 
     def __init__(self,
@@ -89,7 +92,7 @@ class SNR(BaseMetric):
                 convert_to=self.convert_to,
                 channel_order=self.channel_order)
 
-            self._results.append(self._compute_snr(gt, pred))
+            self._results.append(self.compute_snr(pred, gt))
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the SNR metric.
@@ -108,20 +111,21 @@ class SNR(BaseMetric):
         return {'snr': float(np.array(results).mean())}
 
     @staticmethod
-    def _compute_snr(gt: np.ndarray, pred: np.ndarray) -> np.float64:
+    def compute_snr(prediction: np.ndarray,
+                    groundtruth: np.ndarray) -> np.float64:
         """Calculate SNR (Signal-to-Noise Ratio).
 
         Ref: https://en.wikipedia.org/wiki/Signal-to-noise_ratio
 
         Args:
-            gt (np.ndarray): Images with range [0, 255].
-            pred (np.ndarray): Images with range [0, 255].
+            prediction (np.ndarray): Images with range [0, 255].
+            groundtruth (np.ndarray): Images with range [0, 255].
 
         Returns:
             np.float64: SNR result.
         """
-        signal = ((gt)**2).mean()
-        noise = ((gt - pred)**2).mean()
+        signal = (groundtruth**2).mean()
+        noise = ((groundtruth - prediction)**2).mean()
 
         result = 10. * np.log10(signal / noise)
 
