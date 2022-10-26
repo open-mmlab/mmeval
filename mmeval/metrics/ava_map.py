@@ -28,10 +28,10 @@ class AVAMeanAP(BaseMetric):
         exclude_file (str, optional): The excluded timestamp file path.
             Defaults to None.
         num_classes (int): Number of classes. Defaults to 81.
+        custom_classes (list(int), optional): A subset of class ids
+            from origin dataset. Defaults to None.
         verbose (bool): Whether to print messages in the evaluation
             process. Defaults to True.
-        custom_classes (list(int), optional): A subset of class ids
-            from origin dataset.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -80,7 +80,6 @@ class AVAMeanAP(BaseMetric):
         >>>                   [0.106, 0.445, 0.782, 0.673, 0.367]])]}
         >>> ]
         >>> ava_metric(predictions)
-        >>> ava_metric.compute()
         {'mAP@0.5IOU': 0.027777778}
     """
 
@@ -112,7 +111,7 @@ class AVAMeanAP(BaseMetric):
                 - `video_id`: The id of the video, e.g., `3reY9zJKhqN`.
                 - `timestamp`: The timestamp of the video e.g., `1774`.
                 - `outputs`: A list bbox results of each class with the format
-                    of [x1, y1, x2, y2, score].
+                  of [x1, y1, x2, y2, score].
         """
         for prediction in predictions:
             self._results.append(prediction)
