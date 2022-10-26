@@ -26,15 +26,15 @@ class SSIM(BaseMetric):
 
     Args:
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the PSNR calculation. Default: 0.
+            pixels are not involved in the PSNR calculation. Defaults to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
-            Default: 'HWC'.
+            Defaults to 'HWC'.
         convert_to (str, optional): Whether to convert the images to other
             color models. If None, the images are not altered. When computing
             for 'Y', the images are assumed to be in BGR order. Options are
-            'Y' and None. Default: None.
+            'Y' and None. Defaults to None.
         channel_order (str): The channel order of image. Choices are 'rgb' and
-            'bgr'. Default: 'rgb'.
+            'bgr'. Defaults to 'rgb'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
