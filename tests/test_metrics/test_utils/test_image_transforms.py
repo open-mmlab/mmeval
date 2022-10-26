@@ -7,7 +7,7 @@ from numpy.testing import assert_array_almost_equal
 
 from mmeval.metrics.utils.image_transforms import (_convert_input_type_range,
                                                    _convert_output_type_range,
-                                                   bgr2ycbcr, img_transform,
+                                                   bgr2ycbcr, reorder_and_crop,
                                                    reorder_image, rgb2ycbcr)
 
 
@@ -181,35 +181,38 @@ def test_reorder_image():
     assert output.shape == (32, 32, 3)
 
 
-def test_img_transform():
+def test_reorder_and_crop():
     img = np.random.randint(0, 255, size=(4, 4, 3))
-    new_img = img_transform(img, 0, 'HWC', None, 'rgb')
+    new_img = reorder_and_crop(img, 0, 'HWC', None, 'rgb')
     assert new_img.shape == (4, 4, 3)
     assert new_img.dtype == np.float64
 
     img = np.random.randint(0, 255, size=(4, 4, 3))
     with pytest.raises(ValueError):
-        img_transform(img, 0, 'HWC', convert_to='z')
+        reorder_and_crop(img, 0, 'HWC', convert_to='z')
 
     with pytest.raises(ValueError):
-        img_transform(img, 0, 'HWC', convert_to='Y', channel_order='abc')
+        reorder_and_crop(img, 0, 'HWC', convert_to='Y', channel_order='abc')
 
-    new_img = img_transform(img, 0, 'HWC', convert_to='Y', channel_order='rgb')
+    new_img = reorder_and_crop(img, 0, 'HWC', convert_to='Y',
+                               channel_order='rgb')
     assert new_img.shape == (4, 4, 1)
     assert new_img.dtype == np.float64
 
-    new_img = img_transform(img, 0, 'HWC', convert_to='Y', channel_order='bgr')
+    new_img = reorder_and_crop(img, 0, 'HWC', convert_to='Y',
+                               channel_order='bgr')
     assert new_img.shape == (4, 4, 1)
     assert new_img.dtype == np.float64
 
-    new_img = img_transform(img, 0, 'HWC', convert_to='Y', channel_order='rgb')
+    new_img = reorder_and_crop(img, 0, 'HWC', convert_to='Y',
+                               channel_order='rgb')
     assert new_img.shape == (4, 4, 1)
     assert new_img.dtype == np.float64
 
-    new_img = img_transform(np.random.randint(0, 255, size=(32, 32, 3)), 4,
-                            'HWC', None, 'rgb')
+    new_img = reorder_and_crop(np.random.randint(0, 255, size=(32, 32, 3)), 4,
+                               'HWC', None, 'rgb')
     assert new_img.shape == (24, 24, 3)
 
-    new_img = img_transform(np.random.randint(0, 255, size=(32, 32, 3)), 4,
-                            'HWC', 'Y', 'rgb')
+    new_img = reorder_and_crop(np.random.randint(0, 255, size=(32, 32, 3)), 4,
+                               'HWC', 'Y', 'rgb')
     assert new_img.shape == (24, 24, 1)

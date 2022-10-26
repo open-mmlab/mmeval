@@ -3,7 +3,7 @@ import numpy as np
 from typing import Dict, List, Optional, Sequence
 
 from mmeval.core import BaseMetric
-from .utils import img_transform
+from .utils import reorder_and_crop
 
 
 class PSNR(BaseMetric):
@@ -78,20 +78,20 @@ class PSNR(BaseMetric):
             assert groundtruth.shape == prediction.shape, (
                 f'Image shapes are different: \
                     {groundtruth.shape}, {prediction.shape}.')
-            groundtruth = img_transform(
+            groundtruth = reorder_and_crop(
                 groundtruth,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
                 channel_order=self.channel_order)
-            prediction = img_transform(
+            prediction = reorder_and_crop(
                 prediction,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
                 channel_order=self.channel_order)
 
-            self._results.append(self._compute_psnr(groundtruth, prediction))
+            self._results.append(self.compute_psnr(groundtruth, prediction))
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the PSNR metric.
@@ -110,8 +110,8 @@ class PSNR(BaseMetric):
         return {'psnr': float(np.array(results).mean())}
 
     @staticmethod
-    def _compute_psnr(groundtruth: np.ndarray,
-                      prediction: np.ndarray) -> np.float64:
+    def compute_psnr(groundtruth: np.ndarray,
+                     prediction: np.ndarray) -> np.float64:
         """Calculate PSNR (Peak Signal-to-Noise Ratio).
 
         Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
