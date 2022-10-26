@@ -150,11 +150,13 @@ class AVAMeanAP(BaseMetric):
         """Reads a label mapping file.
 
         Returns:
-            labelmap (list): The label map in the form used by the
-            object_detection_evaluation module - a list of
-            {"id": integer, "name": classname } dicts.
-            class_ids (set): A set containing all of the valid
-            class id integers.
+            tuple (labelmap, class_ids):
+            
+            - labelmap (list): The label map in the form used by the
+              object_detection_evaluation module - a list of
+              {"id": integer, "name": classname } dicts.
+            - class_ids (set): A set containing all of the valid
+              class id integers.
         """
         labelmap = []
         class_ids = set()
