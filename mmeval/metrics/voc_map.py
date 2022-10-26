@@ -5,6 +5,7 @@ from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics.utils import calculate_bboxes_area, calculate_overlaps
+from mmeval.utils import is_list_of
 
 
 def calculate_average_precision(recalls: np.ndarray,
@@ -102,9 +103,8 @@ class VOCMeanAP(BaseMetric):
             Defaults to 4.
         drop_class_ap (bool): Whether to drop the class without ground truth
             when calculating the average precision for each class.
-        classwise_result (bool): Whether to return the computed
-            results of each class.
-            Defaults to False.
+        classwise (bool): Whether to return the computed results of each
+            class. Defaults to False.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -144,12 +144,15 @@ class VOCMeanAP(BaseMetric):
                  use_legacy_coordinate: bool = False,
                  nproc: int = 4,
                  drop_class_ap: bool = True,
-                 classwise_result: bool = False,
+                 classwise: bool = False,
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
         if isinstance(iou_thrs, float):
             iou_thrs = [iou_thrs]
+        assert is_list_of(iou_thrs, float), \
+            '`iou_thrs` should be float or a list of float'
+
         self.iou_thrs = iou_thrs
 
         if scale_ranges is None:
@@ -175,7 +178,7 @@ class VOCMeanAP(BaseMetric):
         self.nproc = nproc
         self.use_legacy_coordinate = use_legacy_coordinate
         self.drop_class_ap = drop_class_ap
-        self.classwise_result = classwise_result
+        self.classwise = classwise
 
         self.num_iou = len(self.iou_thrs)
         self.num_scale = len(self.scale_ranges)
@@ -224,7 +227,7 @@ class VOCMeanAP(BaseMetric):
 
                 - bboxes (numpy.ndarray): Shape (M, 4), the ground truth
                   bounding bboxes of this image, in 'xyxy' foramrt.
-                - labels (numpy.ndarray): Shape (M, 1), theground truth
+                - labels (numpy.ndarray): Shape (M, 1), the ground truth
                   labels of bounding boxes.
                 - bboxes_ignore (numpy.ndarray): Shape (K, 4), the ground
                   truth ignored bounding bboxes of this image,
@@ -232,12 +235,12 @@ class VOCMeanAP(BaseMetric):
                 - labels_ignore (numpy.ndarray): Shape (K, 1), the ground
                   truth ignored labels of bounding boxes.
         """
-        for prediction, label in zip(predictions, groundtruths):
+        for prediction, groundtruth in zip(predictions, groundtruths):
             assert isinstance(prediction, dict), 'The prediciton should be ' \
                 f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
-            assert isinstance(label, dict), 'The label should be ' \
-                f'a sequence of dict, but got a sequence of {type(label)}.'
-            self._results.append((prediction, label))
+            assert isinstance(groundtruth, dict), 'The label should be ' \
+                f'a sequence of dict, but got a sequence of {type(groundtruth)}.'  # noqa: E501
+            self._results.append((prediction, groundtruth))
 
     @staticmethod
     def _calculate_image_tpfp(
@@ -465,8 +468,8 @@ class VOCMeanAP(BaseMetric):
             - mAP, the averaged across all IoU thresholds and all class.
             - mAP@{IoU}, the mAP of the specified IoU threshold.
             - mAP@{scale_range}, the mAP of the specified scale range.
-            - classwise_result, the evaluation results of each class.
-              This would be returned if ``self.classwise_result`` is True.
+            - classwise, the evaluation results of each class.
+              This would be returned if ``self.classwise`` is True.
         """
         predictions, groundtruths = zip(*results)
 
@@ -508,7 +511,7 @@ class VOCMeanAP(BaseMetric):
             pool.close()
 
         eval_results = self._aggregate_results(results_per_class)
-        if self.classwise_result:
+        if self.classwise:
             eval_results['classwise_result'] = results_per_class
 
         return eval_results

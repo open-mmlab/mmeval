@@ -49,7 +49,7 @@ def calculate_overlaps(bboxes1: np.ndarray,
             Note when function is used in `VOCDataset`, it should be
             True to align with the official implementation
             `http://host.robots.ox.ac.uk/pascal/VOC/voc2012/VOCdevkit_18-May-2011.tar`
-            Default: False.
+            Defaults to False.
 
     Returns:
         numpy.ndarray: IoUs or IoFs with shape (n, k).
