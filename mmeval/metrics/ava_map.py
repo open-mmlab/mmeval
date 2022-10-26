@@ -108,6 +108,7 @@ class AVAMeanAP(BaseMetric):
         Args:
             predictions (Sequence[dict]): A list of prediction dict which
                 contains the following keys:
+                
                 - `video_id`: The id of the video, e.g., `3reY9zJKhqN`.
                 - `timestamp`: The timestamp of the video e.g., `1774`.
                 - `outputs`: A list bbox results of each class with the format
