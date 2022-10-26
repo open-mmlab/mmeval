@@ -229,8 +229,7 @@ class AVAMeanAP(BaseMetric):
         logger.info('read file ' + csv_file)
         return boxes, labels, scores
 
-    @staticmethod
-    def read_exclusions(exclude_file: str) -> set:
+    def read_exclusions(self, exclude_file: str) -> set:
         """Reads a CSV file of excluded timestamps.
 
         Args:
