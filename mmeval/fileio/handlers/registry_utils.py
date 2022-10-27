@@ -34,6 +34,7 @@ def _register_handler(handler, file_formats):
 
 
 def register_handler(file_formats, **kwargs):
+    """A decorator that register a handler for some file extensions."""
 
     def wrap(cls):
         _register_handler(cls(**kwargs), file_formats)

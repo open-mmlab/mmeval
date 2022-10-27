@@ -1,18 +1,18 @@
-# 支持矩阵
+# Support Matrix
 
-### 支持的分布式通信后端
+## Supported distributed communication backends
 
 |                                                    MPI4Py                                                     |                                                                                                             torch.distributed                                                                                                              |                                                       Horovod                                                       |                                              paddle.distributed                                               |
 | :-----------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------------: | :-----------------------------------------------------------------------------------------------------------: |
 | [MPI4PyDist](../api/generated/mmeval.core.dist_backends.MPI4PyDist.html#mmeval.core.dist_backends.MPI4PyDist) | [TorchCPUDist](../api/generated/mmeval.core.dist_backends.MPI4PyDist.html#mmeval.core.dist_backends.TorchCPUDist) <br> [TorchCUDADist](../api/generated/mmeval.core.dist_backends.MPI4PyDist.html#mmeval.core.dist_backends.TorchCUDADist) | [TFHorovodDist](../api/generated/mmeval.core.dist_backends.MPI4PyDist.html#mmeval.core.dist_backends.TFHorovodDist) | [PaddleDist](../api/generated/mmeval.core.dist_backends.MPI4PyDist.html#mmeval.core.dist_backends.PaddleDist) |
 
-### 支持的评测指标及机器学习框架
+## Supported metrics and ML frameworks
 
 ```{note}
-下表列出 MMEval 已实现的评测指标与对应的机器学习框架支持情况，打勾表示能够直接接收对应框架的数据类型（如 Tensor）进行计算。
+The following table lists the metrics implemented by MMEval and the corresponding machine learning framework support. A check mark indicates that the data type of the corresponding framework (e.g. Tensor) can be directly passed for computation.
 ```
 
-|                                                      评测指标                                                      | NumPy | PyTorch | TensorFlow | Paddle |
+|                                                       Metric                                                       | NumPy | PyTorch | TensorFlow | Paddle |
 | :----------------------------------------------------------------------------------------------------------------: | :---: | :-----: | :--------: | :----: |
 |                 [Accuracy](../api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                  |   ✔   |    ✔    |            |        |
 |    [SingleLabelMetric](../api/generated/mmeval.metrics.SingleLabelMetric.html#mmeval.metrics.SingleLabelMetric)    |   ✔   |    ✔    |            |        |
