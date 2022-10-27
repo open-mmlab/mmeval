@@ -137,7 +137,7 @@ class AVAMeanAP(BaseMetric):
 
                     row_result = [video_id, str(timestamp)]
                     row_result += bbox_[:4]
-                    row_result += str(actual_label)
+                    row_result += [str(actual_label)]
                     row_result += bbox_[4:]
                     csv_results.append(row_result)
 
@@ -207,9 +207,7 @@ class AVAMeanAP(BaseMetric):
         scores = defaultdict(list)
         reader = csv.reader(open(csv_file))
         for row in reader:
-            assert len(row) in [
-                7, 8
-            ], 'Wrong number of columns: ' + row  # type: ignore
+            assert len(row) in [7, 8], f'Wrong number of columns: {row}'
             image_key = f'{row[0]}, {int(row[1]): 04d}'
             x1, y1, x2, y2 = (float(n) for n in row[2:6])
             action_id = int(row[6])
