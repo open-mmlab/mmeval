@@ -23,6 +23,6 @@ __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
-    'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric', 'AveragePrecision',
-    'AVAMeanAP'
+    'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
+    'AveragePrecision', 'AVAMeanAP'
 ]
