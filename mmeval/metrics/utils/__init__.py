@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-from .ava_evaluation import object_detection_evaluation, standard_fields
 from .bbox_overlaps import calculate_bboxes_area, calculate_overlaps
 from .hmean import compute_hmean
 from .image_transforms import reorder_and_crop
@@ -20,6 +19,4 @@ __all__ = [
     'calculate_overlaps',
     'calculate_bboxes_area',
     'reorder_and_crop',
-    'standard_fields',
-    'object_detection_evaluation',
 ]

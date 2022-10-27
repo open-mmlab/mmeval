@@ -8,8 +8,8 @@ from datetime import datetime
 from typing import List, Optional, Sequence
 
 from mmeval.core.base_metric import BaseMetric
-from .utils.ava_evaluation import object_detection_evaluation as det_eval
-from .utils.ava_evaluation import standard_fields
+from ._vendor.ava_evaluation import object_detection_evaluation as det_eval
+from ._vendor.ava_evaluation import standard_fields
 
 logger = logging.getLogger(__name__)
 
