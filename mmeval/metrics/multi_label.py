@@ -21,12 +21,93 @@ BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[Union[int, float]]],
                            Union[int, Sequence[int]]]
 
 
-class MultiLabelMixin:
-    """A Mixin for Multilabel Metrics to accept scores, one-hot encodings and
-    label-format inputs with minimal user awareness.
+def label_to_onehot(label: Union[np.ndarray, 'torch.Tensor'],
+                    num_classes: int) -> Union[np.ndarray, 'torch.Tensor']:
+    """Convert the label-format input to one-hot encodings.
 
-    And provides method to format inputs into the same shape.
+    Args:
+        label (torch.Tensor or np.ndarray): The label-format input.
+            The format of item must be label-format.
+        num_classes (int): The number of classes.
+
+    Return:
+        torch.Tensor or np.ndarray: The converted one-hot encodings.
     """
+    if torch and isinstance(label, torch.Tensor):
+        label = label.long()
+        onehot = label.new_zeros((num_classes, ))
+    else:
+        label = label.astype(np.int64)
+        onehot = np.zeros((num_classes, ), dtype=np.int64)
+    assert label.max().item() < num_classes, \
+        'Max index is out of `num_classes` {num_classes}'
+    assert label.min().item() >= 0
+    onehot[label] = 1
+    return onehot
+
+
+def format_data(data: Union[Sequence[Union[np.ndarray, 'torch.Tensor']],
+                            np.ndarray, 'torch.Tensor'],
+                num_classes: int,
+                is_onehot: bool = False) -> Union[np.ndarray, 'torch.Tensor']:
+    """Format data from different inputs such as prediction scores, label-
+    format data and one-hot encodings into the same output shape of `(N,
+    num_classes)`.
+
+    Args:
+        data (Union[Sequence[np.ndarray, 'torch.Tensor'], np.ndarray,
+            'torch.Tensor']): The input data of prediction or labels.
+        num_classes (int): The number of classes.
+        is_onehot (bool): Whether the data is one-hot encodings.
+
+    Return:
+        torch.Tensor or np.ndarray: One-hot encodings or predict scores.
+    """
+    if torch and isinstance(data[0], torch.Tensor):
+        stack_func = torch.stack
+    elif isinstance(data[0], (np.ndarray, np.int64)):
+        stack_func = np.stack
+    else:
+        raise NotImplementedError(f'Data type of {type(data[0])}'
+                                  'is not supported.')
+
+    try:
+        # try stack scores or one-hot indices directly
+        formated_data = stack_func(data)
+        # all assertions below is to find labels that are
+        # raw indices which should be caught in exception
+        # to convert to one-hot indices.
+        #
+        # 1. all raw indices has only 1 dims
+        assert formated_data.ndim == 2
+        # 2. all raw indices has the same dims
+        assert formated_data.shape[1] == num_classes
+        # 3. all raw indices has the same dims as num_classes
+        # then max indices should greater than 1 for num_classes > 2
+        assert formated_data.max() <= 1
+        # 4. corner case, num_classes=2, then one-hot indices
+        # and raw indices are undistinguishable, for instance:
+        #   [[0, 1], [0, 1]] can be one-hot indices of 2 positives
+        #   or raw indices of 4 positives.
+        # Extra induction is needed.
+        if num_classes == 2:
+            warnings.warn('Ambiguous data detected, reckoned as scores'
+                          ' or label-format data as defaults. Please set '
+                          'parms related to `is_onehot` if use one-hot '
+                          'encoding data to compute metrics.')
+            assert is_onehot
+    # Error corresponds to np, torch, stack_func respectively
+    except (ValueError, RuntimeError, AssertionError):
+        # convert label-format inputs to one-hot encodings
+        formated_data = stack_func(
+            [label_to_onehot(sample, num_classes) for sample in data])
+    return formated_data
+
+
+class MultiLabelMixin:
+    """A Mixin for Multilabel Metrics to clarify whether the input is one-hot
+    encodings or label-format inputs for corner case with minimal user
+    awareness."""
 
     def __init__(self, *args, **kwargs) -> None:
         # pass arguments for multiple inheritances
@@ -69,89 +150,6 @@ class MultiLabelMixin:
         encodings or label-format.
         """
         self._label_is_onehot = is_onehot
-
-    @staticmethod
-    def label_to_onehot(label: Union[np.ndarray, 'torch.Tensor'],
-                        num_classes: int) -> Union[np.ndarray, 'torch.Tensor']:
-        """Convert the label-format input to one-hot encodings.
-
-        Args:
-            label (torch.Tensor or np.ndarray): The label-format input.
-                The format of item must be label-format.
-            num_classes (int): The number of classes.
-
-        Return:
-            torch.Tensor or np.ndarray: The converted one-hot encodings.
-        """
-        if torch and isinstance(label, torch.Tensor):
-            label = label.long()
-            onehot = label.new_zeros((num_classes, ))
-        else:
-            label = label.astype(np.int64)
-            onehot = np.zeros((num_classes, ), dtype=np.int64)
-        assert label.max().item() < num_classes, \
-            'Max index is out of `num_classes` {num_classes}'
-        assert label.min().item() >= 0
-        onehot[label] = 1
-        return onehot
-
-    def format_data(self,
-                    data: Union[Sequence[Union[np.ndarray, 'torch.Tensor']],
-                                np.ndarray, 'torch.Tensor'], num_classes: int,
-                    is_onehot: bool) -> Union[np.ndarray, 'torch.Tensor']:
-        """Format data from different inputs such as prediction scores, label-
-        format data and one-hot encodings into the same output shape of `(N,
-        num_classes)`.
-
-        Args:
-            data (Union[Sequence[np.ndarray, 'torch.Tensor'], np.ndarray,
-                'torch.Tensor']): The input data of prediction or labels.
-            num_classes (int): The number of classes.
-            is_onehot (bool): Whether the data is one-hot encodings.
-
-        Return:
-            torch.Tensor or np.ndarray: One-hot encodings or predict scores.
-        """
-        if torch and isinstance(data[0], torch.Tensor):
-            stack_func = torch.stack
-        elif isinstance(data[0], (np.ndarray, np.int64)):
-            stack_func = np.stack
-        else:
-            raise NotImplementedError(f'Data type of {type(data[0])}'
-                                      'is not supported.')
-
-        try:
-            # try stack scores or one-hot indices directly
-            formated_data = stack_func(data)
-            # all assertions below is to find labels that are
-            # raw indices which should be caught in exception
-            # to convert to one-hot indices.
-            #
-            # 1. all raw indices has only 1 dims
-            assert formated_data.ndim == 2
-            # 2. all raw indices has the same dims
-            assert formated_data.shape[1] == num_classes
-            # 3. all raw indices has the same dims as num_classes
-            # then max indices should greater than 1 for num_classes > 2
-            assert formated_data.max() <= 1
-            # 4. corner case, num_classes=2, then one-hot indices
-            # and raw indices are undistinguishable, for instance:
-            #   [[0, 1], [0, 1]] can be one-hot indices of 2 positives
-            #   or raw indices of 4 positives.
-            # Extra induction is needed.
-            if num_classes == 2:
-                warnings.warn(
-                    'Ambiguous data detected, reckoned as scores'
-                    ' or one-hot indices as defaults. Please set '
-                    '`self.pred_is_onehot` and `self.label_is_onehot`'
-                    ' if use label-format data to compute metrics.')
-                assert is_onehot
-        # Error corresponds to np, torch, stack_func respectively
-        except (ValueError, RuntimeError, AssertionError):
-            # convert label-format inputs to one-hot encodings
-            formated_data = stack_func(
-                [self.label_to_onehot(sample, num_classes) for sample in data])
-        return formated_data
 
 
 class MultiLabelMetric(MultiLabelMixin, BaseMetric):
@@ -196,7 +194,7 @@ class MultiLabelMetric(MultiLabelMixin, BaseMetric):
         MultiLabelMetric supports different kinds of inputs. Such as:
         1. Each sample has scores for every classes. (Only for predictions)
         2. Each sample has one-hot indices for every classes.
-        3. Each sample has raw indices.
+        3. Each sample has label-format indices.
 
     Examples:
 
@@ -366,10 +364,10 @@ class MultiLabelMetric(MultiLabelMixin, BaseMetric):
                         labels: Sequence['torch.Tensor']) -> List:
         """A PyTorch implementation that computes the metric."""
 
-        preds = self.format_data(predictions, self.num_classes,
-                                 self._pred_is_onehot)
-        labels = self.format_data(labels, self.num_classes,
-                                  self._label_is_onehot).long()
+        preds = format_data(predictions, self.num_classes,
+                            self._pred_is_onehot)
+        labels = format_data(labels, self.num_classes,
+                             self._label_is_onehot).long()
 
         # cannot be raised in current implementation because
         # `and` method will guarantee the equal length.
@@ -407,9 +405,9 @@ class MultiLabelMetric(MultiLabelMixin, BaseMetric):
                         labels: Sequence[Union[np.ndarray, np.int64]]) -> List:
         """A NumPy implementation that computes the metric."""
 
-        preds = self.format_data(preds, self.num_classes, self._pred_is_onehot)
-        labels = self.format_data(labels, self.num_classes,
-                                  self._label_is_onehot).astype(np.int64)
+        preds = format_data(preds, self.num_classes, self._pred_is_onehot)
+        labels = format_data(labels, self.num_classes,
+                             self._label_is_onehot).astype(np.int64)
 
         # cannot be raised in current implementation because
         # `and` method will guarantee the equal length.
@@ -554,13 +552,13 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
     """Calculate the average precision with respect of classes.
 
     Args:
-        average (str | None): The average method. It supports two modes:
+        average (str, optional): The average method. It supports two modes:
 
-                - `"macro"`: Calculate metrics for each category, and calculate
-                  the mean value over all categories.
-                - `None`: Return scores of all categories.
+            - `"macro"`: Calculate metrics for each category, and calculate
+                the mean value over all categories.
+            - `None`: Return scores of all categories.
 
-            Defaults to "macro".
+        Defaults to "macro".
 
     References
     ----------
@@ -685,8 +683,7 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
 
         preds = torch.stack(preds)
         num_classes = preds.shape[1]
-        labels = self.format_data(labels, num_classes,
-                                  self._label_is_onehot).long()
+        labels = format_data(labels, num_classes, self._label_is_onehot).long()
 
         assert preds.shape[0] == labels.shape[0], \
             'Number of samples does not match between preds' \
@@ -712,8 +709,8 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
 
         preds = np.stack(preds)
         num_classes = preds.shape[1]
-        labels = self.format_data(labels, num_classes,
-                                  self._label_is_onehot).astype(np.int64)
+        labels = format_data(labels, num_classes,
+                             self._label_is_onehot).astype(np.int64)
 
         assert preds.shape[0] == labels.shape[0], \
             'Number of samples does not match between preds' \
