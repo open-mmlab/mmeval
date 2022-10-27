@@ -89,8 +89,6 @@ def parse_requirements(fname='requirements/runtime.txt', with_version=True):
     return packages
 
 
-install_requires = parse_requirements()
-
 setup(
     name='mmeval',
     version=get_version(),
@@ -102,5 +100,8 @@ setup(
     author_email='openmmlab@gmail.com',
     packages=find_packages(),
     python_requires='>=3.6',
-    install_requires=install_requires,
+    install_requires=parse_requirements('requirements/runtime.txt'),
+    extras_require={
+        'all': parse_requirements('requirements/optional.txt'),
+    },
 )

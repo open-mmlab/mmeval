@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-
 import copy
 import csv
 import json
@@ -7,7 +6,8 @@ import numpy as np
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-from .voc_map import VOCMeanAP, calculate_overlaps, filter_by_bboxes_area
+from mmeval.metrics.utils import calculate_overlaps
+from .voc_map import VOCMeanAP, filter_by_bboxes_area
 
 
 def _convert_hierarchy_tree(hierarchy_map: dict,
@@ -313,21 +313,22 @@ class OIDMeanAP(VOCMeanAP):
                 following keys:
 
                 - bboxes (numpy.ndarray): Shape (N, 4), the predicted bounding
-                bboxes of this image, in 'xyxy' foramrt.
+                  bboxes of this image, in 'xyxy' foramrt.
                 - scores (numpy.ndarray): Shape (N, 1), the predicted scores
-                of bounding boxes.
+                  of bounding boxes.
                 - labels (numpy.ndarray): Shape (N, 1), the predicted labels
-                of bounding boxes.
+                  of bounding boxes.
 
             groundtruths (Sequence[dict]): A sequence of dict. Each dict
                 representing a groundtruths for an image, with the following
                 keys:
 
                 - instances (List[dict]): Each dict representing a bounding
-                box with the following keys:
-                    - bbox (list): Containing box location in 'xyxy' foramrt.
-                    - bbox_label (int): Box label index.
-                    - is_group_of (bool): Whether the box is group or not.
+                  box with the following keys:
+
+                  - bbox (list): Containing box location in 'xyxy' foramrt.
+                  - bbox_label (int): Box label index.
+                  - is_group_of (bool): Whether the box is group or not.
                 - image_level_labels (numpy.ndarray): The image level labels.
         """
         for pred, groundtruth in zip(predictions, groundtruths):
@@ -384,11 +385,11 @@ class OIDMeanAP(VOCMeanAP):
             modified predicted bboxes.
 
             - tp (numpy.ndarray): Shape (num_ious, num_scales, N),
-            the true positive flag of each predicted bbox on this image.
+              the true positive flag of each predicted bbox on this image.
             - fp (numpy.ndarray): Shape (num_ious, num_scales, N),
-            the false positive flag of each predicted bbox on this image.
+              the false positive flag of each predicted bbox on this image.
             - pred_bboxes (numpy.ndarray): Shape (K, 5), the modified
-            pred bboxes.
+              pred bboxes.
 
         Note:
             This method should be a staticmethod to avoid resource competition
@@ -535,11 +536,11 @@ class OIDMeanAP(VOCMeanAP):
             tuple (tp, fp, num_gts):
 
             - tp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
-            the true positive flag of each predict bbox.
+              the true positive flag of each predict bbox.
             - fp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
-            the false positive flag of each predict bbox.
+              the false positive flag of each predict bbox.
             - num_gts (numpy.ndarray): Shape (num_ious, num_scales), the
-            number of ground truths.
+              number of ground truths.
         """
         class_preds = self.get_class_predictions(predictions, class_index)
         class_gts, class_group_of_flags = self.get_class_gts(

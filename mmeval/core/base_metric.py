@@ -14,7 +14,7 @@ class BaseMetric(metaclass=ABCMeta):
     will automatically complete the distributed synchronization between
     processes.
 
-    In the evaluation process, each metric will update ``self._results` to
+    In the evaluation process, each metric will update ``self._results`` to
     store intermediate results after each call of ``add``. When computing the
     final metric result, the ``self._results`` will be synchronized between
     processes.
