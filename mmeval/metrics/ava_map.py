@@ -146,8 +146,11 @@ class AVAMeanAP(BaseMetric):
                 f.write(','.join(csv_result))
                 f.write('\n')
 
-    def read_label(self) -> tuple:
+    def read_label(self, label_file: str) -> tuple:
         """Reads a label mapping file.
+
+        Args:
+            label_file (str): The path of label file.
 
         Returns:
             tuple (labelmap, class_ids):
@@ -161,7 +164,7 @@ class AVAMeanAP(BaseMetric):
         labelmap = []
         class_ids = set()
         name = ''
-        with open(self.label_file) as f:
+        with open(label_file) as f:
             for line in f:
                 if line.startswith('  name:'):
                     name = line.split('"')[1]
@@ -255,7 +258,7 @@ class AVAMeanAP(BaseMetric):
         Returns:
             dict: The evaluation results.
         """
-        categories, class_whitelist = self.read_label()
+        categories, class_whitelist = self.read_label(self.label_file)
         if self.custom_classes is not None:
             custom_classes = self.custom_classes[1:]
             assert set(custom_classes).issubset(set(class_whitelist))
