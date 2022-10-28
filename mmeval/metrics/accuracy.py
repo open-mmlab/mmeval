@@ -269,6 +269,7 @@ class Accuracy(BaseMetric):
         corrects = (tf.cast(pred_label, labels.dtype) == labels)
 
         # compute the corrects corresponding to all topk and thrs per sample
+        # NOTE: We should use a `tf.Variable` so that we can assign value.
         corrects_per_sample = tf.Variable(
             tf.zeros((len(predictions), len(self.topk), len(self.thrs)),
                      tf.int32))
@@ -323,6 +324,8 @@ class Accuracy(BaseMetric):
             pred_label == labels.reshape((1, -1)).expand_as(pred_label))
 
         # compute the corrects corresponding to all topk and thrs per sample
+        # NOTE: The data type of `corrects_per_sample` should be 'float64',
+        # otherwise will got wrong results when the shape of input is large.
         corrects_per_sample = paddle.zeros(
             (len(predictions), len(self.topk), len(self.thrs)), 'float64')
         for i, k in enumerate(self.topk):
@@ -332,6 +335,8 @@ class Accuracy(BaseMetric):
                     thr_corrects = corrects & (pred_scores.t() > thr)
                 else:
                     thr_corrects = corrects
+                # NOTE: The `keepdim` should be True, otherwise will got
+                # negative number.
                 corrects_per_sample[:, i, j] = thr_corrects[:k].sum(
                     0, keepdim=False).cast('float64')
         return corrects_per_sample
