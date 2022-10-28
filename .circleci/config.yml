@@ -30,6 +30,9 @@ jobs:
       paddle:
         type: string
         default: "2.2.2"
+      tensorflow:
+        type: string
+        default: "2.4.0"
     docker:
       - image: cimg/python:<< parameters.python >>
     resource_class: large
@@ -45,6 +48,10 @@ jobs:
           name: Install PaddlePaddle via pip
           command: |
             pip install paddlepaddle==<< parameters.paddle >> protobuf==3.20.*
+      - run:
+          name: Install TensorFlow via pip
+          command: |
+            pip install tensorflow==<< parameters.tensorflow >>
       - run:
           name: Install mmeval and dependencies
           command: |

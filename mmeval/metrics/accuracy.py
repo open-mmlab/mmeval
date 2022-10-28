@@ -9,9 +9,14 @@ from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
+    import paddle
+    import tensorflow
+    import tensorflow as tf
     import torch
 else:
+    paddle = try_import('paddle')
     torch = try_import('torch')
+    tf = try_import('tensorflow')
 
 
 @overload
@@ -23,15 +28,10 @@ def _is_scalar(obj: np.number):  # type: ignore
 
 @overload
 @dispatch
-def _is_scalar(obj: np.ndarray):  # type: ignore
-    """Check if a ``numpy.ndarray`` is a scalar."""
-    return obj.ndim == 0
-
-
-@overload
-@dispatch
-def _is_scalar(obj: 'torch.Tensor'):  # type: ignore
-    """Check if a ``torch.Tensor`` is a scalar."""
+def _is_scalar(obj: Union[np.ndarray,  # type: ignore
+                          'torch.Tensor', 'tensorflow.Tensor']):
+    """Check if a ``np.ndarray`` | ``torch.Tensor`` | ``tensorflow.Tensor`` is
+    a scalar."""
     return obj.ndim == 0
 
 
@@ -75,7 +75,7 @@ def _numpy_topk(inputs: np.ndarray,
         values, indices = _torch_topk(torch.from_numpy(inputs), k, dim=axis)
         return values.numpy(), indices.numpy()
 
-    indices = np.argsort(inputs, axis=axis)
+    indices = np.argsort(inputs * -1.0, axis=axis)
     indices = np.take(indices, np.arange(k), axis=axis)
     values = np.take_along_axis(inputs, indices, axis=axis)
     return values, indices
@@ -86,9 +86,9 @@ class Accuracy(BaseMetric):
 
     This metric computes the accuracy based on the given topk and thresholds.
 
-    Currently, this metric supports 2 kinds of inputs, i.e. ``numpy.ndarray``
-    and ``torch.Tensor``, and the implementation for the calculation depends on
-    the inputs type.
+    Currently, this metric supports 4 kinds of inputs, i.e. ``numpy.ndarray``,
+    ``torch.Tensor``, ``tensorflow.Tensor`` and ``paddle.Tensor``, and the
+    implementation for the calculation depends on the inputs type.
 
     Args:
         topk (int | Sequence[int]): If the predictions in ``topk``
@@ -225,6 +225,117 @@ class Accuracy(BaseMetric):
                     0, keepdim=True).float()
         return corrects_per_sample
 
+    @overload  # type: ignore
+    @dispatch
+    def _compute_corrects(  # type: ignore
+        self, predictions: Union['tensorflow.Tensor',
+                                 Sequence['tensorflow.Tensor']],
+        labels: Union['tensorflow.Tensor',
+                      Sequence['tensorflow.Tensor']]) -> 'tensorflow.Tensor':
+        """Compute the correct number of per topk and threshold with
+        TensorFlow.
+
+        Args:
+            prediction (tensorflow.Tensor | Sequence): Predictions from the
+                model. Same as ``self.add``.
+            labels (tensorflow.Tensor | Sequence): The ground truth labels.
+                Same as ``self.add``.
+
+        Returns:
+            tensorflow.Tensor: Correct number with the following 2 shapes.
+
+            - (N, ): If the ``predictions`` is a label tensor instead of score.
+              Only return a top-1 correct tensor, and ignore the argument
+              ``topk`` and ``thrs``.
+            - (N, num_topk, num_thr): If the ``prediction`` is a score tensor
+              (number of dimensions is 2). Return the correct number on each
+              ``topk`` and ``thrs``.
+        """
+        if not isinstance(predictions, tf.Tensor):
+            predictions = tf.stack(predictions)
+        if not isinstance(labels, tf.Tensor):
+            labels = tf.stack(labels)
+
+        if predictions.ndim == 1:
+            corrects = (tf.cast(predictions, labels.dtype) == labels)
+            return tf.cast(corrects, tf.float64)
+
+        pred_scores, pred_label = tf.math.top_k(predictions, self.maxk)
+        pred_label = tf.transpose(pred_label)
+
+        # broadcast `label` to the shape of `pred_label`
+        labels = tf.broadcast_to(tf.reshape(labels, (1, -1)), pred_label.shape)
+        # compute correct tensor
+        corrects = (tf.cast(pred_label, labels.dtype) == labels)
+
+        # compute the corrects corresponding to all topk and thrs per sample
+        corrects_per_sample = tf.Variable(
+            tf.zeros((len(predictions), len(self.topk), len(self.thrs)),
+                     tf.int32))
+        for i, k in enumerate(self.topk):
+            for j, thr in enumerate(self.thrs):
+                # Only prediction socres larger than thr are counted as correct
+                if thr is not None:
+                    thr_corrects = corrects & (tf.transpose(pred_scores) > thr)
+                else:
+                    thr_corrects = corrects
+                corrects_per_sample[:, i, j].assign(
+                    tf.reduce_sum(tf.cast(thr_corrects[:k], tf.int32), axis=0))
+        return corrects_per_sample.value()
+
+    @overload  # type: ignore
+    @dispatch
+    def _compute_corrects(  # type: ignore
+        self, predictions: Union['paddle.Tensor', Sequence['paddle.Tensor']],
+        labels: Union['paddle.Tensor',
+                      Sequence['paddle.Tensor']]) -> 'paddle.Tensor':
+        """Compute the correct number of per topk and threshold with Paddle.
+
+        Args:
+            prediction (paddle.Tensor | Sequence): Predictions from the model.
+                Same as ``self.add``.
+            labels (paddle.Tensor | Sequence): The ground truth labels. Same as
+                ``self.add``.
+
+        Returns:
+            paddle.Tensor: Correct number with the following 2 shapes.
+
+            - (N, ): If the ``predictions`` is a label tensor instead of score.
+              Only return a top-1 correct tensor, and ignore the argument
+              ``topk`` and ``thrs``.
+            - (N, num_topk, num_thr): If the ``prediction`` is a score tensor
+              (number of dimensions is 2). Return the correct number on each
+              ``topk`` and ``thrs``.
+        """
+        if not isinstance(predictions, paddle.Tensor):
+            predictions = paddle.stack(predictions)
+        if not isinstance(labels, paddle.Tensor):
+            labels = paddle.stack(labels)
+
+        if predictions.ndim == 1:
+            corrects = (predictions.cast(labels.dtype) == labels)
+            return corrects.cast('float64')
+
+        pred_scores, pred_label = paddle.topk(predictions, self.maxk)
+        pred_label = pred_label.t()
+
+        corrects = (
+            pred_label == labels.reshape((1, -1)).expand_as(pred_label))
+
+        # compute the corrects corresponding to all topk and thrs per sample
+        corrects_per_sample = paddle.zeros(
+            (len(predictions), len(self.topk), len(self.thrs)), 'int64')
+        for i, k in enumerate(self.topk):
+            for j, thr in enumerate(self.thrs):
+                # Only prediction socres larger than thr are counted as correct
+                if thr is not None:
+                    thr_corrects = corrects & (pred_scores.t() > thr)
+                else:
+                    thr_corrects = corrects
+                corrects_per_sample[:, i, j] = thr_corrects[:k].sum(
+                    0, keepdim=True).cast('int64')
+        return corrects_per_sample
+
     @dispatch
     def _compute_corrects(
             self, predictions: Union[np.ndarray, Sequence[np.ndarray]],
@@ -261,7 +372,7 @@ class Accuracy(BaseMetric):
 
         # broadcast `label` to the shape of `pred_label`
         labels = np.broadcast_to(labels.reshape(1, -1), pred_label.shape)
-        # compute correct tensor
+        # compute correct array
         corrects = (pred_label == labels)
 
         # compute the corrects corresponding to all topk and thrs per sample
@@ -279,7 +390,9 @@ class Accuracy(BaseMetric):
         return corrects_per_sample
 
     def compute_metric(
-        self, results: List[Union[Iterable, Union[np.number, 'torch.Tensor']]]
+        self, results: List[Union[Iterable,
+                                  Union[np.number, 'torch.Tensor',
+                                        'tensorflow.Tensor', 'paddle.Tensor']]]
     ) -> Dict[str, float]:
         """Compute the accuracy metric.
 
@@ -287,9 +400,10 @@ class Accuracy(BaseMetric):
         distributed synchronization.
 
         Args:
-            results (List[Union[Iterable, Union[np.number, torch.Tensor]]]): A
-                list that consisting the correct numbers. This list has already
-                been synced across all ranks.
+            results (List[Union[Iterable, Union[np.number, torch.Tensor,
+                tensorflow.Tensor, paddle.Tensor]]]): A list that consisting
+                the correct numbers. This list has already been synced across
+                all ranks.
 
         Returns:
             Dict[str, float]: The computed accuracy metric.
