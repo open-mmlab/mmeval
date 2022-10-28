@@ -30,6 +30,9 @@ jobs:
       paddle:
         type: string
         default: "2.2.2"
+      tensorflow:
+        type: string
+        default: "2.4"
     docker:
       - image: cimg/python:<< parameters.python >>
     resource_class: large
@@ -45,6 +48,10 @@ jobs:
           name: Install PaddlePaddle via pip
           command: |
             pip install paddlepaddle==<< parameters.paddle >> protobuf==3.20.*
+      - run:
+          name: Install TensorFlow via pip
+          command: |
+            pip install tensorflow==<< parameters.tensorflow >>
       - run:
           name: Install mmeval and dependencies
           command: |
@@ -137,54 +144,49 @@ workflows:
     jobs:
       - lint
       - build_cpu:
-          name: build_cpu_torch1.6
+          name: build_cpu_torch1.6_tf2.4
           torch: 1.6.0
+          tensorflow: "2.4"
           requires:
             - lint
       - build_cpu:
-          name: build_cpu_torch1.7
+          name: build_cpu_torch1.7_tf_2.6
           torch: 1.7.0
+          tensorflow: "2.6"
           requires:
             - lint
       - build_cpu:
-          name: build_cpu_torch1.8_py3.9
+          name: build_cpu_torch1.8_tf2.7_py3.9
           torch: 1.8.0
           python: "3.9.0"
+          tensorflow: "2.7"
           requires:
             - lint
       - build_cpu:
-          name: build_cpu_torch1.9_paddle2.3_py3.8
+          name: build_cpu_torch1.9_paddle2.3_tf2.8_py3.8
           torch: 1.9.0
           paddle: 2.3.2
+          tensorflow: "2.8"
           python: "3.8.12"
           requires:
             - lint
       - build_cpu:
-          name: build_cpu_torch1.9_paddle2.4_py3.9
+          name: build_cpu_torch1.9_paddle2.10_py3.9
           torch: 1.9.0
           paddle: 2.4.0rc0
+          tensorflow: "2.10"
           python: "3.9.0"
           requires:
             - lint
       - build_mpirun_and_tf:
-          name: build_mpirun_and_tf_2.4
-          tensorflow: "2.4"
-          requires:
-            - build_cpu_torch1.6
-            - build_cpu_torch1.7
-            - build_cpu_torch1.8_py3.9
-            - build_cpu_torch1.9_paddle2.3_py3.8
-            - build_cpu_torch1.9_paddle2.4_py3.9
-      - build_mpirun_and_tf:
           name: build_mpirun_and_tf_2.7
           tensorflow: "2.7"
           requires:
-            - build_cpu_torch1.6
-            - build_cpu_torch1.7
-            - build_cpu_torch1.8_py3.9
-            - build_cpu_torch1.9_paddle2.3_py3.8
-            - build_cpu_torch1.9_paddle2.4_py3.9
+            - build_cpu_torch1.6_tf2.4
+            - build_cpu_torch1.7_tf_2.6
+            - build_cpu_torch1.8_tf2.7_py3.9
+            - build_cpu_torch1.9_paddle2.3_tf2.8_py3.8
+            - build_cpu_torch1.9_paddle2.10_py3.9
       - build_cu112:
           requires:
-            - build_mpirun_and_tf_2.4
             - build_mpirun_and_tf_2.7

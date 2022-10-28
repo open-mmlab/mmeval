@@ -11,6 +11,7 @@ from mmeval.utils import try_import
 
 torch = try_import('torch')
 paddle = try_import('paddle')
+tf = try_import('tensorflow')
 
 
 def test_metric_interface_numpy():
@@ -44,6 +45,18 @@ def test_metric_interface_paddle():
     results = miou(
         paddle.randint(0, 4, shape=(2, 10, 10)),
         paddle.randint(0, 4, shape=(2, 10, 10))
+    )
+    assert isinstance(results, dict)
+
+
+@pytest.mark.skipif(tf is None, reason='TensorFlow is not available!')
+def test_metric_interface_tf():
+    miou = MeanIoU(num_classes=4)
+    assert isinstance(miou, BaseMetric)
+
+    results = miou(
+        tf.random.uniform((2, 10, 10), minval=0, maxval=4, dtype=tf.int32),
+        tf.random.uniform((2, 10, 10), minval=0, maxval=4, dtype=tf.int32)
     )
     assert isinstance(results, dict)
 
@@ -145,6 +158,36 @@ def test_metamorphic_numpy_paddle(metric_kwargs, length):
     for key in np_results:
         np.testing.assert_allclose(
             np_results[key], paddle_results[key], rtol=1e-06)
+
+
+@pytest.mark.skipif(tf is None, reason='TensorFlow is not available!')
+@pytest.mark.parametrize(
+    argnames=('metric_kwargs', 'length'),
+    argvalues=[
+        ({'num_classes': 10}, 100),
+        ({'num_classes': 100}, 1000),
+        ({'num_classes': 222}, 500)
+    ]
+)
+def test_metamorphic_numpy_tf(metric_kwargs, length):
+    """Metamorphic testing for NumPy and TensorFlow implementation."""
+    miou = MeanIoU(**metric_kwargs)
+    num_classes = metric_kwargs.get('num_classes')
+
+    predictions = np.random.randint(0, num_classes, size=(length, 224, 224))
+    labels = np.random.randint(0, num_classes, size=(length, 224, 224))
+
+    np_results = miou(predictions, labels)
+
+    predictions = tf.convert_to_tensor(predictions)
+    labels = tf.convert_to_tensor(labels)
+    tf_results = miou(predictions, labels)
+
+    assert np_results.keys() == tf_results.keys()
+
+    for key in np_results:
+        np.testing.assert_allclose(
+            np_results[key], tf_results[key], rtol=1e-06)
 
 
 if __name__ == '__main__':

@@ -62,11 +62,11 @@ Major features:
 
 |                                                                         Metric                                                                          | NumPy | PyTorch | TensorFlow | Paddle |
 | :-----------------------------------------------------------------------------------------------------------------------------------------------------: | :---: | :-----: | :--------: | :----: |
-|                 [Accuracy](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                  |   ✔   |    ✔    |            |        |
+|                 [Accuracy](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                  |   ✔   |    ✔    |     ✔      |   ✔    |
 |    [SingleLabelMetric](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.SingleLabelMetric.html#mmeval.metrics.SingleLabelMetric)    |   ✔   |    ✔    |            |        |
 |     [MultiLabelMetric](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.MultiLabelMetric.html#mmeval.metrics.MultiLabelMetric)      |   ✔   |    ✔    |            |        |
 |     [AveragePrecision](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.AveragePrecision.html#mmeval.metrics.AveragePrecision)      |   ✔   |    ✔    |            |        |
-|                   [MeanIoU](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.MeanIoU.html#mmeval.metrics.MeanIoU)                   |   ✔   |    ✔    |            |   ✔    |
+|                   [MeanIoU](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.MeanIoU.html#mmeval.metrics.MeanIoU)                   |   ✔   |    ✔    |     ✔      |   ✔    |
 |                [VOCMeanAP](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.VOCMeanAP.html#mmeval.metrics.VOCMeanAP)                |   ✔   |         |            |        |
 |                [OIDMeanAP](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.OIDMeanAP.html#mmeval.metrics.OIDMeanAP)                |   ✔   |         |            |        |
 | [CocoDetectionMetric](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.COCODetectionMetric.html#mmeval.metrics.COCODetectionMetric) |   ✔   |         |            |        |
