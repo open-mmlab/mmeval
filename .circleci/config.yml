@@ -189,5 +189,4 @@ workflows:
             - build_cpu_torch1.9_paddle2.10_py3.9
       - build_cu112:
           requires:
-            - build_mpirun_and_tf_2.4
             - build_mpirun_and_tf_2.7
