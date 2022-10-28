@@ -250,7 +250,8 @@ class MeanIoU(BaseMetric):
         mask = (label != self.ignore_index)
         prediction, label = prediction[mask], label[mask]
         confusion_matrix_1d = tf.math.bincount(
-            num_classes * label + prediction, minlength=num_classes**2)
+            tf.cast(num_classes * label + prediction, tf.int32),
+            minlength=num_classes**2)
         confusion_matrix = tf.reshape(confusion_matrix_1d,
                                       (num_classes, num_classes))
         return confusion_matrix.numpy()

@@ -324,7 +324,7 @@ class Accuracy(BaseMetric):
 
         # compute the corrects corresponding to all topk and thrs per sample
         corrects_per_sample = paddle.zeros(
-            (len(predictions), len(self.topk), len(self.thrs)), 'int64')
+            (len(predictions), len(self.topk), len(self.thrs)), 'float64')
         for i, k in enumerate(self.topk):
             for j, thr in enumerate(self.thrs):
                 # Only prediction socres larger than thr are counted as correct
@@ -333,7 +333,7 @@ class Accuracy(BaseMetric):
                 else:
                     thr_corrects = corrects
                 corrects_per_sample[:, i, j] = thr_corrects[:k].sum(
-                    0, keepdim=True).cast('int64')
+                    0, keepdim=False).cast('float64')
         return corrects_per_sample
 
     @dispatch
@@ -400,10 +400,8 @@ class Accuracy(BaseMetric):
         distributed synchronization.
 
         Args:
-            results (List[Union[Iterable, Union[np.number, torch.Tensor,
-                tensorflow.Tensor, paddle.Tensor]]]): A list that consisting
-                the correct numbers. This list has already been synced across
-                all ranks.
+            results (list): A list that consisting the correct numbers. This
+                list has already been synced across all ranks.
 
         Returns:
             Dict[str, float]: The computed accuracy metric.
