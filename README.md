@@ -159,7 +159,7 @@ accuracy.compute()
 
 </details>
 
-## Future Work
+## In the works
 
 - Continue to add more metrics and expand more tasks (e.g. NLP, audio).
 - Support more ML frameworks and explore multiple ML framework support paradigms.
