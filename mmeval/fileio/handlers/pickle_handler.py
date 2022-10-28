@@ -5,6 +5,7 @@ from .base import BaseFileHandler
 
 
 class PickleHandler(BaseFileHandler):
+    """A Pickle handler that parse pickle data from file object."""
 
     str_like = False
 

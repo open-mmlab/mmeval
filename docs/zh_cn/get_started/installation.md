@@ -16,7 +16,7 @@ pip install 'mmeval[all]'
 
 ## 使用
 
-MMEval 中的评测指标提供两种使用方式，以 `Accuracy` 为例：
+MMEval 中的评测指标提供两种使用方式，以 [Accuracy](mmeval.metrics.Accuracy) 为例：
 
 ```python
 from mmeval import Accuracy

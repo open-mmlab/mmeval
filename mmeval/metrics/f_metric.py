@@ -17,11 +17,13 @@ class F1Metric(BaseMetric):
 
     Args:
         num_classes (int): Number of labels.
-        mode (str or list[str]): Options are:
+        mode (str or list[str]): There are 2 options:
+
             - 'micro': Calculate metrics globally by counting the total true
               positives, false negatives and false positives.
             - 'macro': Calculate metrics for each label, and find their
               unweighted mean.
+
             If mode is a list, then metrics in mode will be calculated
             separately. Defaults to 'micro'.
         cared_classes (list[int]): The indices of the labels participated in

@@ -160,7 +160,7 @@ class EndPointError(BaseMetric):
         Returns:
             Dict: The computed metric, with following key:
 
-                - EPE, the mean end point error of all pairs.
+            - EPE, the mean end point error of all pairs.
         """
         epe_overall = sum(res[0] * res[1] for res in results)
         valid_pixels = sum(res[1] for res in results)

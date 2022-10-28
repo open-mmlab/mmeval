@@ -114,23 +114,23 @@ class SingleLabelMetric(BaseMetric):
             the available options:
 
             - `"precision"`: The ratio tp / (tp + fp) where tp is the
-                number of true positives and fp the number of false
-                positives.
+              number of true positives and fp the number of false
+              positives.
             - `"recall"`: The ratio tp / (tp + fn) where tp is the number
-                of true positives and fn the number of false negatives.
+              of true positives and fn the number of false negatives.
             - `"f1-score"`: The f1-score is the harmonic mean of the
-                precision and recall.
+              precision and recall.
             - `"support"`: The total number of occurrences of each category
-                in the target.
+              in the target.
 
             Defaults to ('precision', 'recall', 'f1-score').
         average (str, optional): The average method. If None, the scores
             for each class are returned. And it supports two average modes:
 
             - `"macro"`: Calculate metrics for each category, and calculate
-                the mean value over all categories.
+              the mean value over all categories.
             - `"micro"`: Calculate metrics globally by counting the total
-                true positives, false negatives and false positives.
+              true positives, false negatives and false positives.
 
             Defaults to "macro".
         num_classes (int, optional): Number of classes, only need for predictions

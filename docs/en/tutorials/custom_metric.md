@@ -1,10 +1,10 @@
-# 自定义评测指标
+# Implementing a Metric
 
-在 MMEval 中实现一个自定义评测指标，需要继承 [BaseMetric](mmeval.core.BaseMetric) 并且实现 `add` 和 `compute_metric` 方法。
+To implement a metric in `MMEval`, you should implement a subclass of [BaseMetric](mmeval.core.BaseMetric) that overrides the `add` and `compute_metric` methods.
 
-在评测过程中，评测指标需要在调用 `add` 后更新 `_results` 以存储中间结果。在最后进行指标计算的时候，将会对 `_results` 进行进程同步后调用 `compute_metric` 进行指标的计算。
+In the evaluation process, each metric will update `self._results` to store intermediate results after each call of `add`. When computing the final metric result, the `self._results` will be synchronized between processes.
 
-以实现 `Accuracy` 指标为例：
+An example that implementing simple `Accuracy` metric:
 
 ```python
 import numpy as np
@@ -25,7 +25,7 @@ class Accuracy(BaseMetric):
         return {'accuracy': accuracy}
 ```
 
-使用 `Accuracy`：
+Use `Accuracy`：
 
 ```python
 # stateless call

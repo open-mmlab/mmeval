@@ -1,11 +1,11 @@
-# 分布式通信后端
+# Distributed Communication Backend
 
-MMEval 在分布式评测过程中所需的分布式通信需求，主要有以下两个：
+The distributed communication requirements required by `MMEval` in the distributed evaluation mainly include the following:
 
-- 将各个进程中保存的评测指标计算中间结果 all-gather
-- 将 rank 0 进程计算得到的指标结果 broadcast 给所有进程
+- All-gather the intermediate results of the metric saved in each process.
+- Broadcast the metric result calculated by the rank 0 process to all processes
 
-为了能够灵活的支持多种分布式通信库，MMEval 将上述分布式通信需求抽象定义了一个分布式通信接口 [BaseDistBackend](mmeval.core.dist_backends.BaseDistBackend)：
+In order to flexibly support multiple distributed communication libraries, MMEval abstracts the above distributed communication requirements and defines a distributed communication interface [BaseDistBackend](mmeval.core.dist_backends.BaseDistBackend):
 
 ```{mermaid}
 classDiagram
@@ -17,15 +17,15 @@ classDiagram
     BaseDistBackend : +broadcast_object()
 ```
 
-实现一个分布式通信后端，需要继承 [BaseDistBackend](mmeval.core.dist_backends.BaseDistBackend) 并且实现上述接口，其中：
+To implement a distributed communication backend, you need to inherit [BaseDistBackend](mmeval.core.dist_backends.BaseDistBackend) and implement the above interfaces, where:
 
-- is_initialized，标识当前是否已经完成分布式通信环境的初始化。
-- rank，当前进程所在进程组的序号。
-- world_size，进程数量。
-- all_gather_object，对任意可以被 Pickle 序列化的 Python 对象进行 all_tather 操作。
-- broadcast_object，对任意可以被 Pickle 序列化的 Python 对象进行广播操作。
+- is_initialized: identifies whether the initialization of the distributed communication environment has been completed.
+- rank: the rank index of the current process group.
+- world_size: the world size of the current process group.
+- all_gather_object: perform the all_tather operation on any Python object that can be serialized by `Pickle`.
+- broadcast_object: broadcasts any Python object that can be serialized by `Pickle`.
 
-以实现 [MPI4PyDist](mmeval.core.dist_backends.MPI4PyDist) 为例：
+Take the implementation of [MPI4PyDist](mmeval.core.dist_backends.MPI4PyDist) as an example:
 
 ```python
 from mpi4py import MPI
@@ -64,4 +64,4 @@ class MPI4PyDist(BaseDistBackend):
         return comm.bcast(obj, root=src)
 ```
 
-MMEval 中已经预置实现了一些分布式通信后端，具体可以在[支持矩阵](../get_started/support_matrix.md)中查看。
+Some distributed communication backends have been implemented in `MMEval`, which can be viewed in the [support matrix](../get_started/support_matrix.md).

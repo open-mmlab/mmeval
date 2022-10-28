@@ -79,19 +79,20 @@ class PCKAccuracy(BaseMetric):
                 Each prediction dict has the following keys:
 
                 - coords (np.ndarray, [1, K, D]): predicted keypoints
-                coordinates
+                  coordinates
+
             groundtruths (Sequence[dict]): The ground truth labels.
                 Each groundtruth dict has the following keys:
 
                 - coords (np.ndarray, [1, K, D]): ground truth keypoints
-                coordinates
+                  coordinates
                 - mask (np.ndarray, [1, K]): ground truth keypoints_visible
                 - bbox_size (np.ndarray, optional, [1, 2]): ground truth
-                bbox size
+                  bbox size
                 - head_size (np.ndarray, optional, [1, 2]): ground truth
-                head size
+                  head size
                 - torso_size (np.ndarray, optional, [1, 2]): ground truth
-                torso size
+                  torso size
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             self._results.append((prediction, groundtruth))

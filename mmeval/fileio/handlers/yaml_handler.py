@@ -10,6 +10,7 @@ from .base import BaseFileHandler  # isort:skip
 
 
 class YamlHandler(BaseFileHandler):
+    """A Yaml handler that parse yaml data from file object."""
 
     def load_from_fileobj(self, file, **kwargs):
         kwargs.setdefault('Loader', Loader)

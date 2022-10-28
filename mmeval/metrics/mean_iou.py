@@ -244,11 +244,11 @@ class MeanIoU(BaseMetric):
                 following elements:
 
                 - (List[numpy.ndarray]): Each element in the list is the number
-                of true positive per-class on a sample.
+                  of true positive per-class on a sample.
                 - (List[numpy.ndarray]): Each element in the list is the number
-                of ground truth per-class on a sample.
+                  of ground truth per-class on a sample.
                 - (List[numpy.ndarray]): Each element in the list is the number
-                of predicition per-class on a sample.
+                  of predicition per-class on a sample.
 
         Returns:
             Dict: The computed metric, with following keys:

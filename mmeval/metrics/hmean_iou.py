@@ -52,12 +52,14 @@ class HmeanIoU(BaseMetric):
       E_mn represents the IoU between the m-th valid GT and n-th valid
       prediction.
     - Based on different prediction score threshold:
+
       - Obtain the ignored predictions according to prediction score.
         The filtered predictions will not be involved in the later metric
         computations.
       - Based on the IoU matrix, get the match metric according to
-      ``match_iou_thr``.
+        ``match_iou_thr``.
       - Based on different `strategy`, accumulate the match number.
+
     - calculate H-mean under different prediction score threshold.
 
     Args:
