@@ -12,6 +12,10 @@
 The following table lists the metrics implemented by MMEval and the corresponding machine learning framework support. A check mark indicates that the data type of the corresponding framework (e.g. Tensor) can be directly passed for computation.
 ```
 
+```{note}
+MMEval tested with PyTorch 1.6+, TensorFlow 2.4+ and Paddle 2.2+.
+```
+
 |                                                       Metric                                                       | NumPy | PyTorch | TensorFlow | Paddle |
 | :----------------------------------------------------------------------------------------------------------------: | :---: | :-----: | :--------: | :----: |
 |                 [Accuracy](../api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                  |   ✔   |    ✔    |     ✔      |   ✔    |

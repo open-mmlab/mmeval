@@ -15,6 +15,7 @@ Welcome to MMEval's documentation!
    :caption: 入门教程
 
    tutorials/custom_metric.md
+   tutorials/dist_evaluation.md
 
 
 .. toctree::

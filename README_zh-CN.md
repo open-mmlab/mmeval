@@ -60,6 +60,8 @@ MMEval 是一个机器学习算法评测库，提供高效准确的分布式评�
 <details>
 <summary> 支持的评测指标及机器学习框架 </summary>
 
+`注：MMEval 在 PyTorch 1.6+，TensorFlow 2.4+ 和 Paddle 2.2+ 测试通过。`
+
 |                                                                          评测指标                                                                          | NumPy | PyTorch | TensorFlow | Paddle |
 | :--------------------------------------------------------------------------------------------------------------------------------------------------------: | :---: | :-----: | :--------: | :----: |
 |                 [Accuracy](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                  |   ✔   |    ✔    |     ✔      |   ✔    |
@@ -138,6 +140,7 @@ accuracy.compute()
 <summary>入门教程</summary>
 
 - [自定义评测指标](https://mmeval.readthedocs.io/zh_CN/latest/tutorials/custom_metric.html)
+- [使用分布式评测](https://mmeval.readthedocs.io/zh_CN/latest/tutorials/dist_evaluation.html)
 
 </details>
 
