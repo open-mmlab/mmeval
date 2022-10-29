@@ -15,7 +15,7 @@ else:
     torch = try_import('torch')
     F = try_import('torch.nn.functional')
 
-NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.int64], np.int64]
+NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.number], np.number]
 TORCH_IMPL_HINTS = Tuple['torch.Tensor', 'torch.Tensor']
 BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[Union[int, float]]],
                            Union[int, Sequence[int]]]
@@ -328,8 +328,8 @@ class SingleLabelMetric(BaseMetric):
 
     @dispatch
     def _compute_metric(self, predictions: Sequence[Union[np.ndarray,
-                                                          np.int64]],
-                        labels: Sequence[np.int64]) -> List[Any]:
+                                                          np.number]],
+                        labels: Sequence[np.number]) -> List[Any]:
         """A NumPy implementation that computes the metric."""
         preds = np.stack(predictions)
         labels = np.stack(labels)

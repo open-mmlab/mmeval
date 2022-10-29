@@ -14,8 +14,8 @@ if TYPE_CHECKING:
 else:
     torch = try_import('torch')
 
-NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.int64], Union[np.ndarray,
-                                                            np.int64]]
+NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.number], Union[np.ndarray,
+                                                             np.number]]
 TORCH_IMPL_HINTS = Tuple['torch.Tensor', 'torch.Tensor']
 BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[Union[int, float]]],
                            Union[int, Sequence[int]]]
@@ -65,7 +65,7 @@ def format_data(data: Union[Sequence[Union[np.ndarray, 'torch.Tensor']],
     """
     if torch and isinstance(data[0], torch.Tensor):
         stack_func = torch.stack
-    elif isinstance(data[0], (np.ndarray, np.int64)):
+    elif isinstance(data[0], (np.ndarray, np.number)):
         stack_func = np.stack
     else:
         raise NotImplementedError(f'Data type of {type(data[0])}'
@@ -401,8 +401,9 @@ class MultiLabelMetric(MultiLabelMixin, BaseMetric):
                                     [np.array(target) for target in labels])
 
     @dispatch
-    def _compute_metric(self, preds: Sequence[Union[np.ndarray, np.int64]],
-                        labels: Sequence[Union[np.ndarray, np.int64]]) -> List:
+    def _compute_metric(
+            self, preds: Sequence[Union[np.ndarray, np.number]],
+            labels: Sequence[Union[np.ndarray, np.number]]) -> List:
         """A NumPy implementation that computes the metric."""
 
         preds = format_data(preds, self.num_classes, self._pred_is_onehot)
@@ -703,8 +704,8 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
 
     @dispatch
     def _compute_metric(
-            self, preds: Sequence[Union[np.ndarray, np.int64]],
-            labels: Sequence[Union[np.ndarray, np.int64]]) -> List[List]:
+            self, preds: Sequence[Union[np.ndarray, np.number]],
+            labels: Sequence[Union[np.ndarray, np.number]]) -> List[List]:
         """A NumPy implementation that computes the metric."""
 
         preds = np.stack(preds)
