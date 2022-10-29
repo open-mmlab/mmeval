@@ -12,6 +12,10 @@
 下表列出 MMEval 已实现的评测指标与对应的机器学习框架支持情况，打勾表示能够直接接收对应框架的数据类型（如 Tensor）进行计算。
 ```
 
+```{note}
+MMEval 在 PyTorch 1.6+，TensorFlow 2.4+ 和 Paddle 2.2+ 测试通过。
+```
+
 |                                                      评测指标                                                      | NumPy | PyTorch | TensorFlow | Paddle |
 | :----------------------------------------------------------------------------------------------------------------: | :---: | :-----: | :--------: | :----: |
 |                 [Accuracy](../api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                  |   ✔   |    ✔    |     ✔      |   ✔    |

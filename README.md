@@ -60,6 +60,8 @@ Major features:
 <details>
 <summary> Supported metrics and ML frameworks </summary>
 
+`NOTE: MMEval tested with PyTorch 1.6+, TensorFlow 2.4+ and Paddle 2.2+.`
+
 |                                                                         Metric                                                                          | NumPy | PyTorch | TensorFlow | Paddle |
 | :-----------------------------------------------------------------------------------------------------------------------------------------------------: | :---: | :-----: | :--------: | :----: |
 |                 [Accuracy](https://mmeval.readthedocs.io/en/latest/api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                  |   ✔   |    ✔    |     ✔      |   ✔    |
@@ -138,6 +140,7 @@ accuracy.compute()
 <summary>Tutorials</summary>
 
 - [Implementing a Metric](https://mmeval.readthedocs.io/en/latest/tutorials/custom_metric.html)
+- [Using Distributed Evaluation](https://mmeval.readthedocs.io/en/latest/tutorials/dist_evaluation.html)
 
 </details>
 
