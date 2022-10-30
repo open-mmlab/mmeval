@@ -175,7 +175,7 @@ class _MMEvalDispatcher(plum.Dispatcher):
             resolved_type = getattr(module, module_attr_basename)
         except Exception as e:
             if importable_name not in self._unimportable_types:
-                logger.warning(
+                logger.debug(
                     f"Unimportable: '{importable_name}', raise error: {e}.")
                 resolved_type = type(importable_name, (), {})
                 self._unimportable_types[importable_name] = resolved_type
