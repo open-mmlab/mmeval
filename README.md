@@ -169,7 +169,7 @@ accuracy.compute()
 
 ## Contributing
 
-We appreciate all contributions to improve MMEngine. Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for the contributing guideline.
+We appreciate all contributions to improve MMEval. Please refer to [CONTRIBUTING.md](CONTRIBUTING.md) for the contributing guideline.
 
 ## License
 

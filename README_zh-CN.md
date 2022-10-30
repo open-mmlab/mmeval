@@ -169,7 +169,7 @@ accuracy.compute()
 
 ## 贡献指南
 
-我们感谢所有的贡献者为改进和提升 MMEngine 所作出的努力。请参考[贡献指南](CONTRIBUTING_zh-CN.md)来了解参与项目贡献的相关指引。
+我们感谢所有的贡献者为改进和提升 MMEval 所作出的努力。请参考[贡献指南](CONTRIBUTING_zh-CN.md)来了解参与项目贡献的相关指引。
 
 ## 开源许可证
 
