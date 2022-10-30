@@ -5,9 +5,48 @@ from collections import OrderedDict
 from typing import Dict, List, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
-from .utils import keypoint_pck_accuracy
+from .utils import calc_distances, distance_acc
 
 logger = logging.getLogger(__name__)
+
+
+def keypoint_pck_accuracy(pred: np.ndarray, gt: np.ndarray, mask: np.ndarray,
+                          thr: np.ndarray, norm_factor: np.ndarray) -> tuple:
+    """Calculate the pose accuracy of PCK for each individual keypoint and the
+    averaged accuracy across all keypoints for coordinates.
+
+    Note:
+        PCK metric measures accuracy of the localization of the body joints.
+        The distances between predicted positions and the ground-truth ones
+        are typically normalized by the bounding box size.
+        The threshold (thr) of the normalized distance is commonly set
+        as 0.05, 0.1 or 0.2 etc.
+
+        - instance number: N
+        - keypoint number: K
+
+    Args:
+        pred (np.ndarray[N, K, 2]): Predicted keypoint location.
+        gt (np.ndarray[N, K, 2]): Groundtruth keypoint location.
+        mask (np.ndarray[N, K]): Visibility of the target. False for invisible
+            joints, and True for visible. Invisible joints will be ignored for
+            accuracy calculation.
+        thr (float): Threshold of PCK calculation.
+        norm_factor (np.ndarray[N, 2]): Normalization factor for H&W.
+
+    Returns:
+        tuple: A tuple containing keypoint accuracy.
+
+        - acc (np.ndarray[K]): Accuracy of each keypoint.
+        - avg_acc (float): Averaged accuracy across all keypoints.
+        - cnt (int): Number of valid keypoints.
+    """
+    distances = calc_distances(pred, gt, mask, norm_factor)
+    acc = np.array([distance_acc(d, thr) for d in distances])
+    valid_acc = acc[acc >= 0]
+    cnt = len(valid_acc)
+    avg_acc = valid_acc.mean() if cnt > 0 else 0
+    return acc, avg_acc, cnt
 
 
 class PCKAccuracy(BaseMetric):
