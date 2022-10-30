@@ -30,7 +30,7 @@ class Accuracy(BaseMetric):
 ```python
 # stateless call
 accuracy = Accuracy()
-metric_reuslts = accuracy(predictions=[1, 2, 3, 4], labels=[1, 2, 3, 1])
+metric_results = accuracy(predictions=[1, 2, 3, 4], labels=[1, 2, 3, 1])
 print(metric_results)
 # {'accuracy': 0.75}
 
@@ -40,6 +40,6 @@ for i in range(10):
     labels = predicts = np.random.randint(0, 4, size=(10,))
     accuracy.add(predicts, labels)
 
-metric_reuslts = accuracy.compute()
+metric_results = accuracy.compute()
 accuracy.reset()  # clear the intermediate results
 ```
