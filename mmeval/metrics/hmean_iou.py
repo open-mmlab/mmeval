@@ -1,10 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-from typing import TYPE_CHECKING, Dict, List, Sequence, Tuple
+from typing import TYPE_CHECKING, Dict, List, Sequence, Tuple, Union
 
 from mmeval.core import BaseMetric
-from mmeval.metrics.utils import (compute_hmean, poly_intersection, poly_iou,
-                                  polys2shapely)
+from mmeval.metrics.utils import poly_intersection, poly_iou, polys2shapely
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
@@ -18,6 +17,47 @@ else:
         Polygon = geometry.Polygon
 
 BATCH_POLYS = Sequence[Sequence[np.ndarray]]
+
+
+def compute_hmean(accum_hit_recall: Union[int, float],
+                  accum_hit_prec: Union[int, float], gt_num: int,
+                  pred_num: int) -> Tuple[float, float, float]:
+    """Compute hmean given hit number, ground truth number and prediction
+    number.
+
+    Args:
+        accum_hit_recall (int or float): Accumulated hits for computing recall.
+        accum_hit_prec (int or float): Accumulated hits for computing
+            precision.
+        gt_num (int): Ground truth number.
+        pred_num (int): Prediction number.
+
+    Returns:
+        Tuple(float, float, float): Recall, precision and hmean.
+    """
+
+    assert isinstance(accum_hit_recall, (float, int))
+    assert isinstance(accum_hit_prec, (float, int))
+
+    assert isinstance(gt_num, int)
+    assert isinstance(pred_num, int)
+    assert accum_hit_recall >= 0.0
+    assert accum_hit_prec >= 0.0
+    assert gt_num >= 0.0
+    assert pred_num >= 0.0
+
+    if gt_num == 0:
+        recall = 1.0
+        precision = 0.0 if pred_num > 0 else 1.0
+    else:
+        recall = float(accum_hit_recall) / gt_num
+        precision = 0.0 if pred_num == 0 else float(accum_hit_prec) / pred_num
+
+    denom = recall + precision
+
+    hmean = 0.0 if denom == 0 else (2.0 * precision * recall / denom)
+
+    return recall, precision, hmean
 
 
 class HmeanIoU(BaseMetric):
