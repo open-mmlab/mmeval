@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
+import os
 import pytest
 
 from mmeval.core.base_metric import BaseMetric
@@ -99,6 +100,8 @@ def _test_metric_compute(rank, world_size, port, dist_collect_mode):
 
 
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
+@pytest.mark.skipif(
+    os.name == 'nt', reason='Skip torch.distributed test in Windnows!')
 @pytest.mark.skipif(
     torch is None or not torch.distributed.is_available(),
     reason='torch.distributed is not available!')
