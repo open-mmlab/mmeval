@@ -1,6 +1,6 @@
 # Introduction
 
-MMEval is a machine learning evaluation library that provides efficient and accurate distributed evaluation with a variety of machine learning frameworks support.
+MMEval is a machine learning evaluation library that supports efficient and accurate distributed evaluation on a variety of machine learning frameworks.
 
 Major features:
 
