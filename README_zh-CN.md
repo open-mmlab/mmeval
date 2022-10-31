@@ -62,29 +62,29 @@ MMEval 是一个机器学习算法评测库，提供高效准确的分布式评�
 
 `注：MMEval 在 PyTorch 1.6+，TensorFlow 2.4+ 和 Paddle 2.2+ 测试通过。`
 
-|                                                                          评测指标                                                                          | NumPy | PyTorch | TensorFlow | Paddle |
-| :--------------------------------------------------------------------------------------------------------------------------------------------------------: | :---: | :-----: | :--------: | :----: |
-|                 [Accuracy](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                  |   ✔   |    ✔    |     ✔      |   ✔    |
-|    [SingleLabelMetric](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.SingleLabelMetric.html#mmeval.metrics.SingleLabelMetric)    |   ✔   |    ✔    |            |        |
-|     [MultiLabelMetric](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MultiLabelMetric.html#mmeval.metrics.MultiLabelMetric)      |   ✔   |    ✔    |            |        |
-|     [AveragePrecision](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.AveragePrecision.html#mmeval.metrics.AveragePrecision)      |   ✔   |    ✔    |            |        |
-|                   [MeanIoU](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MeanIoU.html#mmeval.metrics.MeanIoU)                   |   ✔   |    ✔    |     ✔      |   ✔    |
-|                [VOCMeanAP](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.VOCMeanAP.html#mmeval.metrics.VOCMeanAP)                |   ✔   |         |            |        |
-|                [OIDMeanAP](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.OIDMeanAP.html#mmeval.metrics.OIDMeanAP)                |   ✔   |         |            |        |
-| [CocoDetectionMetric](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.COCODetectionMetric.html#mmeval.metrics.COCODetectionMetric) |   ✔   |         |            |        |
-|        [ProposalRecall](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.ProposalRecall.html#mmeval.metrics.ProposalRecall)         |   ✔   |         |            |        |
-|                 [F1Metric](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.F1Metric.html#mmeval.metrics.F1Metric)                  |   ✔   |    ✔    |            |        |
-|                 [HmeanIoU](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.HmeanIoU.html#mmeval.metrics.HmeanIoU)                  |   ✔   |         |            |        |
-|             [PCKAccuracy](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.PCKAccuracy.html#mmeval.metrics.PCKAccuracy)             |   ✔   |         |            |        |
-|       [MpiiPCKAccuracy](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MpiiPCKAccuracy.html#mmeval.metrics.MpiiPCKAccuracy)       |   ✔   |         |            |        |
-|     [JhmdbPCKAccuracy](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.JhmdbPCKAccuracy.html#mmeval.metrics.JhmdbPCKAccuracy)      |   ✔   |         |            |        |
-|          [EndPointError](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.EndPointError.html#mmeval.metrics.EndPointError)          |   ✔   |    ✔    |            |        |
-|                [AVAMeanAP](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.AVAMeanAP.html#mmeval.metrics.AVAMeanAP)                |   ✔   |         |            |        |
-|                       [SSIM](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.SSIM.html#mmeval.metrics.SSIM)                        |   ✔   |         |            |        |
-|                         [SNR](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.SNR.html#mmeval.metrics.SNR)                         |   ✔   |         |            |        |
-|                       [PSNR](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.PSNR.html#mmeval.metrics.PSNR)                        |   ✔   |         |            |        |
-|                         [MAE](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MAE.html#mmeval.metrics.MAE)                         |   ✔   |         |            |        |
-|                         [MSE](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MSE.html#mmeval.metrics.MSE)                         |   ✔   |         |            |        |
+|                                                                          评测指标                                                                          | numpy.ndarray | torch.Tensor | tensorflow.Tensor | paddle.Tensor |
+| :--------------------------------------------------------------------------------------------------------------------------------------------------------: | :-----------: | :----------: | :---------------: | :-----------: |
+|                 [Accuracy](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                  |       ✔       |      ✔       |         ✔         |       ✔       |
+|    [SingleLabelMetric](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.SingleLabelMetric.html#mmeval.metrics.SingleLabelMetric)    |       ✔       |      ✔       |                   |               |
+|     [MultiLabelMetric](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MultiLabelMetric.html#mmeval.metrics.MultiLabelMetric)      |       ✔       |      ✔       |                   |               |
+|     [AveragePrecision](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.AveragePrecision.html#mmeval.metrics.AveragePrecision)      |       ✔       |      ✔       |                   |               |
+|                   [MeanIoU](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MeanIoU.html#mmeval.metrics.MeanIoU)                   |       ✔       |      ✔       |         ✔         |       ✔       |
+|                [VOCMeanAP](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.VOCMeanAP.html#mmeval.metrics.VOCMeanAP)                |       ✔       |              |                   |               |
+|                [OIDMeanAP](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.OIDMeanAP.html#mmeval.metrics.OIDMeanAP)                |       ✔       |              |                   |               |
+| [CocoDetectionMetric](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.COCODetectionMetric.html#mmeval.metrics.COCODetectionMetric) |       ✔       |              |                   |               |
+|        [ProposalRecall](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.ProposalRecall.html#mmeval.metrics.ProposalRecall)         |       ✔       |              |                   |               |
+|                 [F1Metric](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.F1Metric.html#mmeval.metrics.F1Metric)                  |       ✔       |      ✔       |                   |               |
+|                 [HmeanIoU](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.HmeanIoU.html#mmeval.metrics.HmeanIoU)                  |       ✔       |              |                   |               |
+|             [PCKAccuracy](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.PCKAccuracy.html#mmeval.metrics.PCKAccuracy)             |       ✔       |              |                   |               |
+|       [MpiiPCKAccuracy](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MpiiPCKAccuracy.html#mmeval.metrics.MpiiPCKAccuracy)       |       ✔       |              |                   |               |
+|     [JhmdbPCKAccuracy](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.JhmdbPCKAccuracy.html#mmeval.metrics.JhmdbPCKAccuracy)      |       ✔       |              |                   |               |
+|          [EndPointError](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.EndPointError.html#mmeval.metrics.EndPointError)          |       ✔       |      ✔       |                   |               |
+|                [AVAMeanAP](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.AVAMeanAP.html#mmeval.metrics.AVAMeanAP)                |       ✔       |              |                   |               |
+|                       [SSIM](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.SSIM.html#mmeval.metrics.SSIM)                        |       ✔       |              |                   |               |
+|                         [SNR](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.SNR.html#mmeval.metrics.SNR)                         |       ✔       |              |                   |               |
+|                       [PSNR](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.PSNR.html#mmeval.metrics.PSNR)                        |       ✔       |              |                   |               |
+|                         [MAE](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MAE.html#mmeval.metrics.MAE)                         |       ✔       |              |                   |               |
+|                         [MSE](https://mmeval.readthedocs.io/zh_CN/latest/api/generated/mmeval.metrics.MSE.html#mmeval.metrics.MSE)                         |       ✔       |              |                   |               |
 
 </details>
 
