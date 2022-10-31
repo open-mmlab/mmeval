@@ -7,6 +7,10 @@ import pytest
 if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') != '0':
     pytest.skip(allow_module_level=True)
 
+# skip torch.distributed test in Windnows
+if os.name == 'nt':
+    pytest.skip(allow_module_level=True)
+
 from mmeval.core.dist_backends.torch_cpu import TorchCPUDist
 from mmeval.core.dist_backends.torch_cuda import TorchCUDADist
 

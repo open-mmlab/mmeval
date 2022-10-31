@@ -2,7 +2,7 @@
 
 分布式评测一般采用数据并行的策略，每个进程执行相同的程序来处理不同的数据。
 
-MMEval 中已支持的分布式通信后端可以通过 [list_all_backends](mmeval.core.dist.list_all_backends) 查看：
+MMEval 中已支持的分布式通信后端可以通过 [list_all_backends](mmeval.core.list_all_backends) 查看：
 
 ```python
 import mmeval
