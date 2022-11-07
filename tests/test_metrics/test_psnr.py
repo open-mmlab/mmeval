@@ -70,4 +70,5 @@ def test_psnr_channel_order_checking(caplog):
                Mock(return_value=np.ones((32, 32)))) as process_fn:
         psnr.add(img1, img2, channel_order='BGR')
     assert target_warn_msg in caplog.text
-    assert process_fn.call_args.kwargs['channel_order'] == 'BGR'
+    _, kwargs = process_fn.call_args
+    assert kwargs['channel_order'] == 'BGR'
