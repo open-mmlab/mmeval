@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import pytest
+from unittest.mock import Mock, patch
 
 from mmeval.metrics import PSNR
 
@@ -58,3 +59,15 @@ def test_psnr(metric_kwargs, img1, img2, results):
     psnr_results = psnr(img1, img2)
     assert isinstance(psnr_results, dict)
     np.testing.assert_almost_equal(psnr_results['psnr'], results)
+
+
+def test_psnr_channel_order_checking(caplog):
+    psnr = PSNR(crop_border=0, channel_order='RGB')
+    img1, img2 = [np.ones((32, 32))], [np.ones((32, 32)) * 2]
+    target_warn_msg = ('Input \'channel_order\'(BGR) is different '
+                       'from \'self.channel_order\'(RGB).')
+    with patch('mmeval.metrics.psnr.reorder_and_crop',
+               Mock(return_value=np.ones((32, 32)))) as process_fn:
+        psnr.add(img1, img2, channel_order='BGR')
+    assert target_warn_msg in caplog.text
+    assert process_fn.call_args.kwargs['channel_order'] == 'BGR'

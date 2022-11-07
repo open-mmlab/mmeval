@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import logging
 import numpy as np
 from typing import Dict, List, Optional, Sequence
 
@@ -79,8 +80,15 @@ class SNR(BaseMetric):
                 samples. If not passed, will set as :attr:`self.channel_order`.
                 Defaults to None.
         """
-        channel_order = self.channel_order \
-            if channel_order is None else channel_order
+        if channel_order is None:
+            channel_order = self.channel_order
+        else:
+            if (self.channel_order is not None
+                    and channel_order != self.channel_order):
+                logging.warning(
+                    f'Input \'channel_order\'({channel_order}) is different '
+                    f'from \'self.channel_order\'({self.channel_order}).')
+
         for pred, gt in zip(predictions, groundtruths):
             assert gt.shape == pred.shape, (
                 f'Image shapes are different: {gt.shape}, {pred.shape}.')
@@ -89,13 +97,13 @@ class SNR(BaseMetric):
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
+                channel_order=channel_order)
             pred = reorder_and_crop(
                 pred,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
+                channel_order=channel_order)
 
             self._results.append(self.compute_snr(pred, gt))
 

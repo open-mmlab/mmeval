@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+from unittest.mock import Mock, patch
 
 from mmeval.metrics import SNR
 
@@ -47,3 +48,15 @@ def test_snr(metric_kwargs, img1, img2, results):
     snr_results = snr(img1, img2)
     assert isinstance(snr_results, dict)
     np.testing.assert_almost_equal(snr_results['snr'], results)
+
+
+def test_psnr_channel_order_checking(caplog):
+    snr = SNR(crop_border=0, channel_order='RGB')
+    img1, img2 = [np.ones((32, 32))], [np.ones((32, 32)) * 2]
+    target_warn_msg = ('Input \'channel_order\'(BGR) is different '
+                       'from \'self.channel_order\'(RGB).')
+    with patch('mmeval.metrics.snr.reorder_and_crop',
+               Mock(return_value=np.ones((32, 32)))) as process_fn:
+        snr.add(img1, img2, channel_order='BGR')
+    assert target_warn_msg in caplog.text
+    assert process_fn.call_args.kwargs['channel_order'] == 'BGR'
