@@ -8,6 +8,7 @@ from mmeval.metrics import F1Metric
 from mmeval.utils import try_import
 
 torch = try_import('torch')
+flow = try_import('oneflow')
 
 
 def test_init():
@@ -39,6 +40,35 @@ def test_init():
     ],
 )
 def test_macro_metric_torch(predictions, labels):
+    assertions = unittest.TestCase('__init__')
+
+    f1 = F1Metric(num_classes=5, mode='macro')
+    results = f1(predictions, labels)
+    assert isinstance(results, dict)
+    assertions.assertAlmostEqual(results['macro_f1'], 0.4)
+
+    f1 = F1Metric(num_classes=5, ignored_classes=[1], mode='macro')
+    results = f1(predictions, labels)
+    assert isinstance(results, dict)
+    assertions.assertAlmostEqual(results['macro_f1'], 0.25)
+
+    f1 = F1Metric(num_classes=5, cared_classes=[0, 2, 3, 4], mode='macro')
+    results = f1(predictions, labels)
+    assert isinstance(results, dict)
+    assertions.assertAlmostEqual(results['macro_f1'], 0.25)
+
+@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+@pytest.mark.parametrize(
+    argnames=['predictions', 'labels'],
+    argvalues=[
+        ([flow.LongTensor([0, 1, 2])], [flow.LongTensor([0, 1, 4])]),
+        ([flow.LongTensor([0, 1]),
+          flow.LongTensor([2])],
+         [flow.LongTensor([0, 1]),
+          flow.LongTensor([4])]),
+    ],
+)
+def test_macro_metric_oneflow(predictions, labels):
     assertions = unittest.TestCase('__init__')
 
     f1 = F1Metric(num_classes=5, mode='macro')
@@ -117,6 +147,40 @@ def test_micro_metric_torch(predictions, labels):
     assert isinstance(results, dict)
     assertions.assertAlmostEqual(results['micro_f1'], 0.285, delta=0.001)
 
+@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+@pytest.mark.parametrize(
+    argnames=['predictions', 'labels'],
+    argvalues=[
+        ([flow.LongTensor([0, 1, 0, 1,
+                            2])], [flow.LongTensor([0, 1, 2, 2, 0])]),
+        ([flow.LongTensor([0, 1, 0]),
+          flow.LongTensor([2, 2])],
+         [flow.LongTensor([0, 1, 2]),
+          flow.LongTensor([0, 1])]),
+    ])
+def test_micro_metric_oneflow(predictions, labels):
+    assertions = unittest.TestCase('__init__')
+
+    f1 = F1Metric(num_classes=3, mode='micro')
+    results = f1(predictions, labels)
+    assert isinstance(results, dict)
+    assertions.assertAlmostEqual(results['micro_f1'], 0.4, delta=0.01)
+
+    f1 = F1Metric(num_classes=5, mode='micro')
+    results = f1(predictions, labels)
+    assert isinstance(results, dict)
+    assertions.assertAlmostEqual(results['micro_f1'], 0.4, delta=0.01)
+
+    f1 = F1Metric(num_classes=5, ignored_classes=[1], mode='micro')
+    results = f1(predictions, labels)
+    assert isinstance(results, dict)
+    assertions.assertAlmostEqual(results['micro_f1'], 0.285, delta=0.001)
+
+    f1 = F1Metric(num_classes=5, cared_classes=[0, 2, 3, 4], mode='micro')
+    results = f1(predictions, labels)
+    assert isinstance(results, dict)
+    assertions.assertAlmostEqual(results['micro_f1'], 0.285, delta=0.001)
+
 
 @pytest.mark.parametrize(
     argnames=['predictions', 'labels'],
@@ -163,6 +227,18 @@ def test_mode_torch():
     assertions.assertAlmostEqual(results['micro_f1'], 0.4, delta=0.01)
     assertions.assertAlmostEqual(results['macro_f1'], 0.39, delta=0.01)
 
+@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+def test_mode_oneflow():
+    predictions = [flow.LongTensor([0, 1, 0, 1, 2])]
+    labels = [flow.LongTensor([0, 1, 2, 2, 0])]
+    mode = ['micro', 'macro']
+    assertions = unittest.TestCase('__init__')
+
+    f1 = F1Metric(num_classes=3, mode=mode)
+    results = f1(predictions, labels)
+    assert isinstance(results, dict)
+    assertions.assertAlmostEqual(results['micro_f1'], 0.4, delta=0.01)
+    assertions.assertAlmostEqual(results['macro_f1'], 0.39, delta=0.01)
 
 def test_mode_np():
     predictions = [np.array([0, 1, 0, 1, 2])]

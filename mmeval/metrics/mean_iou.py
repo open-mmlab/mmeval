@@ -12,10 +12,12 @@ if TYPE_CHECKING:
     import tensorflow
     import tensorflow as tf
     import torch
+    import oneflow as flow
 else:
     paddle = try_import('paddle')
     torch = try_import('torch')
     tf = try_import('tensorflow')
+    flow = try_import('oneflow')
 
 
 class MeanIoU(BaseMetric):
@@ -27,7 +29,7 @@ class MeanIoU(BaseMetric):
     accuracy, mean dice, mean precision, mean recall and mean f-score.
 
     This metric supports 4 kinds of inputs, i.e. ``numpy.ndarray``,
-    ``torch.Tensor``, ``tensorflow.Tensor`` and ``paddle.Tensor``, and the
+    ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor`` and ``paddle.Tensor``, and the
     implementation for the calculation depends on the inputs type.
 
     Args:
@@ -201,6 +203,29 @@ class MeanIoU(BaseMetric):
         mask = (label != self.ignore_index)
         prediction, label = prediction[mask], label[mask]
         confusion_matrix_1d = torch.bincount(
+            num_classes * label + prediction, minlength=num_classes**2)
+        confusion_matrix = confusion_matrix_1d.reshape(num_classes,
+                                                       num_classes)
+        return confusion_matrix.cpu().numpy()
+
+    @overload  # type: ignore
+    @dispatch
+    def compute_confusion_matrix(  # type: ignore
+            self, prediction: 'oneflow.Tensor', label: 'oneflow.Tensor',
+            num_classes: int) -> np.ndarray:
+        """Compute confusion matrix with OneFlow.
+
+        Args:
+            prediction (oneflow.Tensor): The predicition.
+            label (oneflow.Tensor): The ground truth.
+            num_classes (int): The number of classes.
+
+        Returns:
+            numpy.ndarray: The computed confusion matrix.
+        """
+        mask = (label != self.ignore_index)
+        prediction, label = prediction[mask], label[mask]
+        confusion_matrix_1d = flow.bincount(
             num_classes * label + prediction, minlength=num_classes**2)
         confusion_matrix = confusion_matrix_1d.reshape(num_classes,
                                                        num_classes)

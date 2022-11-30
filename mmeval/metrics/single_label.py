@@ -11,29 +11,34 @@ from mmeval.utils import try_import
 if TYPE_CHECKING:
     import torch
     import torch.nn.functional as F
+    import oneflow as flow
+    import oneflow.nn.functional as of_F
 else:
     torch = try_import('torch')
     F = try_import('torch.nn.functional')
+    flow = try_import('oneflow')
+    of_F = try_import('oneflow.nn.functional')
 
 NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.number], np.number]
 TORCH_IMPL_HINTS = Tuple['torch.Tensor', 'torch.Tensor']
+ONEFLOW_IMPL_HINTS = Tuple['oneflow.Tensor', 'oneflow.Tensor']
 BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[Union[int, float]]],
                            Union[int, Sequence[int]]]
 
 
 def _precision_recall_f1_support(pred_positive: Union[np.ndarray,
-                                                      'torch.Tensor'],
+                                                      'torch.Tensor', 'oneflow.Tensor'],
                                  gt_positive: Union[np.ndarray,
-                                                    'torch.Tensor'],
+                                                    'torch.Tensor', 'oneflow.Tensor'],
                                  average: Optional[str]) -> Tuple:
     """Calculate base classification task metrics, such as precision, recall,
     f1_score, support.
 
     Args:
-        pred_positive (Union[np.ndarray, 'torch.Tensor']): A tensor or
+        pred_positive (Union[np.ndarray, 'torch.Tensor', 'oneflow.Tensor']): A tensor or
             np.ndarray that indicates the one-hot mapping of positive
             labels in prediction.
-        gt_positive (Union[np.ndarray, 'torch.Tensor']): A tensor or
+        gt_positive (Union[np.ndarray, 'torch.Tensor', 'oneflow.Tensor']): A tensor or
             np.ndarray that indicates the one-hot mapping of positive
             labels in ground truth.
             of tuples that consisting the prediction and label. This list
@@ -53,8 +58,9 @@ def _precision_recall_f1_support(pred_positive: Union[np.ndarray,
 
     Notes:
         Inputs of `pred_positive` and `gt_positive` should be both
-        `torch.tensor` with `torch.int64` dtype or `numpy.ndarray`
-        with `numpy.int64` dtype. And should be both with shape of (M, N):
+        `torch.tensor` with `torch.int64` dtype or `oneflow.tensor` 
+        with `oneflow.int64` dtype or `numpy.ndarray` with `numpy.int64` 
+        dtype. And should be both with shape of (M, N):
             - M: Number of samples.
             - N: Number of classes.
     """
@@ -72,13 +78,19 @@ def _precision_recall_f1_support(pred_positive: Union[np.ndarray,
         pred_sum = pred_positive.sum(0)
         gt_sum = gt_positive.sum(0)
 
-    # in case torch is not supported
+    # in case torch/oneflow is not supported
     if torch and isinstance(pred_sum, torch.Tensor):
         # use torch with torch.Tensor
         precision = tp_sum / torch.clamp(pred_sum, min=1).float() * 100
         recall = tp_sum / torch.clamp(gt_sum, min=1).float() * 100
         f1_score = 2 * precision * recall / torch.clamp(
             precision + recall, min=torch.finfo(torch.float32).eps)
+    elif flow and isinstance(pred_sum, flow.Tensor):
+        # use oneflow with oneflow.Tensor
+        precision = tp_sum / flow.clamp(pred_sum, min=1).float() * 100
+        recall = tp_sum / flow.clamp(gt_sum, min=1).float() * 100
+        f1_score = 2 * precision * recall / flow.clamp(
+            precision + recall, min=flow.finfo(flow.float32).eps)
     else:
         # use numpy with numpy.ndarray
         precision = tp_sum / np.clip(pred_sum, 1, np.inf) * 100
@@ -315,6 +327,56 @@ class SingleLabelMetric(BaseMetric):
 
             return results
 
+    @overload  # type: ignore
+    @dispatch
+    def _compute_metric(self, predictions: Sequence['oneflow.Tensor'],
+                        labels: Sequence['oneflow.Tensor']) -> List[Any]:
+        """A OneFlow implementation that computes the accuracy metric."""
+        preds = flow.stack(predictions)
+        labels = flow.stack(labels)
+
+        # cannot be raised in current implementation because
+        # `add` method will guarantee the equal length.
+        # However length check should remain somewhere.
+        assert preds.shape[0] == labels.shape[0], \
+            'Number of samples does not match between preds' \
+            f'({preds.shape[0]}) and labels ({labels.shape[0]}).'
+
+        if preds.ndim == 1:
+            assert self.num_classes is not None, \
+                'Please specify `num_classes` in `self` if the `preds`'\
+                'is labels instead of scores.'
+            gt_positive = of_F.one_hot(labels.flatten().to(flow.int64),
+                                    self.num_classes)
+            pred_positive = of_F.one_hot(preds.to(flow.int64), self.num_classes)
+            return _precision_recall_f1_support(  # type: ignore
+                pred_positive, gt_positive, self.average)
+        else:
+            # For pred score, calculate on all thresholds.
+            num_classes = preds.shape[1]
+            if self.num_classes is not None:
+                assert num_classes == self.num_classes, \
+                    'Number of classes does not match between preds' \
+                    f'({num_classes}) and `self` ({self.num_classes}).'
+            pred_score, pred_label = flow.topk(preds, k=1)
+            pred_score = pred_score.flatten()
+            pred_label = pred_label.flatten()
+
+            gt_positive = of_F.one_hot(labels.flatten().to(flow.int64),
+                                    num_classes)
+
+            results = []
+            for thr in self.thrs:
+                pred_positive = of_F.one_hot(
+                    pred_label.to(flow.int64), num_classes)
+                if thr is not None:
+                    pred_positive[pred_score <= thr] = 0
+                results.append(
+                    _precision_recall_f1_support(pred_positive, gt_positive,
+                                                 self.average))
+
+            return results
+
     @overload
     @dispatch
     def _compute_metric(
@@ -375,14 +437,14 @@ class SingleLabelMetric(BaseMetric):
             return results
 
     def compute_metric(
-        self, results: List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS,
+        self, results: List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS, ONEFLOW_IMPL_HINTS,
                                   BUILTIN_IMPL_HINTS]]
     ) -> Dict[str, float]:
         """Compute the accuracy metric.
 
         Currently, there are 2 actual implementations of this method: NumPy and
         PyTorch. Which implementation to use is determined by the type of the
-        calling parameters. e.g. `numpy.ndarray` or `torch.Tensor`.
+        calling parameters. e.g. `numpy.ndarray` or `torch.Tensor` or 'oneflow.Tensor'.
 
         Builtin type of data will be converted to `numpy.ndarray` for default
         implementation.
@@ -391,7 +453,7 @@ class SingleLabelMetric(BaseMetric):
         synchronization.
 
         Args:
-            results (List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS,
+            results (List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS, ONEFLOW_IMPL_HINTS,
                 BUILTIN_IMPL_HINTS]]): A list
                 of tuples that consisting the prediction and label. This list
                 has already been synced across all ranks.
