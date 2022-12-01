@@ -290,7 +290,8 @@ class VOCMeanAP(BaseMetric):
         # within area range are false positives.
         if all_gt_bboxes.shape[0] == 0:
             for idx, (min_area, max_area) in enumerate(area_ranges):
-                area_mask = filter_by_bboxes_area(pred_bboxes[:, :4], min_area,max_area)
+                area_mask = filter_by_bboxes_area(pred_bboxes[:, :4], min_area,
+                                                  max_area)
                 fp[:, idx, area_mask] = 1
             return tp, fp
 

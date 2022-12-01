@@ -1,3 +1,4 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
@@ -7,7 +8,9 @@ from .utils.bbox_iou_rotated import bbox_iou_rotated
 
 
 class DOTAMetric(BaseMetric):
-    def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:
+
+    def add(self, predictions: Sequence[Dict],
+            groundtruths: Sequence[Dict]) -> None:
         """Add the intermediate results to ``self._results``.
 
         Args:
@@ -45,12 +48,10 @@ class DOTAMetric(BaseMetric):
 
     @staticmethod
     def _calculate_image_tpfp(
-        pred_bboxes: np.ndarray,
-        gt_bboxes: np.ndarray,
-        ignore_gt_bboxes: np.ndarray,
-        iou_thrs: List[float],
-        area_ranges: List[Tuple[Optional[float], Optional[float]]],
-        use_legacy_coordinate: bool) -> Tuple[np.ndarray, np.ndarray ]:
+            pred_bboxes: np.ndarray, gt_bboxes: np.ndarray,
+            ignore_gt_bboxes: np.ndarray, iou_thrs: List[float],
+            area_ranges: List[Tuple[Optional[float], Optional[float]]],
+            use_legacy_coordinate: bool) -> Tuple[np.ndarray, np.ndarray]:
         pass
         # Step 1. Concatenate `gt_bboxes` and `ignore_gt_bboxes`, then set
         # the `ignore_gt_flags`.
@@ -58,7 +59,7 @@ class DOTAMetric(BaseMetric):
         ignore_gt_flags = np.concatenate((np.zeros(
             (gt_bboxes.shape[0], 1),
             dtype=bool), np.ones((ignore_gt_bboxes.shape[0], 1), dtype=bool)))
-        
+
         # Step 2. Initialize the `tp` and `fp` arrays.
         num_preds = pred_bboxes.shape[0]
         tp = np.zeros((len(iou_thrs), len(area_ranges), num_preds))
@@ -68,9 +69,10 @@ class DOTAMetric(BaseMetric):
         # within area range are false positives.
         if all_gt_bboxes.shape[0] == 0:
             for idx, (min_area, max_area) in enumerate(area_ranges):
-                area_mask = filter_by_bboxes_area(pred_bboxes[:, :4], min_area,max_area)
+                area_mask = filter_by_bboxes_area(pred_bboxes[:, :4], min_area,
+                                                  max_area)
                 fp[:, idx, area_mask] = 1
-            return tp,fp
+            return tp, fp
 
         # Step 4. Calculate the IoUs between the predicted bboxes and the
         # ground truth bboxes.
@@ -119,10 +121,9 @@ class DOTAMetric(BaseMetric):
                             fp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
 
         return tp, fp
-        
-    def get_class_predictions(self,
-                                predictions: List[dict],
-                                class_index: int) -> List:
+
+    def get_class_predictions(self, predictions: List[dict],
+                              class_index: int) -> List:
         class_preds = []
         for pred in predictions:
             pred_indices = (pred['labels'] == class_index)
@@ -145,14 +146,12 @@ class DOTAMetric(BaseMetric):
             ignore_gt_bboxes = gt['bboxes_ignore'][ignore_gt_indices, :]
             class_gts.append(gt_bboxes)
             class_ignore_gts.append(ignore_gt_bboxes)
-        
+
         return class_gts, class_ignore_gts
 
-    def calculate_class_tpfp(self,
-                            predictions: List[dict],
-                            groundtruths: List[dict],
-                            class_index: int,
-                            pool: Optional[Pool]) -> Tuple:
+    def calculate_class_tpfp(self, predictions: List[dict],
+                             groundtruths: List[dict], class_index: int,
+                             pool: Optional[Pool]) -> Tuple:
         class_preds = self.get_class_predictions(predictions, class_index)
         class_gts, class_ignore_gts = self.get_class_gts(
             groundtruths, class_index)
@@ -167,14 +166,14 @@ class DOTAMetric(BaseMetric):
         else:
             tpfp_list = []
             for img_idx in range(len(class_preds)):
-                tpfp = self._calculate_image_tpfp(class_preds       [img_idx],
+                tpfp = self._calculate_image_tpfp(class_preds[img_idx],
                                                   class_gts[img_idx],
                                                   class_ignore_gts[img_idx],
                                                   self.iou_thrs,
                                                   self._area_ranges,
                                                   self.use_legacy_coordinate)
                 tpfp_list.append(tpfp)
-        
+
         image_tp_list, image_fp_list = tuple(zip(*tpfp_list))
         sorted_indices = np.argsort(-np.vstack(class_preds)[:, -1])
         tp = np.concatenate(image_tp_list, axis=2)[..., sorted_indices]
@@ -184,7 +183,7 @@ class DOTAMetric(BaseMetric):
             area_mask = filter_by_bboxes_area(
                 np.vstack(class_gts), min_area, max_area)
             num_gts[:, idx] = np.sum(area_mask)
-        
+
         return tp, fp, num_gts
 
     def compute_metric(self, results: list) -> dict:

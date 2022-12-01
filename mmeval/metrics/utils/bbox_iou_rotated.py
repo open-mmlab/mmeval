@@ -1,10 +1,11 @@
+# Copyright (c) OpenMMLab. All rights reserved.
 '''
 Author: Ghost 1432072586@qq.com
 Date: 2022-12-01 16:30:30
 LastEditors: Ghost 1432072586@qq.com
 LastEditTime: 2022-12-01 16:39:54
 FilePath: /mmeval/mmeval/metrics/utils/bbox_iou_rotated.py
-Description: 
+Description:
 '''
 import numpy as np
 
