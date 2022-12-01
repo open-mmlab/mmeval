@@ -125,7 +125,7 @@ class EndPointError(BaseMetric):
         epe = epe_map.reshape(-1)[val]
         return epe.mean(keepdims=True), int(val.sum())
 
-    @dispatch
+    @dispatch  # type: ignore
     def end_point_error_map(  # type: ignore
             self,
             prediction: 'torch.Tensor',
@@ -149,7 +149,7 @@ class EndPointError(BaseMetric):
         epe = epe_map.reshape(-1)[val]
         return epe.mean().cpu().numpy(), int(val.sum())
 
-    @dispatch
+    @dispatch  # noqa: F811
     def end_point_error_map(  # type: ignore
         self,
         prediction: 'oneflow.Tensor',
