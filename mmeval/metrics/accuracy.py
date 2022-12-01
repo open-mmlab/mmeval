@@ -105,7 +105,7 @@ class Accuracy(BaseMetric):
     This metric computes the accuracy based on the given topk and thresholds.
 
     Currently, this metric supports 5 kinds of inputs, i.e. ``numpy.ndarray``,
-    ``torch.Tensor``, ``OneFlow.Tensor``, ``tensorflow.Tensor`` and
+    ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor`` and
     ``paddle.Tensor``, and the implementation for the calculation depends on
     the inputs type.
 
