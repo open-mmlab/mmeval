@@ -32,10 +32,10 @@ def _is_scalar(obj: np.number):  # type: ignore
 @overload
 @dispatch
 def _is_scalar(obj: Union[np.ndarray,  # type: ignore
-                          'torch.Tensor', 'oneflow.Tensor',
+                          'torch.Tensor', 
+                          'oneflow.Tensor',
                           'tensorflow.Tensor']):
     """Check if a ``np.ndarray`` | ``torch.Tensor`` | ``oneflow.Tensor``
-
     |``tensorflow.Tensor`` is a scalar.
     """
     return obj.ndim == 0
