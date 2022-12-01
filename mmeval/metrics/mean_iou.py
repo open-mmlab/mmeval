@@ -8,11 +8,12 @@ from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
+    import oneflow
+    import oneflow as flow
     import paddle
     import tensorflow
     import tensorflow as tf
     import torch
-    import oneflow as flow
 else:
     paddle = try_import('paddle')
     torch = try_import('torch')
@@ -29,8 +30,9 @@ class MeanIoU(BaseMetric):
     accuracy, mean dice, mean precision, mean recall and mean f-score.
 
     This metric supports 4 kinds of inputs, i.e. ``numpy.ndarray``,
-    ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor`` and ``paddle.Tensor``, and the
-    implementation for the calculation depends on the inputs type.
+    ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor`` and
+    ``paddle.Tensor``, and the implementation for the calculation depends
+    on the inputs type.
 
     Args:
         num_classes (int, optional): The number of classes. If None, it will be

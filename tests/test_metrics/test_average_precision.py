@@ -65,6 +65,7 @@ def test_metric_input_torch(preds, labels):
     results = average_precision(preds, labels)
     assert isinstance(results, dict)
 
+
 @pytest.mark.parametrize('preds', [
     flow.tensor([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
     [flow.tensor([0.1, 0.9]), flow.tensor([0.5, 0.6])],  # scores in Sequence

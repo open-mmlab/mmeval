@@ -57,6 +57,7 @@ def test_macro_metric_torch(predictions, labels):
     assert isinstance(results, dict)
     assertions.assertAlmostEqual(results['macro_f1'], 0.25)
 
+
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 @pytest.mark.parametrize(
     argnames=['predictions', 'labels'],
@@ -147,12 +148,13 @@ def test_micro_metric_torch(predictions, labels):
     assert isinstance(results, dict)
     assertions.assertAlmostEqual(results['micro_f1'], 0.285, delta=0.001)
 
+
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 @pytest.mark.parametrize(
     argnames=['predictions', 'labels'],
     argvalues=[
         ([flow.LongTensor([0, 1, 0, 1,
-                            2])], [flow.LongTensor([0, 1, 2, 2, 0])]),
+                           2])], [flow.LongTensor([0, 1, 2, 2, 0])]),
         ([flow.LongTensor([0, 1, 0]),
           flow.LongTensor([2, 2])],
          [flow.LongTensor([0, 1, 2]),
@@ -227,6 +229,7 @@ def test_mode_torch():
     assertions.assertAlmostEqual(results['micro_f1'], 0.4, delta=0.01)
     assertions.assertAlmostEqual(results['macro_f1'], 0.39, delta=0.01)
 
+
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 def test_mode_oneflow():
     predictions = [flow.LongTensor([0, 1, 0, 1, 2])]
@@ -239,6 +242,7 @@ def test_mode_oneflow():
     assert isinstance(results, dict)
     assertions.assertAlmostEqual(results['micro_f1'], 0.4, delta=0.01)
     assertions.assertAlmostEqual(results['macro_f1'], 0.39, delta=0.01)
+
 
 def test_mode_np():
     predictions = [np.array([0, 1, 0, 1, 2])]

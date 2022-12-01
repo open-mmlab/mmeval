@@ -45,6 +45,7 @@ def test_metric_interface_torch():
         torch.Tensor([[0.1, 0.9], [0.5, 0.5]]), torch.Tensor([0, 1]))
     assert isinstance(results, dict)
 
+
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 def test_metric_interface_oneflow():
     accuracy = Accuracy()
@@ -162,12 +163,12 @@ def test_metamorphic_numpy_oneflow(metric_kwargs, classes_num, length):
 
     predictions = flow.from_numpy(predictions)
     labels = flow.from_numpy(labels)
-    oneflow_acc_results = accuracy(predictions, labels)
+    flow_acc_results = accuracy(predictions, labels)
 
-    assert np_acc_results.keys() == oneflow_acc_results.keys()
+    assert np_acc_results.keys() == flow_acc_results.keys()
 
     for key in np_acc_results:
-        np.testing.assert_allclose(np_acc_results[key], oneflow_acc_results[key])
+        np.testing.assert_allclose(np_acc_results[key], flow_acc_results[key])
 
 
 @pytest.mark.skipif(tf is None, reason='TensorFlow is not available!')

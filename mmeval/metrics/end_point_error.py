@@ -8,8 +8,9 @@ from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
-    import torch
+    import oneflow
     import oneflow as flow
+    import torch
 else:
     torch = try_import('torch')
     flow = try_import('oneflow')
@@ -22,8 +23,8 @@ class EndPointError(BaseMetric):
     estimation.
 
     This metric supports 2 kinds of inputs, i.e. `numpy.ndarray` and
-    `torch.Tensor`, `oneflow.Tensor`, and the implementation for the calculation depends on
-    the inputs type.
+    `torch.Tensor`, `oneflow.Tensor`, and the implementation for the
+    calculation depends on the inputs type.
 
     Args:
         **kwargs: Keyword arguments passed to :class:`BaseMetric`.
@@ -125,12 +126,12 @@ class EndPointError(BaseMetric):
         return epe.mean(keepdims=True), int(val.sum())
 
     @dispatch
-    def end_point_error_map(
+    def end_point_error_map(  # type: ignore
             self,
             prediction: 'torch.Tensor',
             label: 'torch.Tensor',
-            valid_mask: Optional['torch.Tensor'] = None
-    ) -> Tuple[np.ndarray, int]:
+            valid_mask: Optional['torch.Tensor'] = None) -> Tuple[np.ndarray,
+                                                                  int]:
         """Calculate end point error map.
 
         Args:
@@ -149,18 +150,19 @@ class EndPointError(BaseMetric):
         return epe.mean().cpu().numpy(), int(val.sum())
 
     @dispatch
-    def end_point_error_map(
-            self,
-            prediction: 'oneflow.Tensor',
-            label: 'oneflow.Tensor',
-            valid_mask: Optional['oneflow.Tensor'] = None
-    ) -> Tuple[np.ndarray, int]:
+    def end_point_error_map(  # type: ignore
+        self,
+        prediction: 'oneflow.Tensor',
+        label: 'oneflow.Tensor',
+        valid_mask: Optional['oneflow.Tensor'] = None) -> Tuple[np.ndarray,
+                                                                int]:
         """Calculate end point error map.
 
         Args:
             prediction (oneflow.Tensor): Prediction with shape (H, W, 2).
             label (oneflow.Tensor): Ground truth with shape (H, W, 2).
-            valid_mask (oneflow.Tensor, optional): Valid mask with shape (H, W).
+            valid_mask (oneflow.Tensor, optional):
+                Valid mask with shape (H, W).
 
         Returns:
             Tuple: The mean of end point error and the numbers of valid labels.

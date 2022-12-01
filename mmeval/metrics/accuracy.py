@@ -9,16 +9,17 @@ from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
+    import oneflow
+    import oneflow as flow
     import paddle
     import tensorflow
     import tensorflow as tf
     import torch
-    import oneflow as flow
 else:
     paddle = try_import('paddle')
     torch = try_import('torch')
     tf = try_import('tensorflow')
-    flow = try_import("oneflow")
+    flow = try_import('oneflow')
 
 
 @overload
@@ -31,9 +32,12 @@ def _is_scalar(obj: np.number):  # type: ignore
 @overload
 @dispatch
 def _is_scalar(obj: Union[np.ndarray,  # type: ignore
-                          'torch.Tensor', 'oneflow.Tensor', 'tensorflow.Tensor']):
-    """Check if a ``np.ndarray`` | ``torch.Tensor`` | ``oneflow.Tensor`` |``tensorflow.Tensor`` is
-    a scalar."""
+                          'torch.Tensor', 'oneflow.Tensor',
+                          'tensorflow.Tensor']):
+    """Check if a ``np.ndarray`` | ``torch.Tensor`` | ``oneflow.Tensor``
+
+    |``tensorflow.Tensor`` is a scalar.
+    """
     return obj.ndim == 0
 
 
@@ -53,11 +57,13 @@ def _torch_topk(inputs: 'torch.Tensor',
     """Invoke the PyTorch topk."""
     return inputs.topk(k, dim=dim)
 
+
 def _oneflow_topk(inputs: 'oneflow.Tensor',
-                k: int,
-                dim: Optional[int] = None) -> Tuple:
+                  k: int,
+                  dim: Optional[int] = None) -> Tuple:
     """Invoke the OneFlow topk."""
     return inputs.topk(k, dim=dim)
+
 
 def _numpy_topk(inputs: np.ndarray,
                 k: int,
@@ -76,14 +82,15 @@ def _numpy_topk(inputs: np.ndarray,
         tuple: The values and indices of the k largest elements.
 
     Note:
-        If PyTorch/OneFlow is available, the ``_torch_topk`` or ``_oneflow_topk`` would be used.
+        If PyTorch/OneFlow is available, the ``_torch_topk`` or
+        ``_oneflow_topk`` would be used.
     """
     if torch is not None:
         values, indices = _torch_topk(torch.from_numpy(inputs), k, dim=axis)
         return values.numpy(), indices.numpy()
 
     if flow is not None:
-        values, indices = _oneflow_topk(flow.from_numpy(inputs), k, dim=axis) 
+        values, indices = _oneflow_topk(flow.from_numpy(inputs), k, dim=axis)
         return values.numpy(), indices.numpy()
 
     indices = np.argsort(inputs * -1.0, axis=axis)
@@ -97,9 +104,10 @@ class Accuracy(BaseMetric):
 
     This metric computes the accuracy based on the given topk and thresholds.
 
-    Currently, this metric supports 4 kinds of inputs, i.e. ``numpy.ndarray``,
-    ``torch.Tensor``, ``OneFlow.Tensor``, ``tensorflow.Tensor`` and ``paddle.Tensor``, and the
-    implementation for the calculation depends on the inputs type.
+    Currently, this metric supports 5 kinds of inputs, i.e. ``numpy.ndarray``,
+    ``torch.Tensor``, ``OneFlow.Tensor``, ``tensorflow.Tensor`` and
+    ``paddle.Tensor``, and the implementation for the calculation depends on
+    the inputs type.
 
     Args:
         topk (int | Sequence[int]): If the predictions in ``topk``
@@ -238,7 +246,7 @@ class Accuracy(BaseMetric):
 
     @overload  # type: ignore
     @dispatch
-    def _compute_corrects(
+    def _compute_corrects(  # type: ignore
         self, predictions: Union['oneflow.Tensor', Sequence['oneflow.Tensor']],
         labels: Union['oneflow.Tensor',
                       Sequence['oneflow.Tensor']]) -> 'oneflow.Tensor':
@@ -247,8 +255,8 @@ class Accuracy(BaseMetric):
         Args:
             prediction (oneflow.Tensor | Sequence): Predictions from the model.
                 Same as ``self.add``.
-            labels (oneflow.Tensor | Sequence): The ground truth labels. Same as
-                ``self.add``.
+            labels (oneflow.Tensor | Sequence): The ground truth labels.
+                Same as ``self.add``.
 
         Returns:
             oneflow.Tensor: Correct number with the following 2 shapes.
@@ -459,8 +467,9 @@ class Accuracy(BaseMetric):
 
     def compute_metric(
         self, results: List[Union[Iterable,
-                                  Union[np.number, 'torch.Tensor', 'flow.Tensor',
-                                        'tensorflow.Tensor', 'paddle.Tensor']]]
+                                  Union[np.number, 'torch.Tensor',
+                                        'flow.Tensor', 'tensorflow.Tensor',
+                                        'paddle.Tensor']]]
     ) -> Dict[str, float]:
         """Compute the accuracy metric.
 

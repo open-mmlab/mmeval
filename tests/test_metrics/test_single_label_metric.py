@@ -49,6 +49,7 @@ def test_metric_torch_assertion():
         single_label_metric(
             torch.Tensor([[0.1, 0.9, 0], [0.5, 0.5, 0]]), torch.Tensor([0, 1]))
 
+
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 def test_metric_oneflow_assertion():
     single_label_metric = SingleLabelMetric()
@@ -61,6 +62,7 @@ def test_metric_oneflow_assertion():
                        match='Number of classes does not match'):
         single_label_metric(
             flow.Tensor([[0.1, 0.9, 0], [0.5, 0.5, 0]]), flow.Tensor([0, 1]))
+
 
 @pytest.mark.parametrize(
     argnames='metric_kwargs',
@@ -105,6 +107,7 @@ def test_metric_input_torch():
     results = single_label_metric(
         torch.Tensor([1, 2, 3]), torch.Tensor([3, 2, 1]))
     assert isinstance(results, dict)
+
 
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 def test_metric_input_oneflow():
@@ -199,6 +202,7 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
     for key in np_acc_results:
         np.testing.assert_allclose(
             np_acc_results[key], torch_acc_results[key], rtol=1e-5)
+
 
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 @pytest.mark.parametrize(

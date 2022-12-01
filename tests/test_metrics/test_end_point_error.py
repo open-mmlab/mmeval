@@ -31,6 +31,7 @@ def test_metric_interface_torch():
     results = epe(torch.randn(10, 10, 2), torch.randn(10, 10, 2))
     assert isinstance(results, dict)
 
+
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 def test_metric_interface_oneflow():
     epe = EndPointError()
@@ -38,6 +39,7 @@ def test_metric_interface_oneflow():
 
     results = epe(flow.randn(10, 10, 2), flow.randn(10, 10, 2))
     assert isinstance(results, dict)
+
 
 @pytest.mark.parametrize(
     argnames=['predictions', 'labels', 'valid_masks'],
@@ -76,6 +78,7 @@ def test_metamorphic_numpy_pytorch():
     for key in np_results:
         np.testing.assert_allclose(
             np_results[key], torch_results[key], rtol=1e-06)
+
 
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 def test_metamorphic_numpy_oneflow():

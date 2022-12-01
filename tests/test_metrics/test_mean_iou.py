@@ -37,6 +37,7 @@ def test_metric_interface_torch():
     )
     assert isinstance(results, dict)
 
+
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 def test_metric_interface_oneflow():
     miou = MeanIoU(num_classes=4)
@@ -47,6 +48,7 @@ def test_metric_interface_oneflow():
         flow.randint(0, 4, size=(2, 10, 10))
     )
     assert isinstance(results, dict)
+
 
 @pytest.mark.skipif(paddle is None, reason='Paddle is not available!')
 def test_metric_interface_paddle():
@@ -139,6 +141,7 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, length):
     for key in np_results:
         np.testing.assert_allclose(
             np_results[key], torch_results[key], rtol=1e-06)
+
 
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 @pytest.mark.parametrize(

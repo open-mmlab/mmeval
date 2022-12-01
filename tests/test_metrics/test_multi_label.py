@@ -100,6 +100,7 @@ def test_metric_interface_torch_topk(metric_kwargs, preds, labels):
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
+
 @pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3, 'topk': 1}])
 @pytest.mark.parametrize('preds', [
     flow.Tensor([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a Tensor
@@ -266,6 +267,7 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
         # precision is different between numpy and torch
         np.testing.assert_allclose(
             np_acc_results[key], torch_acc_results[key], rtol=1e-5)
+
 
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 @pytest.mark.parametrize(
