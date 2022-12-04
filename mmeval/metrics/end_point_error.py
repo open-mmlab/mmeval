@@ -22,7 +22,7 @@ class EndPointError(BaseMetric):
     EndPointError is a widely used evaluation metric for optical flow
     estimation.
 
-    This metric supports 2 kinds of inputs, i.e. `numpy.ndarray` and
+    This metric supports 3 kinds of inputs, i.e. `numpy.ndarray` and
     `torch.Tensor`, `oneflow.Tensor`, and the implementation for the
     calculation depends on the inputs type.
 
@@ -127,11 +127,11 @@ class EndPointError(BaseMetric):
 
     @dispatch  # type: ignore
     def end_point_error_map(  # type: ignore
-            self,
-            prediction: 'torch.Tensor',
-            label: 'torch.Tensor',
-            valid_mask: Optional['torch.Tensor'] = None) -> Tuple[np.ndarray,
-                                                                  int]:
+        self,
+        prediction: 'torch.Tensor',
+        label: 'torch.Tensor',
+        valid_mask: Optional['torch.Tensor'] = None
+    ) -> Tuple[np.ndarray, int]:  # type: ignore
         """Calculate end point error map.
 
         Args:

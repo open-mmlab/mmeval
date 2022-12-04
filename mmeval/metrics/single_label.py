@@ -80,7 +80,7 @@ def _precision_recall_f1_support(pred_positive: Union[np.ndarray,
         pred_sum = pred_positive.sum(0)
         gt_sum = gt_positive.sum(0)
 
-    # in case torch/oneflow is not supported
+    # in case torch / oneflow is not supported
     if torch and isinstance(pred_sum, torch.Tensor):
         # use torch with torch.Tensor
         precision = tp_sum / torch.clamp(pred_sum, min=1).float() * 100
