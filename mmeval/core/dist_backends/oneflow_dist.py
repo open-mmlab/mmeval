@@ -55,8 +55,6 @@ class OneFlowDist(BaseDistBackend):
 
         Args:
             tensor (Tensor): The tensor for all gather.
-            shapes (List[List[int]]): if provided, each element
-                 represents the tensor's shape in each rank.
 
         Returns:
             list: A list of the gathered tensor.
