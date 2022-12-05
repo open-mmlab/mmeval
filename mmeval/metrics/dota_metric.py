@@ -12,6 +12,18 @@ from .utils.bbox_iou_rotated import (bbox_iou_rotated,
 def filter_by_bboxes_area_rotated(bboxes: np.ndarray,
                                   min_area: Optional[float],
                                   max_area: Optional[float]):
+    """Filter the rotated bboxes with an area range.
+
+    Args:
+        bboxes (numpy.ndarray): The bboxes with shape (n, 5) in 'xywha' format.
+        min_area (Optional[float]): The minimum area. If None, does not filter
+            the minimum area.
+        max_area (Optional[float]): The maximum area. If None, does not filter
+            the maximum area.
+
+    Returns:
+        numpy.ndarray: A mask of ``bboxes`` identify which bbox are filtered.
+    """
     bboxes_area = calculate_bboxes_area_rotated(bboxes)
     area_mask = np.ones_like(bboxes_area, dtype=bool)
     if min_area is not None:
