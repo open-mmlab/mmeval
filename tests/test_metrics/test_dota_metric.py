@@ -53,7 +53,7 @@ def _gen_groundtruth(num_gt=10,
 # yapf: enable
 def test_metric_interface(metric_kwargs):
     num_classes = 10
-    dota_metric = DOTAMetric(num_classes=num_classes)
+    dota_metric = DOTAMetric(num_classes=num_classes, **metric_kwargs)
     assert isinstance(dota_metric, BaseMetric)
     metric_results = dota_metric(
         predictions=[
