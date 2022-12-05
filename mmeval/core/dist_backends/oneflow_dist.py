@@ -8,16 +8,16 @@ from .base_backend import BaseDistBackend
 if TYPE_CHECKING:
     import oneflow
     import oneflow as flow
-    from oneflow.framework.check_point_v2 import _broadcast_py_object
+    import oneflow.framework.check_point_v2 as checkpoint_v2
 else:
     flow = try_import('oneflow')
-    from oneflow.framework.check_point_v2 import _broadcast_py_object
+    check_point_v2 = try_import('oneflow.framework.check_point_v2')
 
 Tensor = TypeVar('Tensor', bound='oneflow.Tensor')
 
 
 class OneFlowDist(BaseDistBackend):
-    """A cuda distributed communication backend for oneflow."""
+    """A distributed communication backend for oneflow."""
 
     def __init__(self) -> None:
         super().__init__()
@@ -55,6 +55,8 @@ class OneFlowDist(BaseDistBackend):
 
         Args:
             tensor (Tensor): The tensor for all gather.
+            shapes (List[List[int]]): if provided, each element
+                 represents the tensor's shape in each rank.
 
         Returns:
             list: A list of the gathered tensor.
@@ -65,6 +67,21 @@ class OneFlowDist(BaseDistBackend):
         ]
         flow.comm.all_gather(tensor_list, tensor)
         return tensor_list
+
+    def _all_gather_py_obj(self, obj: Any) -> List[Any]:
+        """All gather the given python object.
+
+        Args:
+            obj (Any): The python object for all gather.
+
+        Returns:
+            list: A list of the gathered objects.
+        """
+        obj_list = []
+        for src in range(flow.env.get_world_size()):
+            new_obj = checkpoint_v2._broadcast_py_object(obj, src)
+            obj_list.append(new_obj)
+        return obj_list
 
     def _broadcast(self, tensor: Tensor, src: int = 0) -> Tensor:
         """Broadcast the given object from the source rank.
@@ -90,12 +107,15 @@ class OneFlowDist(BaseDistBackend):
             list: A list of the all gathered object.
         """
         if isinstance(obj, flow.Tensor):
-            return self._all_gather(obj)
+            shape = list(obj.shape)
+            shapes = self._all_gather_py_obj(shape)
+            flag = all(s == shapes[0] for s in shapes[1:])
+            if flag:
+                return self._all_gather(obj)
+            nps = self._all_gather_py_obj(obj.numpy())
+            return [flow.tensor(np) for np in nps]
 
-        obj_list = []
-        for src in range(flow.env.get_world_size()):
-            obj_list.append(_broadcast_py_object(obj, src))
-        return obj_list
+        return self._all_gather_py_obj(obj)
 
     def broadcast_object(self, obj: Any, src: int = 0) -> Any:
         """Broadcast the given object from source process to the current
@@ -111,4 +131,4 @@ class OneFlowDist(BaseDistBackend):
         if isinstance(obj, flow.Tensor):
             return self._broadcast(obj, src)
 
-        return _broadcast_py_object(obj, src)
+        return checkpoint_v2._broadcast_py_object(obj, src)
