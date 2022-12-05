@@ -9,7 +9,7 @@ from .dist_backends import (BaseDistBackend, MPI4PyDist, NonDist, OneFlowDist,
 _DIST_BACKENDS = {
     'non_dist': NonDist,
     'mpi4py': MPI4PyDist,
-    'oneflow_dist': OneFlowDist,
+    'oneflow': OneFlowDist,
     'tf_horovod': TFHorovodDist,
     'torch_cpu': TorchCPUDist,
     'torch_cuda': TorchCUDADist,

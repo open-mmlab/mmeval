@@ -8,7 +8,7 @@ from .base_backend import BaseDistBackend
 if TYPE_CHECKING:
     import oneflow
     import oneflow as flow
-    import oneflow.framework.check_point_v2 as checkpoint_v2
+    import oneflow.framework.check_point_v2 as check_point_v2
 else:
     flow = try_import('oneflow')
     check_point_v2 = try_import('oneflow.framework.check_point_v2')
@@ -77,7 +77,7 @@ class OneFlowDist(BaseDistBackend):
         """
         obj_list = []
         for src in range(flow.env.get_world_size()):
-            new_obj = checkpoint_v2._broadcast_py_object(obj, src)
+            new_obj = check_point_v2._broadcast_py_object(obj, src)
             obj_list.append(new_obj)
         return obj_list
 
@@ -129,4 +129,4 @@ class OneFlowDist(BaseDistBackend):
         if isinstance(obj, flow.Tensor):
             return self._broadcast(obj, src)
 
-        return checkpoint_v2._broadcast_py_object(obj, src)
+        return check_point_v2._broadcast_py_object(obj, src)
