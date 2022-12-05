@@ -53,6 +53,10 @@ jobs:
           command: |
             pip install tensorflow==<< parameters.tensorflow >>
       - run:
+          name: Install OneFlow via pip
+          command: |
+            pip install -f https://release.oneflow.info oneflow==0.4.0+cpu
+      - run:
           name: Install mmeval and dependencies
           command: |
             pip install -r requirements/tests.txt
