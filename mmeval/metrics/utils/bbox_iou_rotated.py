@@ -19,9 +19,7 @@ def le90_to_oc(bboxes: np.ndarray):
     mask = bboxes[:, 4] <= 0.0
     # convert angle
     ret_bboxes = bboxes.copy()
-    ret_bboxes[:,
-               4] = ret_bboxes[:,
-                               4] + np.pi / 2 * np.ones(bboxes.shape[0]) * mask
+    ret_bboxes[:, 4] += np.pi / 2 * np.ones(bboxes.shape[0]) * mask
     # convert w and h
     temp = ret_bboxes[mask]
     temp[:, [2, 3]] = temp[:, [3, 2]]
