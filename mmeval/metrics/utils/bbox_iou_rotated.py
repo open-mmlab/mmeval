@@ -13,7 +13,7 @@ def le90_to_oc(bboxes: np.ndarray):
     Returns:
         np.ndarray: An numpy.ndarray with the same shape of input.
     """
-    assert bboxes.shape[1] == 5, "The boxes' shape[-1] should be 5"
+    assert bboxes.shape[1] == 5, 'The boxes shape should be [N,5]'
 
     # a mask to indicate if input angles belong to (0,pi/2]
     mask = bboxes[:, 4] <= 0.0
