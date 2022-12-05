@@ -1,8 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-import pickle
-import numpy as np
-from typing import TYPE_CHECKING, Any, List, Tuple, TypeVar, Union
+from typing import TYPE_CHECKING, Any, List, TypeVar
 
 from mmeval.utils import try_import
 from .base_backend import BaseDistBackend
@@ -17,7 +15,7 @@ else:
 
 Tensor = TypeVar('Tensor', bound='oneflow.Tensor')
 
-    
+
 class OneFlowDist(BaseDistBackend):
     """A cuda distributed communication backend for oneflow."""
 

@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-import os
 import multiprocessing
+import os
 import pytest
 
 # check if current process is launch via mpirun
@@ -63,11 +63,13 @@ def _oneflow_dist_broadcast_fn(world_size):
 
     assert broadcast_obj == rank_0_obj
 
+
 def _subprocess(fn, local_rank, world_size, port=12345):
-    os.environ["LOCAL_RANK"] = str(local_rank)
-    os.environ["WORLD_SIZE"] = str(world_size)
-    os.environ["MASTER_PORT"] = str(port)
+    os.environ['LOCAL_RANK'] = str(local_rank)
+    os.environ['WORLD_SIZE'] = str(world_size)
+    os.environ['MASTER_PORT'] = str(port)
     fn(local_rank)
+
 
 @pytest.mark.parametrize(
     argnames=['process_num', 'comm_port'],
@@ -88,7 +90,9 @@ def _subprocess(fn, local_rank, world_size, port=12345):
 def test_all_gather_object(process_num, comm_port):
     p = multiprocessing.Pool(process_num)
     for rank in range(process_num):
-        p.apply_async(_subprocess, args=(_oneflow_dist_all_gather_fn, rank, process_num, comm_port))
+        p.apply_async(
+            _subprocess,
+            args=(_oneflow_dist_all_gather_fn, rank, process_num, comm_port))
     p.close()
     p.join()
 
@@ -112,7 +116,9 @@ def test_all_gather_object(process_num, comm_port):
 def test_broadcast_object(process_num, comm_port):
     p = multiprocessing.Pool(process_num)
     for rank in range(process_num):
-        p.apply_async(_subprocess, args=(_oneflow_dist_broadcast_fn, rank, process_num, comm_port))
+        p.apply_async(
+            _subprocess,
+            args=(_oneflow_dist_broadcast_fn, rank, process_num, comm_port))
     p.close()
     p.join()
 
