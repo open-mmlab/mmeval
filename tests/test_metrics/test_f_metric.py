@@ -63,15 +63,14 @@ def test_macro_metric_torch(predictions, labels):
     argnames=['predictions', 'labels'],
     argvalues=[
         ([[0, 1, 2]], [[0, 1, 4]]),
-        ([[0, 1], [2]],
-         [[0, 1], [4]]),
+        ([[0, 1], [2]], [[0, 1], [4]]),
     ],
 )
 def test_macro_metric_oneflow(predictions, labels):
     assertions = unittest.TestCase('__init__')
-    predictions = list(flow.LongTensor(prediction) for prediction in predictions)
+    predictions = list(
+        flow.LongTensor(prediction) for prediction in predictions)
     labels = list(flow.LongTensor(label) for label in labels)
-    print(predictions, labels)
     f1 = F1Metric(num_classes=5, mode='macro')
     results = f1(predictions, labels)
     assert isinstance(results, dict)
@@ -154,12 +153,12 @@ def test_micro_metric_torch(predictions, labels):
     argnames=['predictions', 'labels'],
     argvalues=[
         ([[0, 1, 0, 1, 2]], [[0, 1, 2, 2, 0]]),
-        ([[0, 1, 0], [2, 2]],
-         [[0, 1, 2], [0, 1]]),
+        ([[0, 1, 0], [2, 2]], [[0, 1, 2], [0, 1]]),
     ])
 def test_micro_metric_oneflow(predictions, labels):
     assertions = unittest.TestCase('__init__')
-    predictions = list(flow.LongTensor(prediction) for prediction in predictions)
+    predictions = list(
+        flow.LongTensor(prediction) for prediction in predictions)
     labels = list(flow.LongTensor(label) for label in labels)
     f1 = F1Metric(num_classes=3, mode='micro')
     results = f1(predictions, labels)
