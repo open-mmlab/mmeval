@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
+import numpy as np
 import os
 import pytest
 import sys
@@ -21,28 +22,18 @@ def equal(a, b):
     elif isinstance(a, (int, float, bool, str)):
         return a == b
     elif isinstance(a, flow.Tensor):
-        return flow.all(a == b)
+        return np.all(a.numpy() == b.numpy())
     else:
         return False
 
 
-def _create_obj_list(world_size):
+def _create_obj_list(rank, world_size, device):
     obj_list = []
     for idx in range(world_size):
+        rank = idx + 1
         obj = dict()
         obj['rank'] = idx
-        obj['world_size'] = world_size
-        obj['data'] = [i for i in range(idx)]
-        obj_list.append(obj)
-    return obj_list
-
-
-def _create_tensor_list(rank, world_size, device='cpu'):
-    obj_list = []
-    rank += 1
-    for idx in range(world_size):
-        obj = dict()
-        obj['rank'] = idx
+        obj['ranks'] = list(range(world_size))
         obj['world_size'] = world_size
         obj['data'] = [
             flow.tensor([rank * 1.0, rank * 2.0, rank * 3.0], device=device)
@@ -51,7 +42,7 @@ def _create_tensor_list(rank, world_size, device='cpu'):
     return obj_list
 
 
-def _oneflow_dist_all_gather_fn(rank, world_size, comm_port, device):
+def _oneflow_dist_all_gather_fn(rank, world_size, device):
     dist_comm = OneFlowDist()
 
     assert dist_comm.is_initialized
@@ -60,8 +51,7 @@ def _oneflow_dist_all_gather_fn(rank, world_size, comm_port, device):
     rank = dist_comm.rank
     assert device in ['cpu', 'cuda'], 'only cpu & gpu is supported'
 
-    # cpu
-    obj_list = _create_obj_list(world_size)
+    obj_list = _create_obj_list(rank, world_size, device)
 
     local_obj = obj_list[rank]
     print(f'rank {rank}, local_obj {local_obj}')
@@ -70,19 +60,8 @@ def _oneflow_dist_all_gather_fn(rank, world_size, comm_port, device):
     print(f'rank {rank}, gather_obj_list {gather_obj_list}')
     assert equal(gather_obj_list, obj_list)
 
-    # cuda
-    obj_list = _create_tensor_list(0, world_size, device)
 
-    local_obj = obj_list[rank]
-    print(f'rank {rank}, local_obj {local_obj}')
-
-    gather_obj_list = dist_comm.all_gather_object(local_obj)
-    print(f'rank {rank}, gather_obj_list {gather_obj_list}')
-
-    assert equal(gather_obj_list, obj_list)
-
-
-def _oneflow_dist_broadcast_fn(rank, world_size, comm_port, device):
+def _oneflow_dist_broadcast_fn(rank, world_size, device):
     dist_comm = OneFlowDist()
 
     assert dist_comm.is_initialized
@@ -91,28 +70,15 @@ def _oneflow_dist_broadcast_fn(rank, world_size, comm_port, device):
     rank = dist_comm.rank
 
     assert device in ['cpu', 'cuda'], 'only cpu & gpu is supported'
-    # cpu
-    rank_0_obj = {'rank': 0}
+    obj_list = _create_obj_list(rank, world_size, device)
 
-    if rank == 0:
-        obj = rank_0_obj
-    else:
-        obj = None
+    local_obj = obj_list[rank]
 
-    print(f'rank {rank}, obj {obj}')
-    broadcast_obj = dist_comm.broadcast_object(obj, src=0)
+    print(f'rank {rank}, obj {local_obj}')
+    broadcast_obj = dist_comm.broadcast_object(local_obj, src=0)
     print(f'rank {rank}, broadcast_obj {broadcast_obj}')
 
-    assert equal(broadcast_obj, rank_0_obj)
-
-    # cuda
-    rank_0_obj = flow.randn(3, 4).to(device)
-
-    print(f'rank {rank}, obj {rank_0_obj}')
-    broadcast_obj = dist_comm.broadcast_object(rank_0_obj, src=0)
-    print(f'rank {rank}, broadcast_obj {broadcast_obj}')
-
-    assert equal(broadcast_obj, rank_0_obj)
+    assert equal(broadcast_obj, obj_list[0])
 
 
 @pytest.mark.parametrize(
@@ -137,7 +103,7 @@ def _oneflow_dist_broadcast_fn(rank, world_size, comm_port, device):
     ])
 def test_all_gather_object(process_num, comm_port, device):
     if process_num < 2:
-        _oneflow_dist_all_gather_fn(0, process_num, comm_port, device)
+        _oneflow_dist_all_gather_fn(0, process_num, device)
     else:
         file = os.path.join(
             os.path.dirname(__file__),
@@ -175,7 +141,7 @@ def test_all_gather_object(process_num, comm_port, device):
     ])
 def test_broadcast_object(process_num, comm_port, device):
     if process_num < 2:
-        _oneflow_dist_broadcast_fn(0, 1, comm_port, device)
+        _oneflow_dist_broadcast_fn(0, 1, device)
     else:
         file = os.path.join(
             os.path.dirname(__file__),

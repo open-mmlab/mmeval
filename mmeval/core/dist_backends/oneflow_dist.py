@@ -1,9 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-from typing import TYPE_CHECKING, Any, List, TypeVar
+import numpy as np
+import pickle
+from typing import TYPE_CHECKING, Any, List, Tuple, TypeVar, Union
 
 from mmeval.utils import try_import
-from .base_backend import BaseDistBackend
+from .base_backend import TensorBaseDistBackend
 
 if TYPE_CHECKING:
     import oneflow
@@ -16,7 +18,7 @@ else:
 Tensor = TypeVar('Tensor', bound='oneflow.Tensor')
 
 
-class OneFlowDist(BaseDistBackend):
+class OneFlowDist(TensorBaseDistBackend):
     """A distributed communication backend for oneflow."""
 
     def __init__(self) -> None:
@@ -50,6 +52,59 @@ class OneFlowDist(BaseDistBackend):
         """Returns the world size of the current process group."""
         return flow.env.get_world_size()
 
+    def _object_to_tensor(self, obj: Any) -> Tuple[Tensor, Tensor]:
+        """Convert the given object to a tensor via `pickle.dumps`.
+
+        Args:
+            obj (any): Any pickle-able python object.
+
+        Returns:
+            Tuple: A tuple of the tensor converted from given object and the
+            tensor size.
+        """
+        buffer = pickle.dumps(obj)
+        storage = np.frombuffer(buffer, dtype=np.int8)
+        tensor = flow.tensor(storage).to('cuda')
+        local_size_tensor = flow.tensor([tensor.numel()], device='cuda')
+        return tensor, local_size_tensor
+
+    def _tensor_to_object(self, tensor: Tensor,
+                          tensor_size: Union[int, Tensor]) -> Any:
+        """Convert the given Tensor to a object via `pickle.loads`.
+
+        Args:
+            tenosr (Tensor): A tensor-like data.
+            tensor_size (int or Tensor): The tensor size of the given Tensor to
+                be convert object.
+
+        Returns:
+            Any: The object converted from the given tensor.
+        """
+        size = int(tensor_size)
+        buffer = tensor.cpu().numpy().tobytes()[:size]
+        obj = pickle.loads(buffer)
+        return obj
+
+    def _pad_tensor(self, tensor: Tensor,
+                    max_size: Union[int, Tensor]) -> Tensor:  # yapf: disable
+        """Padding the given tensor to the given size.
+
+        Args:
+            tensor (Tensor): A tensor-like data to be padded.
+            max_size (int or Tensor): The max tensor size that for tensor
+                padding.
+
+        Returns:
+            Tensor: The padded tensor.
+        """
+        if tensor.numel() < max_size:
+            print(f'max_size{max_size}, tensor:{tensor}')
+            padding = flow.zeros((max_size - tensor.numel(), ),
+                                 dtype=flow.int8,
+                                 device='cuda')
+            tensor = flow.cat((tensor, padding), dim=0)
+        return tensor
+
     def _all_gather(self, tensor: Tensor) -> List[Tensor]:
         """All gather the given tensor.
 
@@ -66,21 +121,6 @@ class OneFlowDist(BaseDistBackend):
         flow.comm.all_gather(tensor_list, tensor)
         return tensor_list
 
-    def _all_gather_py_obj(self, obj: Any) -> List[Any]:
-        """All gather the given python object.
-
-        Args:
-            obj (Any): The python object for all gather.
-
-        Returns:
-            list: A list of the gathered objects.
-        """
-        obj_list = []
-        for src in range(flow.env.get_world_size()):
-            new_obj = check_point_v2._broadcast_py_object(obj, src)
-            obj_list.append(new_obj)
-        return obj_list
-
     def _broadcast(self, tensor: Tensor, src: int = 0) -> Tensor:
         """Broadcast the given object from the source rank.
 
@@ -93,40 +133,3 @@ class OneFlowDist(BaseDistBackend):
         """
         flow.comm.broadcast(tensor, src=src)
         return tensor
-
-    def all_gather_object(self, obj: Any) -> List[Any]:
-        """All gather the given object from the current process group and
-        returns a list consisting gathered object of each process.
-
-        Args:
-            obj (any): Any pickle-able python object for all gather.
-
-        Returns:
-            list: A list of the all gathered object.
-        """
-        if isinstance(obj, flow.Tensor):
-            shape = list(obj.shape)
-            shapes = self._all_gather_py_obj(shape)
-            flag = all(s == shapes[0] for s in shapes[1:])
-            if flag:
-                return self._all_gather(obj)
-            nps = self._all_gather_py_obj(obj.numpy())
-            return [flow.tensor(np) for np in nps]
-
-        return self._all_gather_py_obj(obj)
-
-    def broadcast_object(self, obj: Any, src: int = 0) -> Any:
-        """Broadcast the given object from source process to the current
-        process group.
-
-        Args:
-            obj (any): Any pickle-able python object for broadcast.
-            src (int): The source rank index.
-
-        Returns:
-            any: The broadcast object.
-        """
-        if isinstance(obj, flow.Tensor):
-            return self._broadcast(obj, src)
-
-        return check_point_v2._broadcast_py_object(obj, src)
