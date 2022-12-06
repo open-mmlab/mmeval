@@ -1,9 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
+import multiprocessing as mp
 import numpy as np
 import os
 import pytest
-import sys
 
 # check if current process is launch via mpirun
 if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') != '0':
@@ -12,9 +12,6 @@ if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') != '0':
 from mmeval.core.dist_backends.oneflow_dist import OneFlowDist
 
 flow = pytest.importorskip('oneflow')
-flow_version = '0.8.0'
-if flow is not None:
-    flow_version = flow.__version__
 
 
 def equal(a, b):
@@ -30,7 +27,7 @@ def equal(a, b):
         return False
 
 
-def _create_obj_list(rank, world_size, device):
+def _create_obj_list(rank, world_size):
     obj_list = []
     for idx in range(world_size):
         rank = idx + 1
@@ -38,23 +35,23 @@ def _create_obj_list(rank, world_size, device):
         obj['rank'] = idx
         obj['ranks'] = list(range(world_size))
         obj['world_size'] = world_size
-        obj['data'] = [
-            flow.tensor([rank * 1.0, rank * 2.0, rank * 3.0], device=device)
-        ]
+        obj['data'] = [flow.tensor([rank * 1.0, rank * 2.0, rank * 3.0])]
         obj_list.append(obj)
     return obj_list
 
 
-def _oneflow_dist_all_gather_fn(rank, world_size, device):
+def _oneflow_dist_all_gather_fn(
+    rank,
+    world_size,
+):
     dist_comm = OneFlowDist()
 
     assert dist_comm.is_initialized
     assert dist_comm.world_size == world_size
 
     rank = dist_comm.rank
-    assert device in ['cpu', 'cuda'], 'only cpu & gpu is supported'
 
-    obj_list = _create_obj_list(rank, world_size, device)
+    obj_list = _create_obj_list(rank, world_size)
 
     local_obj = obj_list[rank]
     print(f'rank {rank}, local_obj {local_obj}')
@@ -64,7 +61,7 @@ def _oneflow_dist_all_gather_fn(rank, world_size, device):
     assert equal(gather_obj_list, obj_list)
 
 
-def _oneflow_dist_broadcast_fn(rank, world_size, device):
+def _oneflow_dist_broadcast_fn(rank, world_size):
     dist_comm = OneFlowDist()
 
     assert dist_comm.is_initialized
@@ -72,8 +69,7 @@ def _oneflow_dist_broadcast_fn(rank, world_size, device):
 
     rank = dist_comm.rank
 
-    assert device in ['cpu', 'cuda'], 'only cpu & gpu is supported'
-    obj_list = _create_obj_list(rank, world_size, device)
+    obj_list = _create_obj_list(rank, world_size)
 
     local_obj = obj_list[rank]
 
@@ -84,91 +80,56 @@ def _oneflow_dist_broadcast_fn(rank, world_size, device):
     assert equal(broadcast_obj, obj_list[0])
 
 
-@pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port', 'device'],
-    argvalues=[
-        pytest.param(
-            1,
-            2350,
-            'cpu',
-            marks=pytest.mark.skipif(
-                flow_version < '0.8.1',
-                reason='OneFlow.version > 0.8.0 required')),
-        pytest.param(
-            1,
-            2350,
-            'cuda',
-            marks=pytest.mark.skipif(
-                flow_version < '0.8.1' or flow.cuda.device_count() < 1,
-                reason='CUDA device count must greater than 0.')),
-        pytest.param(
-            2,
-            2350,
-            'cuda',
-            marks=pytest.mark.skipif(
-                flow_version < '0.8.1' or flow.cuda.device_count() < 2,
-                reason='CUDA device count must greater than 1.'))
-    ])
-def test_all_gather_object(process_num, comm_port, device):
-    if process_num < 2:
-        _oneflow_dist_all_gather_fn(0, process_num, device)
-    else:
-        file = os.path.join(
-            os.path.dirname(__file__),
-            'test_oneflow_dist_single_node_multi_processes.py')
-        cmd = f'{sys.executable} -m oneflow.distributed.launch \
-                --nproc_per_node {process_num}                 \
-                --master_port {comm_port}                      \
-                {file}                                         \
-                --fn all_gather                                \
-                --device {device}                              \
-                '
+def _init_oneflow_dist(local_rank, world_size, port):
+    os.environ['RANK'] = str(local_rank)
+    os.environ['LOCAL_RANK'] = str(local_rank)
+    os.environ['WORLD_SIZE'] = str(world_size)
+    os.environ['MASTER_PORT'] = str(port)
+    os.environ['MASTER_ADDR'] = '127.0.0.1'
 
-        assert os.system(cmd) == 0
+
+def _reset_dist_env():
+    os.environ['RANK'] = '0'
+    os.environ['LOCAL_RANK'] = '0'
+    os.environ['WORLD_SIZE'] = '1'
+
+
+def _launch_dist_fn(target_fn, process_num, comm_port):
+    ctx = mp.get_context('spawn')
+    process_list = []
+    for rank in range(process_num):
+        _init_oneflow_dist(rank, process_num, comm_port)
+        p = ctx.Process(target=target_fn, args=(rank, process_num))
+        p.start()
+        process_list.append(p)
+
+    for p in process_list:
+        p.join()
+
+    _reset_dist_env()
 
 
 @pytest.mark.parametrize(
-    argnames=['process_num', 'comm_port', 'device'],
+    argnames=['process_num', 'comm_port'],
     argvalues=[
-        pytest.param(
-            1,
-            2350,
-            'cpu',
-            marks=pytest.mark.skipif(
-                flow_version < '0.8.1',
-                reason='OneFlow.version > 0.8.0 required')),
-        pytest.param(
-            1,
-            2350,
-            'cuda',
-            marks=pytest.mark.skipif(
-                flow_version < '0.8.1' or flow.cuda.device_count() < 1,
-                reason='CUDA device count must greater than 0.')),
-        pytest.param(
-            2,
-            2350,
-            'cuda',
-            marks=pytest.mark.skipif(
-                flow_version < '0.8.1' or flow.cuda.device_count() < 2,
-                reason='CUDA device count must greater than 1.'))
+        (1, 2350),
+        (2, 2350),
+        (4, 2350),
     ])
-def test_broadcast_object(process_num, comm_port, device):
-    if process_num < 2:
-        _oneflow_dist_broadcast_fn(0, 1, device)
-    else:
-        file = os.path.join(
-            os.path.dirname(__file__),
-            'test_oneflow_dist_single_node_multi_processes.py')
-        cmd = f'{sys.executable} -m oneflow.distributed.launch \
-                --nproc_per_node {process_num}                 \
-                --master_port {comm_port}                      \
-                {file}                                         \
-                --fn broadcast                                 \
-                --device {device}                              \
-                '
+def test_broadcast_object(process_num, comm_port):
+    _launch_dist_fn(_oneflow_dist_broadcast_fn, process_num, comm_port)
 
-        assert os.system(cmd) == 0
+
+@pytest.mark.parametrize(
+    argnames=['process_num', 'comm_port'],
+    argvalues=[
+        (1, 2350),
+        (2, 2350),
+        (4, 2350),
+    ])
+def test_all_gather_object(process_num, comm_port):
+    _launch_dist_fn(_oneflow_dist_all_gather_fn, process_num, comm_port)
 
 
 if __name__ == '__main__':
-    pytest.main([__file__, '-v', '--capture=no'])
+    pytest.main([__file__, '-vvv', '--capture=no'])
