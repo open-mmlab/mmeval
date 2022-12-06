@@ -95,13 +95,6 @@ def _oneflow_dist_broadcast_fn(rank, world_size, device):
                 flow_version < '0.8.1',
                 reason='OneFlow.version > 0.8.0 required')),
         pytest.param(
-            2,
-            2350,
-            'cpu',
-            marks=pytest.mark.skipif(
-                flow_version < '0.8.1',
-                reason='OneFlow.version > 0.8.0 required')),
-        pytest.param(
             1,
             2350,
             'cuda',
@@ -139,13 +132,6 @@ def test_all_gather_object(process_num, comm_port, device):
     argvalues=[
         pytest.param(
             1,
-            2350,
-            'cpu',
-            marks=pytest.mark.skipif(
-                flow_version < '0.8.1',
-                reason='OneFlow.version > 0.8.0 required')),
-        pytest.param(
-            2,
             2350,
             'cpu',
             marks=pytest.mark.skipif(

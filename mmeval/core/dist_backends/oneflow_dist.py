@@ -62,14 +62,11 @@ class OneFlowDist(TensorBaseDistBackend):
             Tuple: A tuple of the tensor converted from given object and the
             tensor size.
         """
-        device = 'cuda'
-        if flow.cuda.device_count() == 0:
-            device = 'cpu'
         buffer = pickle.dumps(obj)
         storage = np.frombuffer(buffer, dtype=np.int8)
-        tensor = flow.tensor(storage).to(device)
-        local_size_tensor = flow.tensor([tensor.numel()], device=device)
-        return tensor, local_size_tensor
+        obj_tensor = flow.tensor(storage)
+        obj_size_tensor = flow.tensor([obj_tensor.numel()])
+        return obj_tensor, obj_size_tensor
 
     def _tensor_to_object(self, tensor: Tensor,
                           tensor_size: Union[int, Tensor]) -> Any:
@@ -100,12 +97,11 @@ class OneFlowDist(TensorBaseDistBackend):
         Returns:
             Tensor: The padded tensor.
         """
-        if tensor.numel() < max_size:
-            print(f'max_size{max_size}, tensor:{tensor}')
-            padding = flow.zeros((max_size - tensor.numel(), ),
-                                 dtype=flow.int8,
-                                 device=tensor.device)
-            tensor = flow.cat((tensor, padding), dim=0)
+        max_size = int(max_size)
+        padding = flow.zeros((max_size - tensor.numel(), ),
+                                dtype=flow.int8,
+                                device=tensor.device)
+        tensor = flow.cat((tensor, padding), dim=0)
         return tensor
 
     def _all_gather(self, tensor: Tensor) -> List[Tensor]:
