@@ -40,10 +40,7 @@ def _create_obj_list(rank, world_size):
     return obj_list
 
 
-def _oneflow_dist_all_gather_fn(
-    rank,
-    world_size,
-):
+def _oneflow_dist_all_gather_fn(rank, world_size):
     dist_comm = OneFlowDist()
 
     assert dist_comm.is_initialized
@@ -106,6 +103,7 @@ def _launch_dist_fn(target_fn, process_num, comm_port):
     for p in process_list:
         p.join()
 
+    # reset the env variable to prevent getting stuck when importing oneflow
     _reset_dist_env()
 
 
