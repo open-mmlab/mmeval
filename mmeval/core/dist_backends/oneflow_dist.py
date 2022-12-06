@@ -62,10 +62,13 @@ class OneFlowDist(TensorBaseDistBackend):
             Tuple: A tuple of the tensor converted from given object and the
             tensor size.
         """
+        device = 'cuda'
+        if flow.cuda.device_count() == 0:
+            device = 'cpu'
         buffer = pickle.dumps(obj)
         storage = np.frombuffer(buffer, dtype=np.int8)
-        tensor = flow.tensor(storage).to('cuda')
-        local_size_tensor = flow.tensor([tensor.numel()], device='cuda')
+        tensor = flow.tensor(storage).to(device)
+        local_size_tensor = flow.tensor([tensor.numel()], device=device)
         return tensor, local_size_tensor
 
     def _tensor_to_object(self, tensor: Tensor,
