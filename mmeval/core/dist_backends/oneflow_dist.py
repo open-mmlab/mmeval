@@ -104,7 +104,7 @@ class OneFlowDist(TensorBaseDistBackend):
             print(f'max_size{max_size}, tensor:{tensor}')
             padding = flow.zeros((max_size - tensor.numel(), ),
                                  dtype=flow.int8,
-                                 device='cuda')
+                                 device=tensor.device)
             tensor = flow.cat((tensor, padding), dim=0)
         return tensor
 
