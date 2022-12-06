@@ -67,18 +67,26 @@ def test_metric_input_torch(preds, labels):
 
 
 @pytest.mark.parametrize('preds', [
-    flow.tensor([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
-    [flow.tensor([0.1, 0.9]), flow.tensor([0.5, 0.6])],  # scores in Sequence
+    np.array([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
+    [[0.1, 0.9], [0.5, 0.6]],  # scores in Sequence
 ])
 @pytest.mark.parametrize('labels', [
-    flow.tensor([[1, 0], [0, 1]]),  # one-hot encodings labels in a ndarray
+    np.array([[1, 0], [0, 1]]),  # one-hot encodings labels in a ndarray
     # one-hot encodings labels in Sequence
-    [flow.tensor([1, 0]), flow.tensor([0, 1])],
-    [flow.tensor([0]), flow.tensor([1])],  # label-format labels in Sequence
+    [[1, 0], [0, 1]],
+    [[0], [1]],  # label-format labels in Sequence
 ])
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 def test_metric_input_flow(preds, labels):
     """Test oneflow inputs."""
+    if isinstance(preds, np.ndarray):
+        preds = flow.tensor(preds)
+    else:
+        preds = list(flow.tensor(pred) for pred in preds)
+    if isinstance(labels, np.ndarray):
+        labels = flow.tensor(labels)
+    else:
+        labels = list(flow.tensor(label) for label in labels)
     average_precision = AveragePrecision()
     results = average_precision(preds, labels)
     assert isinstance(results, dict)
