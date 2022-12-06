@@ -99,8 +99,8 @@ class OneFlowDist(TensorBaseDistBackend):
         """
         max_size = int(max_size)
         padding = flow.zeros((max_size - tensor.numel(), ),
-                                dtype=flow.int8,
-                                device=tensor.device)
+                             dtype=flow.int8,
+                             device=tensor.device)
         tensor = flow.cat((tensor, padding), dim=0)
         return tensor
 
