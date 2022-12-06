@@ -2,12 +2,14 @@
 
 from typing import List, Optional, no_type_check
 
-from .dist_backends import (BaseDistBackend, MPI4PyDist, NonDist, PaddleDist,
-                            TFHorovodDist, TorchCPUDist, TorchCUDADist)
+from .dist_backends import (BaseDistBackend, MPI4PyDist, NonDist, OneFlowDist,
+                            PaddleDist, TFHorovodDist, TorchCPUDist,
+                            TorchCUDADist)
 
 _DIST_BACKENDS = {
     'non_dist': NonDist,
     'mpi4py': MPI4PyDist,
+    'oneflow': OneFlowDist,
     'tf_horovod': TFHorovodDist,
     'torch_cpu': TorchCPUDist,
     'torch_cuda': TorchCUDADist,

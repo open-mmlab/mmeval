@@ -53,6 +53,10 @@ jobs:
           command: |
             pip install tensorflow==<< parameters.tensorflow >>
       - run:
+          name: Install OneFlow via pip
+          command: |
+            pip install -f https://release.oneflow.info oneflow==0.8.0+cpu
+      - run:
           name: Install mmeval and dependencies
           command: |
             pip install -r requirements/tests.txt
@@ -120,13 +124,14 @@ jobs:
             sudo apt-get install libcudnn8=${cudnn_version}-1+${cuda_version}
             sudo apt-get install libcudnn8-dev=${cudnn_version}-1+${cuda_version}
       - run:
-          name: Install PyTorch and Paddle via pip
+          name: Install PyTorch, Paddle and OneFlow via pip
           command: |
             pyenv global 3.9.2
             pip install --upgrade pip
             python -V
             pip install torch==1.7.1+cu110 -f https://download.pytorch.org/whl/torch_stable.html
             pip install paddlepaddle-gpu==2.3.2.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
+            pip install --pre oneflow -f https://staging.oneflow.info/branch/master/cu112
       - run:
           name: Install mmeval and dependencies
           command: |
