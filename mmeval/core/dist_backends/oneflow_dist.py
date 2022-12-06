@@ -45,7 +45,7 @@ class OneFlowDist(TensorBaseDistBackend):
     @property
     def rank(self) -> int:
         """Returns the rank index of the current process group."""
-        return flow.env.get_local_rank()
+        return flow.env.get_rank()
 
     @property
     def world_size(self) -> int:
