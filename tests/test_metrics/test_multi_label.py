@@ -178,23 +178,31 @@ def test_metric_interface_torch(metric_kwargs, preds, labels):
 
 @pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3}])
 @pytest.mark.parametrize('preds', [
-    flow.Tensor([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a Tensor
+    np.array([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a Tensor
     # scores in Sequence
-    [flow.Tensor([0.1, 0.9, 0.8]), flow.Tensor([0.5, 0.6, 0.8])],
-    flow.Tensor([[0, 1, 0], [1, 1, 0]]),  # one-hot encodings in a Tensor
+    [[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]],
+    np.array([[0, 1, 0], [1, 1, 0]]),  # one-hot encodings in a Tensor
     # one-hot encodings in Sequence
-    [flow.Tensor([0, 1, 0]), flow.Tensor([1, 1, 0])],
-    [flow.Tensor([1]), flow.Tensor([0, 1])],  # label-format in Sequence
+    [[0, 1, 0], [1, 1, 0]],
+    [[1], [0, 1]],  # label-format in Sequence
 ])
 @pytest.mark.parametrize('labels', [
-    flow.Tensor([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a Tensor
+    np.array([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a Tensor
     # one-hot encodings in Sequence
-    [flow.Tensor([1, 0, 0]), flow.Tensor([0, 1, 0])],
-    [flow.Tensor([0]), flow.Tensor([1])],  # label-format in Sequence
+    [[1, 0, 0], [0, 1, 0]],
+    [[0], [1]],  # label-format in Sequence
 ])
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
 def test_metric_interface_oneflow(metric_kwargs, preds, labels):
     """Test all kinds of inputs in OneFlow."""
+    if isinstance(preds, np.ndarray):
+        preds = flow.tensor(preds)
+    else:
+        preds = list(flow.tensor(pred) for pred in preds)
+    if isinstance(labels, np.ndarray):
+        labels = flow.tensor(labels)
+    else:
+        labels = list(flow.tensor(label) for label in labels)
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
