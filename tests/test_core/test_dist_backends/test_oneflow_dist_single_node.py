@@ -12,7 +12,7 @@ if os.environ.get('OMPI_COMM_WORLD_SIZE', '0') != '0':
 from mmeval.core.dist_backends.oneflow_dist import OneFlowDist
 
 flow = pytest.importorskip('oneflow')
-flow__version = '0.0.0'
+flow_version = '0.8.0'
 if flow is not None:
     flow_version = flow.__version__
 
@@ -92,28 +92,28 @@ def _oneflow_dist_broadcast_fn(rank, world_size, device):
             2350,
             'cpu',
             marks=pytest.mark.skipif(
-                flow_version <= '0.8.0',
+                flow_version < '0.8.1',
                 reason='OneFlow.version > 0.8.0 required')),
         pytest.param(
             2,
             2350,
             'cpu',
             marks=pytest.mark.skipif(
-                flow_version <= '0.8.0',
+                flow_version < '0.8.1',
                 reason='OneFlow.version > 0.8.0 required')),
         pytest.param(
             1,
             2350,
             'cuda',
             marks=pytest.mark.skipif(
-                flow_version <= '0.8.0' or flow.cuda.device_count() < 1,
+                flow_version < '0.8.1' or flow.cuda.device_count() < 1,
                 reason='CUDA device count must greater than 0.')),
         pytest.param(
             2,
             2350,
             'cuda',
             marks=pytest.mark.skipif(
-                flow_version <= '0.8.0' or flow.cuda.device_count() < 2,
+                flow_version < '0.8.1' or flow.cuda.device_count() < 2,
                 reason='CUDA device count must greater than 1.'))
     ])
 def test_all_gather_object(process_num, comm_port, device):
@@ -142,28 +142,28 @@ def test_all_gather_object(process_num, comm_port, device):
             2350,
             'cpu',
             marks=pytest.mark.skipif(
-                flow_version <= '0.8.0',
+                flow_version < '0.8.1',
                 reason='OneFlow.version > 0.8.0 required')),
         pytest.param(
             2,
             2350,
             'cpu',
             marks=pytest.mark.skipif(
-                flow_version <= '0.8.0',
+                flow_version < '0.8.1',
                 reason='OneFlow.version > 0.8.0 required')),
         pytest.param(
             1,
             2350,
             'cuda',
             marks=pytest.mark.skipif(
-                flow_version <= '0.8.0' or flow.cuda.device_count() < 1,
+                flow_version < '0.8.1' or flow.cuda.device_count() < 1,
                 reason='CUDA device count must greater than 0.')),
         pytest.param(
             2,
             2350,
             'cuda',
             marks=pytest.mark.skipif(
-                flow_version <= '0.8.0' or flow.cuda.device_count() < 2,
+                flow_version < '0.8.1' or flow.cuda.device_count() < 2,
                 reason='CUDA device count must greater than 1.'))
     ])
 def test_broadcast_object(process_num, comm_port, device):
