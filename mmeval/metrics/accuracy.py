@@ -460,14 +460,12 @@ class Accuracy(BaseMetric):
 
         # broadcast `label` to the shape of `pred_label`
         labels = np.broadcast_to(labels.reshape(1, -1), pred_label.shape)
-
         # compute correct array
         corrects = (pred_label == labels)
 
         # compute the corrects corresponding to all topk and thrs per sample
         corrects_per_sample = np.zeros(
             (len(predictions), len(self.topk), len(self.thrs)))
-
         for i, k in enumerate(self.topk):
             for j, thr in enumerate(self.thrs):
                 # Only prediction socres larger than thr are counted as correct
