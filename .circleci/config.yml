@@ -53,7 +53,7 @@ jobs:
           command: |
             pip install tensorflow==<< parameters.tensorflow >>
       - run:
-          name: Install JAX  via pip
+          name: Install JAX via pip
           command: |
             pip install "jax[cpu]"
       - run:
