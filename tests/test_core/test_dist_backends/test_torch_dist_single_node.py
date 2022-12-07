@@ -114,6 +114,9 @@ def test_mpi_all_gather_object(process_num, comm_port):
 
 try:
     nccl_version = torch.cuda.nccl.version()
+    if isinstance(nccl_version, tuple):
+        MAJOR, MINOR, PATCH = nccl_version
+        nccl_version = MAJOR * 1000 + MINOR * 100 + PATCH
 except Exception:
     nccl_version = 0
 
@@ -122,7 +125,7 @@ except Exception:
     not torch_dist.is_nccl_available(),
     reason='NCCL backend is not available.')
 @pytest.mark.skipif(
-    torch.cuda.device_count() < 0,
+    torch.cuda.device_count() < 1,
     reason='CUDA device count must greater than 0.')
 @pytest.mark.parametrize(
     argnames=['process_num', 'comm_port'],
@@ -175,7 +178,7 @@ def test_mpi_broadcast_object(process_num, comm_port):
             1,
             2350,
             marks=pytest.mark.skipif(
-                torch.cuda.device_count() < 0,
+                torch.cuda.device_count() < 1,
                 reason='CUDA device count must greater than 0.')),
         pytest.param(
             2,
