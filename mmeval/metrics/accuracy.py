@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-
 from typing import (TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence,
                     Tuple, Union, overload)
 
