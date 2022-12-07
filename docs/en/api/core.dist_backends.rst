@@ -28,3 +28,4 @@ dist_backends
    TorchCUDADist
    TFHorovodDist
    PaddleDist
+   OneFlowDist
