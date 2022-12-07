@@ -397,9 +397,11 @@ class Accuracy(BaseMetric):
             predictions = jnp.stack(predictions)
         if not isinstance(labels, jnp.ndarray):
             labels = jnp.stack(labels)
+
         if predictions.ndim == 1:
             corrects = (predictions == labels)
             return corrects.astype(jnp.int32)
+
         pred_scores, pred_label = _jnp_topk(predictions, self.maxk, axis=1)
         pred_label = pred_label.T
         # broadcast `label` to the shape of `pred_label`
