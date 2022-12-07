@@ -1,8 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import numpy as np
 from typing import (TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence,
                     Tuple, Union, overload)
-
-import numpy as np
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.core.dispatcher import dispatch
@@ -63,12 +62,15 @@ def _numpy_topk(inputs: np.ndarray,
 
     This implementation returns the values and indices of the k largest
     elements along a given axis.
+
     Args:
         inputs (numpy.ndarray): The input numpy array.
         k (int): The k in `top-k`.
         axis (int, optional): The axis to sort along.
+
     Returns:
         tuple: The values and indices of the k largest elements.
+
     Note:
         If PyTorch is available, the ``_torch_topk`` would be used.
     """
@@ -89,10 +91,12 @@ def _jnp_topk(inputs: 'jax.Array',
 
     This implementation returns the values and indices of the k largest
     elements along a given axis.
+
     Args:
         inputs (jax.Array): The input jax Array.
         k (int): The k in `top-k`.
         axis (int, optional): The axis to sort along.
+
     Returns:
         tuple: The values and indices of the k largest elements.
     """
@@ -107,10 +111,13 @@ def _jnp_topk(inputs: 'jax.Array',
 
 class Accuracy(BaseMetric):
     """Top-k accuracy evaluation metric.
+
     This metric computes the accuracy based on the given topk and thresholds.
+
     Currently, this metric supports 4 kinds of inputs, i.e. ``numpy.ndarray``,
     ``torch.Tensor``, ``tensorflow.Tensor`` and ``paddle.Tensor``, and the
     implementation for the calculation depends on the inputs type.
+
     Args:
         topk (int | Sequence[int]): If the predictions in ``topk``
             matches the target, the predictions will be regarded as
@@ -119,22 +126,30 @@ class Accuracy(BaseMetric):
             under the thresholds are considered negative. None means no
             thresholds. Defaults to 0.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
     Examples:
+
         >>> from mmeval import Accuracy
         >>> accuracy = Accuracy()
+
     Use NumPy implementation:
+
         >>> import numpy as np
         >>> labels = np.asarray([0, 1, 2, 3])
         >>> preds = np.asarray([0, 2, 1, 3])
         >>> accuracy(preds, labels)
         {'top1': 0.5}
+
     Use PyTorch implementation:
+
         >>> import torch
         >>> labels = torch.Tensor([0, 1, 2, 3])
         >>> preds = torch.Tensor([0, 2, 1, 3])
         >>> accuracy(preds, labels)
         {'top1': 0.5}
+
     Computing top-k accuracy with specified threold:
+
         >>> labels = np.asarray([0, 1, 2, 3])
         >>> preds = np.asarray([
             [0.7, 0.1, 0.1, 0.1],
@@ -147,7 +162,9 @@ class Accuracy(BaseMetric):
         >>> accuracy = Accuracy(topk=2, thrs=(0.1, 0.5))
         >>> accuracy(preds, labels)
         {'top2_thr-0.10': 0.75, 'top2_thr-0.50': 0.5}
+
     Accumulate batch:
+
         >>> for i in range(10):
         ...     labels = torch.randint(0, 4, size=(100, ))
         ...     predicts = torch.randint(0, 4, size=(100, ))
@@ -191,11 +208,13 @@ class Accuracy(BaseMetric):
         labels: Union['torch.Tensor',
                       Sequence['torch.Tensor']]) -> 'torch.Tensor':
         """Compute the correct number of per topk and threshold with PyTorch.
+
         Args:
             prediction (torch.Tensor | Sequence): Predictions from the model.
                 Same as ``self.add``.
             labels (torch.Tensor | Sequence): The ground truth labels. Same as
                 ``self.add``.
+
         Returns:
             torch.Tensor: Correct number with the following 2 shapes.
             - (N, ): If the ``predictions`` is a label tensor instead of score.
@@ -242,11 +261,13 @@ class Accuracy(BaseMetric):
                       Sequence['tensorflow.Tensor']]) -> 'tensorflow.Tensor':
         """Compute the correct number of per topk and threshold with
         TensorFlow.
+
         Args:
             prediction (tensorflow.Tensor | Sequence): Predictions from the
                 model. Same as ``self.add``.
             labels (tensorflow.Tensor | Sequence): The ground truth labels.
                 Same as ``self.add``.
+
         Returns:
             tensorflow.Tensor: Correct number with the following 2 shapes.
             - (N, ): If the ``predictions`` is a label tensor instead of score.
@@ -296,11 +317,13 @@ class Accuracy(BaseMetric):
         labels: Union['paddle.Tensor',
                       Sequence['paddle.Tensor']]) -> 'paddle.Tensor':
         """Compute the correct number of per topk and threshold with Paddle.
+
         Args:
             prediction (paddle.Tensor | Sequence): Predictions from the model.
                 Same as ``self.add``.
             labels (paddle.Tensor | Sequence): The ground truth labels. Same as
                 ``self.add``.
+
         Returns:
             paddle.Tensor: Correct number with the following 2 shapes.
             - (N, ): If the ``predictions`` is a label tensor instead of score.
@@ -349,11 +372,13 @@ class Accuracy(BaseMetric):
             self, predictions: Union['jax.Array', Sequence['jax.Array']],
             labels: Union['jax.Array', Sequence['jax.Array']]) -> 'jax.Array':
         """Compute the correct number of per topk and threshold with JAX.
+
         Args:
             prediction (jax.Array | Sequence): Predictions from the model.
                 Same as ``self.add``.
             labels (jax.Array | Sequence): The ground truth labels. Same as
                 ``self.add``.
+
         Returns:
             jax.Array: Correct number with the following 2 shapes.
             - (N, ): If the ``predictions`` is a label array instead of score.
@@ -399,11 +424,13 @@ class Accuracy(BaseMetric):
             self, predictions: Union[np.ndarray, Sequence[np.ndarray]],
             labels: Union[np.ndarray, Sequence[np.ndarray]]) -> np.ndarray:
         """Compute the correct number of per topk and threshold with NumPy.
+
         Args:
             prediction (numpy.ndarray | Sequence): Predictions from the model.
                 Same as ``self.add``.
             labels (numpy.ndarray | Sequence): The ground truth labels. Same as
                 ``self.add``.
+
         Returns:
             numpy.ndarray: Correct number with the following 2 shapes.
             - (N, ): If the ``predictions`` is a label array instead of score.
@@ -456,9 +483,11 @@ class Accuracy(BaseMetric):
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
+
         Args:
             results (list): A list that consisting the correct numbers. This
                 list has already been synced across all ranks.
+
         Returns:
             Dict[str, float]: The computed accuracy metric.
         """
