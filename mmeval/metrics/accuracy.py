@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+
 import numpy as np
 from typing import (TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence,
                     Tuple, Union, overload)
@@ -217,6 +218,7 @@ class Accuracy(BaseMetric):
 
         Returns:
             torch.Tensor: Correct number with the following 2 shapes.
+
             - (N, ): If the ``predictions`` is a label tensor instead of score.
               Only return a top-1 correct tensor, and ignore the argument
               ``topk`` and ``thrs``.
@@ -270,6 +272,7 @@ class Accuracy(BaseMetric):
 
         Returns:
             tensorflow.Tensor: Correct number with the following 2 shapes.
+
             - (N, ): If the ``predictions`` is a label tensor instead of score.
               Only return a top-1 correct tensor, and ignore the argument
               ``topk`` and ``thrs``.
@@ -326,6 +329,7 @@ class Accuracy(BaseMetric):
 
         Returns:
             paddle.Tensor: Correct number with the following 2 shapes.
+
             - (N, ): If the ``predictions`` is a label tensor instead of score.
               Only return a top-1 correct tensor, and ignore the argument
               ``topk`` and ``thrs``.
@@ -381,6 +385,7 @@ class Accuracy(BaseMetric):
 
         Returns:
             jax.Array: Correct number with the following 2 shapes.
+
             - (N, ): If the ``predictions`` is a label array instead of score.
               Only return a top-1 correct array, and ignore the argument
               ``topk`` and ``thrs``.
@@ -433,6 +438,7 @@ class Accuracy(BaseMetric):
 
         Returns:
             numpy.ndarray: Correct number with the following 2 shapes.
+
             - (N, ): If the ``predictions`` is a label array instead of score.
               Only return a top-1 correct array, and ignore the argument
               ``topk`` and ``thrs``.
