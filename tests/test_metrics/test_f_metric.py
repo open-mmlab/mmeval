@@ -3,6 +3,7 @@
 import numpy as np
 import pytest
 import unittest
+from distutils.version import LooseVersion
 
 from mmeval.metrics import F1Metric
 from mmeval.utils import try_import
@@ -59,7 +60,7 @@ def test_macro_metric_torch(predictions, labels):
 
 
 @pytest.mark.skipif(
-    flow is None or flow.__version__ < '0.8.1',
+    flow is None or LooseVersion(flow.__version__) < '0.8.1',
     reason='OneFlow > 0.8.0 is required!')
 @pytest.mark.parametrize(
     argnames=['predictions', 'labels'],
@@ -151,8 +152,8 @@ def test_micro_metric_torch(predictions, labels):
 
 
 @pytest.mark.skipif(
-    flow is None or flow.__version__ < '0.8.1',
-    reason='OneFlow > 0.8.0 is required!')
+    flow is None or LooseVersion(flow.__version__) < '0.8.1',
+    reason='OneFlow >= 0.8.1 is required!')
 @pytest.mark.parametrize(
     argnames=['predictions', 'labels'],
     argvalues=[
@@ -232,8 +233,8 @@ def test_mode_torch():
 
 
 @pytest.mark.skipif(
-    flow is None or flow.__version__ < '0.8.1',
-    reason='OneFlow > 0.8.0 is required!')
+    flow is None or LooseVersion(flow.__version__) < '0.8.1',
+    reason='OneFlow >= 0.8.1 is required!')
 def test_mode_oneflow():
     predictions = [flow.LongTensor([0, 1, 0, 1, 2])]
     labels = [flow.LongTensor([0, 1, 2, 2, 0])]

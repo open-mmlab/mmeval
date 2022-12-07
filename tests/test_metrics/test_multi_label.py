@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+from distutils.version import LooseVersion
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import MultiLabelMetric
@@ -113,8 +114,9 @@ def test_metric_interface_torch_topk(metric_kwargs, preds, labels):
     [[1, 0, 0], [0, 1, 0]],
     [[0], [1]],  # label-format in Sequence
 ])
-@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
-                    reason='OneFlow > 0.8.0 is required!')
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
 def test_metric_interface_oneflow_topk(metric_kwargs, preds, labels):
     """Test scores inputs with topk in OneFlow."""
     if isinstance(preds, np.ndarray):
@@ -193,8 +195,9 @@ def test_metric_interface_torch(metric_kwargs, preds, labels):
     [[1, 0, 0], [0, 1, 0]],
     [[0], [1]],  # label-format in Sequence
 ])
-@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
-                    reason='OneFlow > 0.8.0 is required!')
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
 def test_metric_interface_oneflow(metric_kwargs, preds, labels):
     """Test all kinds of inputs in OneFlow."""
     if isinstance(preds, np.ndarray):
@@ -287,8 +290,9 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
             np_acc_results[key], torch_acc_results[key], rtol=1e-5)
 
 
-@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
-                    reason='OneFlow > 0.8.0 is required!')
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
 @pytest.mark.parametrize(
     argnames=('metric_kwargs', 'classes_num', 'length'),
     argvalues=[

@@ -126,12 +126,12 @@ class EndPointError(BaseMetric):
         return epe.mean(keepdims=True), int(val.sum())
 
     @dispatch  # type: ignore
-    def end_point_error_map(  # type: ignore
-        self,
-        prediction: 'torch.Tensor',
-        label: 'torch.Tensor',
-        valid_mask: Optional['torch.Tensor'] = None
-    ) -> Tuple[np.ndarray, int]:  # type: ignore
+    def end_point_error_map(
+            self,
+            prediction: 'torch.Tensor',
+            label: 'torch.Tensor',
+            valid_mask: Optional['torch.Tensor'] = None
+    ) -> Tuple[np.ndarray, int]:
         """Calculate end point error map.
 
         Args:
@@ -150,12 +150,12 @@ class EndPointError(BaseMetric):
         return epe.mean().cpu().numpy(), int(val.sum())
 
     @dispatch  # noqa: F811
-    def end_point_error_map(  # type: ignore
+    def end_point_error_map(
         self,
         prediction: 'oneflow.Tensor',
         label: 'oneflow.Tensor',
-        valid_mask: Optional['oneflow.Tensor'] = None) -> Tuple[np.ndarray,
-                                                                int]:
+        valid_mask: Optional['oneflow.Tensor'] = None
+    ) -> Tuple[np.ndarray, int]:
         """Calculate end point error map.
 
         Args:

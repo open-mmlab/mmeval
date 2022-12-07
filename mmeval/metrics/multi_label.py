@@ -844,6 +844,7 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
         PyTorch and OneFlow. Which implementation to use is determined by the
         type of the calling parameters. e.g. `numpy.ndarray` or
         `torch.Tensor`, `oneflow.Tensor`.
+
         This method would be invoked in `BaseMetric.compute` after distributed
         synchronization.
         Args:

@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+from distutils.version import LooseVersion
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import MeanIoU
@@ -38,8 +39,9 @@ def test_metric_interface_torch():
     assert isinstance(results, dict)
 
 
-@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
-                    reason='OneFlow > 0.8.0 is required!')
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
 def test_metric_interface_oneflow():
     miou = MeanIoU(num_classes=4)
     assert isinstance(miou, BaseMetric)
@@ -144,8 +146,9 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, length):
             np_results[key], torch_results[key], rtol=1e-06)
 
 
-@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
-                    reason='OneFlow > 0.8.0 is required!')
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
 @pytest.mark.parametrize(
     argnames=('metric_kwargs', 'length'),
     argvalues=[

@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+from distutils.version import LooseVersion
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import Accuracy
@@ -46,8 +47,9 @@ def test_metric_interface_torch():
     assert isinstance(results, dict)
 
 
-@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
-                    reason='OneFlow > 0.8.0 is required!')
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
 def test_metric_interface_oneflow():
     accuracy = Accuracy()
     results = accuracy(flow.Tensor([1, 2, 3]), flow.Tensor([3, 2, 1]))
@@ -143,8 +145,9 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
         np.testing.assert_allclose(np_acc_results[key], torch_acc_results[key])
 
 
-@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
-                    reason='OneFlow > 0.8.0 is required!')
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
 @pytest.mark.parametrize(
     argnames=('metric_kwargs', 'classes_num', 'length'),
     argvalues=[
