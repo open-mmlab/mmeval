@@ -38,7 +38,7 @@ def label_to_onehot(
 
     Return:
         torch.Tensor or oneflow.Tensor or np.ndarray:
-            The converted one-hot encodings.
+        The converted one-hot encodings.
     """
     if torch and isinstance(label, torch.Tensor):
         label = label.long()
@@ -75,7 +75,7 @@ def format_data(
 
     Return:
         torch.Tensor or oneflow.Tensor or np.ndarray:
-            One-hot encodings or predict scores.
+        One-hot encodings or predict scores.
     """
     if torch and isinstance(data[0], torch.Tensor):
         stack_func = torch.stack
@@ -851,6 +851,7 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
             ONEFLOW_IMPL_HINTS]]): A list of tuples that consisting the
             prediction and label. This list has already been synced across
             all ranks.
+
         Returns:
             Dict[str, float]: The computed metric.
         """

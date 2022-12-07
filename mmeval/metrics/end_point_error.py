@@ -161,8 +161,8 @@ class EndPointError(BaseMetric):
         Args:
             prediction (oneflow.Tensor): Prediction with shape (H, W, 2).
             label (oneflow.Tensor): Ground truth with shape (H, W, 2).
-            valid_mask (oneflow.Tensor, optional):
-                Valid mask with shape (H, W).
+            valid_mask (oneflow.Tensor, optional): Valid mask with
+                shape (H, W).
 
         Returns:
             Tuple: The mean of end point error and the numbers of valid labels.
