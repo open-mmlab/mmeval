@@ -50,7 +50,8 @@ def test_metric_torch_assertion():
             torch.Tensor([[0.1, 0.9, 0], [0.5, 0.5, 0]]), torch.Tensor([0, 1]))
 
 
-@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
+                    reason='OneFlow > 0.8.0 is required!')
 def test_metric_oneflow_assertion():
     single_label_metric = SingleLabelMetric()
     with pytest.raises(AssertionError, match='Please specify `num_classes`'):
@@ -109,7 +110,8 @@ def test_metric_input_torch():
     assert isinstance(results, dict)
 
 
-@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
+                    reason='OneFlow > 0.8.0 is required!')
 def test_metric_input_oneflow():
     # test predictions with labels
     single_label_metric = SingleLabelMetric()
@@ -204,7 +206,8 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
             np_acc_results[key], torch_acc_results[key], rtol=1e-5)
 
 
-@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+@pytest.mark.skipif(flow is None or flow.__version__ < '0.8.1',
+                    reason='OneFlow > 0.8.0 is required!')
 @pytest.mark.parametrize(
     argnames=('metric_kwargs', 'classes_num', 'length'),
     argvalues=[
