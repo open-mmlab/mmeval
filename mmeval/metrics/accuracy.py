@@ -495,7 +495,6 @@ class Accuracy(BaseMetric):
         Returns:
             Dict[str, float]: The computed accuracy metric.
         """
-
         if _is_scalar(results[0]):
             return {'top1': float(sum(results) / len(results))}  # type: ignore
 
