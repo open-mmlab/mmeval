@@ -4,14 +4,14 @@
 
 import numpy as np
 import pytest
+from distutils.version import LooseVersion
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import SingleLabelMetric
+from mmeval.utils import try_import
 
-try:
-    import torch
-except ImportError:
-    torch = None
+torch = try_import('torch')
+flow = try_import('oneflow')
 
 
 def test_metric_init_assertion():
@@ -49,6 +49,22 @@ def test_metric_torch_assertion():
                        match='Number of classes does not match'):
         single_label_metric(
             torch.Tensor([[0.1, 0.9, 0], [0.5, 0.5, 0]]), torch.Tensor([0, 1]))
+
+
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+def test_metric_oneflow_assertion():
+    single_label_metric = SingleLabelMetric()
+    with pytest.raises(AssertionError, match='Please specify `num_classes`'):
+        single_label_metric(
+            flow.Tensor([1, 2, 3]), flow.Tensor([3, 2, 1]))
+
+    single_label_metric = SingleLabelMetric(num_classes=2)
+    with pytest.raises(AssertionError,
+                       match='Number of classes does not match'):
+        single_label_metric(
+            flow.Tensor([[0.1, 0.9, 0], [0.5, 0.5, 0]]), flow.Tensor([0, 1]))
 
 
 @pytest.mark.parametrize(
@@ -93,6 +109,23 @@ def test_metric_input_torch():
     single_label_metric = SingleLabelMetric(num_classes=4)
     results = single_label_metric(
         torch.Tensor([1, 2, 3]), torch.Tensor([3, 2, 1]))
+    assert isinstance(results, dict)
+
+
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+def test_metric_input_oneflow():
+    # test predictions with labels
+    single_label_metric = SingleLabelMetric()
+    results = single_label_metric(
+        flow.Tensor([[0.1, 0.9], [0.5, 0.5]]), flow.Tensor([0, 1]))
+    assert isinstance(results, dict)
+
+    # test predictions with pred_scores
+    single_label_metric = SingleLabelMetric(num_classes=4)
+    results = single_label_metric(
+        flow.Tensor([1, 2, 3]), flow.Tensor([3, 2, 1]))
     assert isinstance(results, dict)
 
 
@@ -174,6 +207,39 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
     for key in np_acc_results:
         np.testing.assert_allclose(
             np_acc_results[key], torch_acc_results[key], rtol=1e-5)
+
+
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+@pytest.mark.parametrize(
+    argnames=('metric_kwargs', 'classes_num', 'length'),
+    argvalues=[
+        ({'num_classes': 100}, 100, 100),
+        ({'num_classes': 1000, 'thrs': 0.1}, 1000, 100),
+        ({'num_classes': 1000, 'thrs': (0.1, 0.2)}, 1000, 10000),
+        ({'num_classes': 999, 'thrs': (0.1, None)}, 999, 10002)
+    ]
+)
+def test_metamorphic_numpy_oneflow(metric_kwargs, classes_num, length):
+    """Metamorphic testing for NumPy and OneFlow implementation."""
+    single_label_metric = SingleLabelMetric(**metric_kwargs)
+
+    predictions = np.random.rand(length, classes_num)
+    labels = np.random.randint(0, classes_num, length)
+
+    np_acc_results = single_label_metric(predictions, labels)
+
+    predictions = flow.from_numpy(predictions)
+    labels = flow.from_numpy(labels)
+    oneflow_acc_results = single_label_metric(predictions, labels)
+
+    assert np_acc_results.keys() == oneflow_acc_results.keys()
+    print(np_acc_results, oneflow_acc_results)
+    # oneflow defaults to float32 whereas numpy uses double
+    for key in np_acc_results:
+        np.testing.assert_allclose(
+            np_acc_results[key], oneflow_acc_results[key], rtol=1e-5)
 
 
 if __name__ == '__main__':

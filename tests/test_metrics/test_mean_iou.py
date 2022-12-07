@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+from distutils.version import LooseVersion
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import MeanIoU
@@ -12,6 +13,7 @@ from mmeval.utils import try_import
 torch = try_import('torch')
 paddle = try_import('paddle')
 tf = try_import('tensorflow')
+flow = try_import('oneflow')
 
 
 def test_metric_interface_numpy():
@@ -33,6 +35,20 @@ def test_metric_interface_torch():
     results = miou(
         torch.randint(0, 4, size=(2, 10, 10)),
         torch.randint(0, 4, size=(2, 10, 10))
+    )
+    assert isinstance(results, dict)
+
+
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+def test_metric_interface_oneflow():
+    miou = MeanIoU(num_classes=4)
+    assert isinstance(miou, BaseMetric)
+
+    results = miou(
+        flow.randint(0, 4, size=(2, 10, 10)),
+        flow.randint(0, 4, size=(2, 10, 10))
     )
     assert isinstance(results, dict)
 
@@ -128,6 +144,38 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, length):
     for key in np_results:
         np.testing.assert_allclose(
             np_results[key], torch_results[key], rtol=1e-06)
+
+
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+@pytest.mark.parametrize(
+    argnames=('metric_kwargs', 'length'),
+    argvalues=[
+        ({'num_classes': 10}, 100),
+        ({'num_classes': 100}, 1000),
+        ({'num_classes': 222}, 500)
+    ]
+)
+def test_metamorphic_numpy_oneflow(metric_kwargs, length):
+    """Metamorphic testing for NumPy and OneFlow implementation."""
+    miou = MeanIoU(**metric_kwargs)
+    num_classes = metric_kwargs.get('num_classes')
+
+    predictions = np.random.randint(0, num_classes, size=(length, 224, 224))
+    labels = np.random.randint(0, num_classes, size=(length, 224, 224))
+
+    np_results = miou(predictions, labels)
+
+    predictions = flow.from_numpy(predictions)
+    labels = flow.from_numpy(labels)
+    oneflow_results = miou(predictions, labels)
+
+    assert np_results.keys() == oneflow_results.keys()
+
+    for key in np_results:
+        np.testing.assert_allclose(
+            np_results[key], oneflow_results[key], rtol=1e-06)
 
 
 @pytest.mark.skipif(paddle is None, reason='Paddle is not available!')

@@ -10,30 +10,40 @@ from mmeval.utils import try_import
 from .single_label import _precision_recall_f1_support
 
 if TYPE_CHECKING:
+    import oneflow
+    import oneflow as flow
     import torch
 else:
     torch = try_import('torch')
+    flow = try_import('oneflow')
 
 NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.number], Union[np.ndarray,
                                                              np.number]]
 TORCH_IMPL_HINTS = Tuple['torch.Tensor', 'torch.Tensor']
+ONEFLOW_IMPL_HINTS = Tuple['oneflow.Tensor', 'oneflow.Tensor']
 BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[Union[int, float]]],
                            Union[int, Sequence[int]]]
 
 
-def label_to_onehot(label: Union[np.ndarray, 'torch.Tensor'],
-                    num_classes: int) -> Union[np.ndarray, 'torch.Tensor']:
+def label_to_onehot(
+        label: Union[np.ndarray, 'torch.Tensor',
+                     'oneflow.Tensor'], num_classes: int
+) -> Union[np.ndarray, 'torch.Tensor', 'oneflow.Tensor']:
     """Convert the label-format input to one-hot encodings.
 
     Args:
-        label (torch.Tensor or np.ndarray): The label-format input.
-            The format of item must be label-format.
+        label (torch.Tensor or oneflow.Tensor or np.ndarray):
+            The label-format input. The format of item must be label-format.
         num_classes (int): The number of classes.
 
     Return:
-        torch.Tensor or np.ndarray: The converted one-hot encodings.
+        torch.Tensor or oneflow.Tensor or np.ndarray:
+        The converted one-hot encodings.
     """
     if torch and isinstance(label, torch.Tensor):
+        label = label.long()
+        onehot = label.new_zeros((num_classes, ))
+    elif flow and isinstance(label, flow.Tensor):
         label = label.long()
         onehot = label.new_zeros((num_classes, ))
     else:
@@ -46,25 +56,31 @@ def label_to_onehot(label: Union[np.ndarray, 'torch.Tensor'],
     return onehot
 
 
-def format_data(data: Union[Sequence[Union[np.ndarray, 'torch.Tensor']],
-                            np.ndarray, 'torch.Tensor'],
-                num_classes: int,
-                is_onehot: bool = False) -> Union[np.ndarray, 'torch.Tensor']:
+def format_data(
+    data: Union[Sequence[Union[np.ndarray, 'torch.Tensor', 'oneflow.Tensor']],
+                np.ndarray, 'torch.Tensor', 'oneflow.Tensor'],
+    num_classes: int,
+    is_onehot: bool = False
+) -> Union[np.ndarray, 'torch.Tensor', 'oneflow.Tensor']:
     """Format data from different inputs such as prediction scores, label-
     format data and one-hot encodings into the same output shape of `(N,
     num_classes)`.
 
     Args:
-        data (Union[Sequence[np.ndarray, 'torch.Tensor'], np.ndarray,
-            'torch.Tensor']): The input data of prediction or labels.
+        data (Union[Sequence[np.ndarray, 'torch.Tensor', 'oneflow.Tensor'],
+        np.ndarray, 'torch.Tensor', 'oneflow.Tensor']):
+            The input data of prediction or labels.
         num_classes (int): The number of classes.
         is_onehot (bool): Whether the data is one-hot encodings.
 
     Return:
-        torch.Tensor or np.ndarray: One-hot encodings or predict scores.
+        torch.Tensor or oneflow.Tensor or np.ndarray:
+        One-hot encodings or predict scores.
     """
     if torch and isinstance(data[0], torch.Tensor):
         stack_func = torch.stack
+    elif flow and isinstance(data[0], flow.Tensor):
+        stack_func = flow.stack
     elif isinstance(data[0], (np.ndarray, np.number)):
         stack_func = np.stack
     else:
@@ -96,7 +112,7 @@ def format_data(data: Union[Sequence[Union[np.ndarray, 'torch.Tensor']],
                           'parms related to `is_onehot` if use one-hot '
                           'encoding data to compute metrics.')
             assert is_onehot
-    # Error corresponds to np, torch, stack_func respectively
+    # Error corresponds to np, torch, oneflow, stack_func respectively
     except (ValueError, RuntimeError, AssertionError):
         # convert label-format inputs to one-hot encodings
         formated_data = stack_func(
@@ -389,6 +405,38 @@ class MultiLabelMetric(MultiLabelMixin, BaseMetric):
         return _precision_recall_f1_support(  # type: ignore
             pos_inds, labels, self.average)
 
+    @overload  # type: ignore
+    @dispatch
+    def _compute_metric(  # type: ignore
+            self, predictions: Sequence['oneflow.Tensor'],
+            labels: Sequence['oneflow.Tensor']) -> List:
+        """A OneFlow implementation that computes the metric."""
+
+        preds = format_data(predictions, self.num_classes,
+                            self._pred_is_onehot)
+        labels = format_data(labels, self.num_classes,
+                             self._label_is_onehot).long()
+
+        # cannot be raised in current implementation because
+        # `and` method will guarantee the equal length.
+        # However length check should remain somewhere.
+        assert preds.shape[0] == labels.shape[0], \
+            'Number of samples does not match between preds' \
+            f'({preds.shape[0]}) and labels ({labels.shape[0]}).'
+
+        if self.thr is not None:
+            # a label is predicted positive if larger than self.
+            # work for index as well
+            pos_inds = (preds >= self.thr).long()
+        else:
+            # top-k labels will be predicted positive for any example
+            _, topk_indices = preds.topk(self.topk)
+            pos_inds = flow.zeros_like(preds).scatter_(1, topk_indices, 1)
+            pos_inds = pos_inds.long()
+
+        return _precision_recall_f1_support(  # type: ignore
+            pos_inds, labels, self.average)
+
     @overload
     @dispatch
     def _compute_metric(self, preds: Sequence[Union[int,
@@ -433,19 +481,22 @@ class MultiLabelMetric(MultiLabelMixin, BaseMetric):
 
     def compute_metric(
         self, results: List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS,
-                                  BUILTIN_IMPL_HINTS]]
+                                  ONEFLOW_IMPL_HINTS, BUILTIN_IMPL_HINTS]]
     ) -> Dict[str, float]:
         """Compute the metric.
 
-        Currently, there are 2 implementations of this method: NumPy and
-        PyTorch. Which implementation to use is determined by the type of the
-        calling parameters. e.g. `numpy.ndarray` or `torch.Tensor`.
+        Currently, there are 3 implementations of this method: NumPy and
+        PyTorch and OneFlow. Which implementation to use is determined by the
+        type of the calling parameters. e.g. `numpy.ndarray` or `torch.Tensor`
+        or `oneflow.Tensor`.
         This method would be invoked in `BaseMetric.compute` after distributed
         synchronization.
+
         Args:
-            results (List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS]]): A list
-                of tuples that consisting the prediction and label. This list
-                has already been synced across all ranks.
+            results (List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS,
+            ONEFLOW_IMPL_HINTS]]): A listof tuples that consisting the
+            prediction and label. This list has already been synced across all
+            ranks.
         Returns:
             Dict[str, float]: The computed metric.
         """
@@ -494,6 +545,53 @@ def _average_precision_torch(preds: 'torch.Tensor', labels: 'torch.Tensor',
     tps[torch.logical_not(pos_inds)] = 0
     precision = tps / pred_pos_nums.unsqueeze(-1).float()  # divide along rows
     ap = torch.sum(precision, 0) / torch.clamp(total_pos, min=1)
+
+    if average == 'macro':
+        return ap.mean() * 100.0
+    else:
+        return ap * 100
+
+
+def _average_precision_oneflow(preds: 'oneflow.Tensor',
+                               labels: 'oneflow.Tensor',
+                               average) -> 'oneflow.Tensor':
+    r"""Calculate the average precision for oneflow.
+
+    AP summarizes a precision-recall curve as the weighted mean of maximum
+    precisions obtained for any r'>r, where r is the recall:
+
+    .. math::
+        \text{AP} = \sum_n (R_n - R_{n-1}) P_n
+
+    Note that no approximation is involved since the curve is piecewise
+    constant.
+
+    Args:
+        preds (oneflow.Tensor): The model prediction with shape
+            ``(N, num_classes)``.
+        labels (oneflow.Tensor): The target of predictions with shape
+            ``(N, num_classes)``.
+
+    Returns:
+        oneflow.Tensor: average precision result.
+    """
+    # sort examples along classes
+    sorted_pred_inds = flow.argsort(preds, dim=0, descending=True)
+    sorted_target = flow.gather(labels, 0, sorted_pred_inds)
+
+    # get indexes when gt_true is positive
+    pos_inds = sorted_target == 1
+
+    # Calculate cumulative tp case numbers
+    tps = flow.cumsum(pos_inds, 0)
+    total_pos = tps[-1].clone()  # the last of tensor may change later
+
+    # Calculate cumulative tp&fp(pred_poss) case numbers
+    pred_pos_nums = flow.arange(1, len(sorted_target) + 1).to(preds.device)
+
+    tps[flow.logical_not(pos_inds)] = 0
+    precision = tps / pred_pos_nums.unsqueeze(-1).float()  # divide along rows
+    ap = flow.sum(precision, 0) / flow.clamp(total_pos, min=1)
 
     if average == 'macro':
         return ap.mean() * 100.0
@@ -692,6 +790,23 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
 
         return _average_precision_torch(preds, labels, self.average)
 
+    @overload  # type: ignore
+    @dispatch
+    def _compute_metric(  # type: ignore
+            self, preds: Sequence['oneflow.Tensor'],
+            labels: Sequence['oneflow.Tensor']) -> List[List]:
+        """A OneFlow implementation that computes the metric."""
+
+        preds = flow.stack(preds)
+        num_classes = preds.shape[1]
+        labels = format_data(labels, num_classes, self._label_is_onehot).long()
+
+        assert preds.shape[0] == labels.shape[0], \
+            'Number of samples does not match between preds' \
+            f'({preds.shape[0]}) and labels ({labels.shape[0]}).'
+
+        return _average_precision_oneflow(preds, labels, self.average)
+
     @overload
     @dispatch
     def _compute_metric(
@@ -721,19 +836,23 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
 
     def compute_metric(
         self, results: List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS,
-                                  BUILTIN_IMPL_HINTS]]
+                                  ONEFLOW_IMPL_HINTS, BUILTIN_IMPL_HINTS]]
     ) -> Dict[str, float]:
         """Compute the metric.
 
-        Currently, there are 2 implementations of this method: NumPy and
-        PyTorch. Which implementation to use is determined by the type of the
-        calling parameters. e.g. `numpy.ndarray` or `torch.Tensor`.
+        Currently, there are 3 implementations of this method: NumPy and
+        PyTorch and OneFlow. Which implementation to use is determined by the
+        type of the calling parameters. e.g. `numpy.ndarray` or
+        `torch.Tensor`, `oneflow.Tensor`.
+
         This method would be invoked in `BaseMetric.compute` after distributed
         synchronization.
         Args:
-            results (List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS]]): A list
-                of tuples that consisting the prediction and label. This list
-                has already been synced across all ranks.
+            results (List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS,
+            ONEFLOW_IMPL_HINTS]]): A list of tuples that consisting the
+            prediction and label. This list has already been synced across
+            all ranks.
+
         Returns:
             Dict[str, float]: The computed metric.
         """
