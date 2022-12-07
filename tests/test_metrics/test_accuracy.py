@@ -12,6 +12,7 @@ from mmeval.utils import try_import
 torch = try_import('torch')
 tf = try_import('tensorflow')
 paddle = try_import('paddle')
+jnp = try_import('jax.numpy')
 
 
 @pytest.mark.parametrize(
@@ -66,6 +67,18 @@ def test_metric_interface_paddle():
     results = accuracy(
         paddle.to_tensor([[0.1, 0.9], [0.5, 0.5]]),
         paddle.to_tensor([0, 1]))
+    assert isinstance(results, dict)
+
+
+@pytest.mark.skipif(jnp is None, reason='JAX is not available!')
+def test_metric_interface_jnp():
+    accuracy = Accuracy()
+    results = accuracy(
+        jnp.asarray([1, 2, 3]), jnp.asarray([3, 2, 1]))
+    assert isinstance(results, dict)
+    results = accuracy(
+        jnp.asarray([[0.1, 0.9], [0.5, 0.5]]),
+        jnp.asarray([0, 1]))
     assert isinstance(results, dict)
 
 
@@ -188,6 +201,36 @@ def test_metamorphic_numpy_paddle(metric_kwargs, classes_num, length):
     for key in np_acc_results:
         np.testing.assert_allclose(
             np_acc_results[key], paddle_acc_results[key])
+
+
+@pytest.mark.skipif(jnp is None, reason='JAX is not available!')
+@pytest.mark.parametrize(
+    argnames=('metric_kwargs', 'classes_num', 'length'),
+    argvalues=[
+        ({}, 100, 100),
+        ({'topk': 1, 'thrs': 0.1}, 1000, 100),
+        ({'topk': (1, 2, 3), 'thrs': (0.1, 0.2)}, 1000, 10000),
+        ({'topk': (1, 2, 3), 'thrs': (0.1, None)}, 999, 10002)
+    ]
+)
+def test_metamorphic_numpy_jax(metric_kwargs, classes_num, length):
+    """Metamorphic testing for NumPy and JAX implementation."""
+    accuracy = Accuracy(**metric_kwargs)
+
+    predictions = np.random.rand(length, classes_num)
+    labels = np.random.randint(0, classes_num, length)
+
+    np_acc_results = accuracy(predictions, labels)
+
+    predictions = jnp.asarray(predictions)
+    labels = jnp.asarray(labels)
+    jnp_acc_results = accuracy(predictions, labels)
+
+    assert np_acc_results.keys() == jnp_acc_results.keys()
+
+    for key in np_acc_results:
+        np.testing.assert_allclose(
+            np_acc_results[key], jnp_acc_results[key])
 
 
 if __name__ == '__main__':

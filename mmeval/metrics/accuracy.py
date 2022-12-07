@@ -1,14 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-import numpy as np
 from typing import (TYPE_CHECKING, Dict, Iterable, List, Optional, Sequence,
                     Tuple, Union, overload)
+
+import numpy as np
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
+    import jax
+    import jax.numpy as jnp
     import paddle
     import tensorflow
     import tensorflow as tf
@@ -17,6 +20,8 @@ else:
     paddle = try_import('paddle')
     torch = try_import('torch')
     tf = try_import('tensorflow')
+    jnp = try_import('jax.numpy')
+    jax = try_import('jax')
 
 
 @overload
@@ -59,15 +64,12 @@ def _numpy_topk(inputs: np.ndarray,
 
     This implementation returns the values and indices of the k largest
     elements along a given axis.
-
     Args:
-        inputs (nump.ndarray): The input numpy array.
+        inputs (numpy.ndarray): The input numpy array.
         k (int): The k in `top-k`.
         axis (int, optional): The axis to sort along.
-
     Returns:
         tuple: The values and indices of the k largest elements.
-
     Note:
         If PyTorch is available, the ``_torch_topk`` would be used.
     """
@@ -81,15 +83,35 @@ def _numpy_topk(inputs: np.ndarray,
     return values, indices
 
 
+def _jnp_topk(inputs: 'jax.Array',
+              k: int,
+              axis: Optional[int] = None) -> Tuple:
+    """A implementation of jax.Array top-k.
+
+    This implementation returns the values and indices of the k largest
+    elements along a given axis.
+    Args:
+        inputs (jax.Array): The input jax Array.
+        k (int): The k in `top-k`.
+        axis (int, optional): The axis to sort along.
+    Returns:
+        tuple: The values and indices of the k largest elements.
+    """
+    if axis is None:
+        return jax.lax.top_k(inputs, k)
+    indices = jnp.argsort(inputs * -1.0, axis=axis)
+    indices = jnp.take(indices, jnp.arange(k), axis=axis)
+    values = jnp.take_along_axis(inputs, indices, axis=axis)
+
+    return values, indices
+
+
 class Accuracy(BaseMetric):
     """Top-k accuracy evaluation metric.
-
     This metric computes the accuracy based on the given topk and thresholds.
-
     Currently, this metric supports 4 kinds of inputs, i.e. ``numpy.ndarray``,
     ``torch.Tensor``, ``tensorflow.Tensor`` and ``paddle.Tensor``, and the
     implementation for the calculation depends on the inputs type.
-
     Args:
         topk (int | Sequence[int]): If the predictions in ``topk``
             matches the target, the predictions will be regarded as
@@ -98,30 +120,22 @@ class Accuracy(BaseMetric):
             under the thresholds are considered negative. None means no
             thresholds. Defaults to 0.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
-
     Examples:
-
         >>> from mmeval import Accuracy
         >>> accuracy = Accuracy()
-
     Use NumPy implementation:
-
         >>> import numpy as np
         >>> labels = np.asarray([0, 1, 2, 3])
         >>> preds = np.asarray([0, 2, 1, 3])
         >>> accuracy(preds, labels)
         {'top1': 0.5}
-
     Use PyTorch implementation:
-
         >>> import torch
         >>> labels = torch.Tensor([0, 1, 2, 3])
         >>> preds = torch.Tensor([0, 2, 1, 3])
         >>> accuracy(preds, labels)
         {'top1': 0.5}
-
     Computing top-k accuracy with specified threold:
-
         >>> labels = np.asarray([0, 1, 2, 3])
         >>> preds = np.asarray([
             [0.7, 0.1, 0.1, 0.1],
@@ -134,9 +148,7 @@ class Accuracy(BaseMetric):
         >>> accuracy = Accuracy(topk=2, thrs=(0.1, 0.5))
         >>> accuracy(preds, labels)
         {'top2_thr-0.10': 0.75, 'top2_thr-0.50': 0.5}
-
     Accumulate batch:
-
         >>> for i in range(10):
         ...     labels = torch.randint(0, 4, size=(100, ))
         ...     predicts = torch.randint(0, 4, size=(100, ))
@@ -180,16 +192,13 @@ class Accuracy(BaseMetric):
         labels: Union['torch.Tensor',
                       Sequence['torch.Tensor']]) -> 'torch.Tensor':
         """Compute the correct number of per topk and threshold with PyTorch.
-
         Args:
             prediction (torch.Tensor | Sequence): Predictions from the model.
                 Same as ``self.add``.
             labels (torch.Tensor | Sequence): The ground truth labels. Same as
                 ``self.add``.
-
         Returns:
             torch.Tensor: Correct number with the following 2 shapes.
-
             - (N, ): If the ``predictions`` is a label tensor instead of score.
               Only return a top-1 correct tensor, and ignore the argument
               ``topk`` and ``thrs``.
@@ -234,16 +243,13 @@ class Accuracy(BaseMetric):
                       Sequence['tensorflow.Tensor']]) -> 'tensorflow.Tensor':
         """Compute the correct number of per topk and threshold with
         TensorFlow.
-
         Args:
             prediction (tensorflow.Tensor | Sequence): Predictions from the
                 model. Same as ``self.add``.
             labels (tensorflow.Tensor | Sequence): The ground truth labels.
                 Same as ``self.add``.
-
         Returns:
             tensorflow.Tensor: Correct number with the following 2 shapes.
-
             - (N, ): If the ``predictions`` is a label tensor instead of score.
               Only return a top-1 correct tensor, and ignore the argument
               ``topk`` and ``thrs``.
@@ -291,16 +297,13 @@ class Accuracy(BaseMetric):
         labels: Union['paddle.Tensor',
                       Sequence['paddle.Tensor']]) -> 'paddle.Tensor':
         """Compute the correct number of per topk and threshold with Paddle.
-
         Args:
             prediction (paddle.Tensor | Sequence): Predictions from the model.
                 Same as ``self.add``.
             labels (paddle.Tensor | Sequence): The ground truth labels. Same as
                 ``self.add``.
-
         Returns:
             paddle.Tensor: Correct number with the following 2 shapes.
-
             - (N, ): If the ``predictions`` is a label tensor instead of score.
               Only return a top-1 correct tensor, and ignore the argument
               ``topk`` and ``thrs``.
@@ -341,21 +344,69 @@ class Accuracy(BaseMetric):
                     0, keepdim=False).cast('float64')
         return corrects_per_sample
 
+    @overload
+    @dispatch
+    def _compute_corrects(  # type: ignore
+            self, predictions: Union['jax.Array', Sequence['jax.Array']],
+            labels: Union['jax.Array', Sequence['jax.Array']]) -> 'jax.Array':
+        """Compute the correct number of per topk and threshold with JAX.
+        Args:
+            prediction (jax.Array | Sequence): Predictions from the model.
+                Same as ``self.add``.
+            labels (jax.Array | Sequence): The ground truth labels. Same as
+                ``self.add``.
+        Returns:
+            jax.Array: Correct number with the following 2 shapes.
+            - (N, ): If the ``predictions`` is a label array instead of score.
+              Only return a top-1 correct array, and ignore the argument
+              ``topk`` and ``thrs``.
+            - (N, num_topk, num_thr): If the ``prediction`` is a score array
+              (number of dimensions is 2). Return the correct number on each
+              ``topk`` and ``thrs``.
+        """
+        if not isinstance(predictions, jnp.ndarray):
+            predictions = jnp.stack(predictions)
+        if not isinstance(labels, jnp.ndarray):
+            labels = jnp.stack(labels)
+        if predictions.ndim == 1:
+            corrects = (predictions == labels)
+            return corrects.astype(jnp.int32)
+        pred_scores, pred_label = _jnp_topk(predictions, self.maxk, axis=1)
+        pred_label = pred_label.T
+        # broadcast `label` to the shape of `pred_label`
+        labels = jnp.broadcast_to(labels.reshape(1, -1), pred_label.shape)
+        # compute correct array
+        corrects = (pred_label == labels)
+
+        # compute the corrects corresponding to all topk and thrs per sample
+        corrects_per_sample = jnp.zeros(
+            (len(predictions), len(self.topk), len(self.thrs)))
+
+        for i, k in enumerate(self.topk):
+            for j, thr in enumerate(self.thrs):
+                # Only prediction socres larger than thr are counted as correct
+                if thr is not None:
+                    thr_corrects = corrects & (pred_scores.T > thr)
+                else:
+                    thr_corrects = corrects
+                corrects_per_sample = corrects_per_sample.at[:, i, j].set(
+                    thr_corrects[:k].sum(0,
+                                         keepdims=True).astype(jnp.int32)[0])
+
+        return corrects_per_sample
+
     @dispatch
     def _compute_corrects(
             self, predictions: Union[np.ndarray, Sequence[np.ndarray]],
             labels: Union[np.ndarray, Sequence[np.ndarray]]) -> np.ndarray:
         """Compute the correct number of per topk and threshold with NumPy.
-
         Args:
             prediction (numpy.ndarray | Sequence): Predictions from the model.
                 Same as ``self.add``.
             labels (numpy.ndarray | Sequence): The ground truth labels. Same as
                 ``self.add``.
-
         Returns:
             numpy.ndarray: Correct number with the following 2 shapes.
-
             - (N, ): If the ``predictions`` is a label array instead of score.
               Only return a top-1 correct array, and ignore the argument
               ``topk`` and ``thrs``.
@@ -377,12 +428,14 @@ class Accuracy(BaseMetric):
 
         # broadcast `label` to the shape of `pred_label`
         labels = np.broadcast_to(labels.reshape(1, -1), pred_label.shape)
+
         # compute correct array
         corrects = (pred_label == labels)
 
         # compute the corrects corresponding to all topk and thrs per sample
         corrects_per_sample = np.zeros(
             (len(predictions), len(self.topk), len(self.thrs)))
+
         for i, k in enumerate(self.topk):
             for j, thr in enumerate(self.thrs):
                 # Only prediction socres larger than thr are counted as correct
@@ -397,20 +450,20 @@ class Accuracy(BaseMetric):
     def compute_metric(
         self, results: List[Union[Iterable,
                                   Union[np.number, 'torch.Tensor',
-                                        'tensorflow.Tensor', 'paddle.Tensor']]]
+                                        'tensorflow.Tensor', 'paddle.Tensor',
+                                        'jax.Array']]]
     ) -> Dict[str, float]:
         """Compute the accuracy metric.
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
-
         Args:
             results (list): A list that consisting the correct numbers. This
                 list has already been synced across all ranks.
-
         Returns:
             Dict[str, float]: The computed accuracy metric.
         """
+
         if _is_scalar(results[0]):
             return {'top1': float(sum(results) / len(results))}  # type: ignore
 
