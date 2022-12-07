@@ -91,8 +91,12 @@ def _precision_recall_f1_support(pred_positive: Union[np.ndarray,
         # use oneflow with oneflow.Tensor
         precision = tp_sum / flow.clamp(pred_sum, min=1).float() * 100
         recall = tp_sum / flow.clamp(gt_sum, min=1).float() * 100
+        if (hasattr(flow, 'finfo')):
+            min = min = flow.finfo(flow.float32).eps
+        else:
+            min = 1.1920928955078125e-07
         f1_score = 2 * precision * recall / flow.clamp(
-            precision + recall, min=flow.finfo(flow.float32).eps)
+            precision + recall, min=min)
     else:
         # use numpy with numpy.ndarray
         precision = tp_sum / np.clip(pred_sum, 1, np.inf) * 100
