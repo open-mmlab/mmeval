@@ -103,10 +103,10 @@ def _jnp_topk(inputs: 'jax.Array',
     """
     if axis is None:
         return jax.lax.top_k(inputs, k)
+
     indices = jnp.argsort(inputs * -1.0, axis=axis)
     indices = jnp.take(indices, jnp.arange(k), axis=axis)
     values = jnp.take_along_axis(inputs, indices, axis=axis)
-
     return values, indices
 
 
