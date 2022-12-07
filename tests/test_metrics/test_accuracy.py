@@ -4,6 +4,7 @@
 
 import numpy as np
 import pytest
+from distutils.version import LooseVersion
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import Accuracy
@@ -13,6 +14,7 @@ torch = try_import('torch')
 tf = try_import('tensorflow')
 paddle = try_import('paddle')
 jnp = try_import('jax.numpy')
+flow = try_import('oneflow')
 
 
 @pytest.mark.parametrize(
@@ -43,6 +45,18 @@ def test_metric_interface_torch():
     assert isinstance(results, dict)
     results = accuracy(
         torch.Tensor([[0.1, 0.9], [0.5, 0.5]]), torch.Tensor([0, 1]))
+    assert isinstance(results, dict)
+
+
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+def test_metric_interface_oneflow():
+    accuracy = Accuracy()
+    results = accuracy(flow.Tensor([1, 2, 3]), flow.Tensor([3, 2, 1]))
+    assert isinstance(results, dict)
+    results = accuracy(
+        flow.Tensor([[0.1, 0.9], [0.5, 0.5]]), flow.Tensor([0, 1]))
     assert isinstance(results, dict)
 
 
@@ -142,6 +156,37 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
 
     for key in np_acc_results:
         np.testing.assert_allclose(np_acc_results[key], torch_acc_results[key])
+
+
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+@pytest.mark.parametrize(
+    argnames=('metric_kwargs', 'classes_num', 'length'),
+    argvalues=[
+        ({}, 100, 100),
+        ({'topk': 1, 'thrs': 0.1}, 1000, 100),
+        ({'topk': (1, 2, 3), 'thrs': (0.1, 0.2)}, 1000, 10000),
+        ({'topk': (1, 2, 3), 'thrs': (0.1, None)}, 999, 10002)
+    ]
+)
+def test_metamorphic_numpy_oneflow(metric_kwargs, classes_num, length):
+    """Metamorphic testing for NumPy and OneFlow implementation."""
+    accuracy = Accuracy(**metric_kwargs)
+
+    predictions = np.random.rand(length, classes_num)
+    labels = np.random.randint(0, classes_num, length)
+
+    np_acc_results = accuracy(predictions, labels)
+
+    predictions = flow.from_numpy(predictions)
+    labels = flow.from_numpy(labels)
+    flow_acc_results = accuracy(predictions, labels)
+
+    assert np_acc_results.keys() == flow_acc_results.keys()
+
+    for key in np_acc_results:
+        np.testing.assert_allclose(np_acc_results[key], flow_acc_results[key])
 
 
 @pytest.mark.skipif(tf is None, reason='TensorFlow is not available!')

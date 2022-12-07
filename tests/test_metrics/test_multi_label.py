@@ -4,14 +4,14 @@
 
 import numpy as np
 import pytest
+from distutils.version import LooseVersion
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import MultiLabelMetric
+from mmeval.utils import try_import
 
-try:
-    import torch
-except ImportError:
-    torch = None
+torch = try_import('torch')
+flow = try_import('oneflow')
 
 
 def test_metric_init_assertion():
@@ -102,6 +102,36 @@ def test_metric_interface_torch_topk(metric_kwargs, preds, labels):
     assert isinstance(results, dict)
 
 
+@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3, 'topk': 1}])
+@pytest.mark.parametrize('preds', [
+    np.array([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a Tensor
+    # scores in Sequence
+    [[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]],
+])
+@pytest.mark.parametrize('labels', [
+    np.array([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a Tensor
+    # one-hot encodings in Sequence
+    [[1, 0, 0], [0, 1, 0]],
+    [[0], [1]],  # label-format in Sequence
+])
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+def test_metric_interface_oneflow_topk(metric_kwargs, preds, labels):
+    """Test scores inputs with topk in OneFlow."""
+    if isinstance(preds, np.ndarray):
+        preds = flow.tensor(preds)
+    else:
+        preds = list(flow.tensor(pred) for pred in preds)
+    if isinstance(labels, np.ndarray):
+        labels = flow.tensor(labels)
+    else:
+        labels = list(flow.tensor(label) for label in labels)
+    multi_label_metric = MultiLabelMetric(**metric_kwargs)
+    results = multi_label_metric(preds, labels)
+    assert isinstance(results, dict)
+
+
 @pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3}])
 @pytest.mark.parametrize('preds', [
     np.array([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a ndarray
@@ -144,6 +174,40 @@ def test_metric_interface(metric_kwargs, preds, labels):
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
 def test_metric_interface_torch(metric_kwargs, preds, labels):
     """Test all kinds of inputs in torch."""
+    multi_label_metric = MultiLabelMetric(**metric_kwargs)
+    results = multi_label_metric(preds, labels)
+    assert isinstance(results, dict)
+
+
+@pytest.mark.parametrize('metric_kwargs', [{'num_classes': 3}])
+@pytest.mark.parametrize('preds', [
+    np.array([[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]]),  # scores in a Tensor
+    # scores in Sequence
+    [[0.1, 0.9, 0.8], [0.5, 0.6, 0.8]],
+    np.array([[0, 1, 0], [1, 1, 0]]),  # one-hot encodings in a Tensor
+    # one-hot encodings in Sequence
+    [[0, 1, 0], [1, 1, 0]],
+    [[1], [0, 1]],  # label-format in Sequence
+])
+@pytest.mark.parametrize('labels', [
+    np.array([[1, 0, 0], [0, 1, 0]]),  # one-hot encodings in a Tensor
+    # one-hot encodings in Sequence
+    [[1, 0, 0], [0, 1, 0]],
+    [[0], [1]],  # label-format in Sequence
+])
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+def test_metric_interface_oneflow(metric_kwargs, preds, labels):
+    """Test all kinds of inputs in OneFlow."""
+    if isinstance(preds, np.ndarray):
+        preds = flow.tensor(preds)
+    else:
+        preds = list(flow.tensor(pred) for pred in preds)
+    if isinstance(labels, np.ndarray):
+        labels = flow.tensor(labels)
+    else:
+        labels = list(flow.tensor(label) for label in labels)
     multi_label_metric = MultiLabelMetric(**metric_kwargs)
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
@@ -224,3 +288,35 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
         # precision is different between numpy and torch
         np.testing.assert_allclose(
             np_acc_results[key], torch_acc_results[key], rtol=1e-5)
+
+
+@pytest.mark.skipif(flow is None or
+                    LooseVersion(flow.__version__) < '0.8.1',
+                    reason='OneFlow >= 0.8.1 is required!')
+@pytest.mark.parametrize(
+    argnames=('metric_kwargs', 'classes_num', 'length'),
+    argvalues=[
+        ({'num_classes': 100}, 100, 100),
+        ({'num_classes': 1000, 'thr': 0.1}, 1000, 100),
+        ({'num_classes': 1000, 'topk': 2}, 1000, 10000),
+        ({'num_classes': 999, 'average': None}, 999, 10002)
+    ]
+)
+def test_metamorphic_numpy_oneflow(metric_kwargs, classes_num, length):
+    """Metamorphic testing for NumPy and OneFlow implementation."""
+    multi_label_metric = MultiLabelMetric(**metric_kwargs)
+
+    preds = np.random.rand(length, classes_num)
+    labels = np.random.randint(0, classes_num, length)
+
+    np_acc_results = multi_label_metric(preds, labels)
+
+    preds = flow.from_numpy(preds)
+    labels = flow.from_numpy(labels)
+    oneflow_acc_results = multi_label_metric(preds, labels)
+
+    assert np_acc_results.keys() == oneflow_acc_results.keys()
+    for key in np_acc_results:
+        # precision is different between numpy and oneflow
+        np.testing.assert_allclose(
+            np_acc_results[key], oneflow_acc_results[key], rtol=1e-5)

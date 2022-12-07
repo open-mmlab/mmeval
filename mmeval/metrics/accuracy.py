@@ -11,6 +11,8 @@ from mmeval.utils import try_import
 if TYPE_CHECKING:
     import jax
     import jax.numpy as jnp
+    import oneflow
+    import oneflow as flow
     import paddle
     import tensorflow
     import tensorflow as tf
@@ -21,6 +23,7 @@ else:
     tf = try_import('tensorflow')
     jnp = try_import('jax.numpy')
     jax = try_import('jax')
+    flow = try_import('oneflow')
 
 
 @overload
@@ -33,9 +36,12 @@ def _is_scalar(obj: np.number):  # type: ignore
 @overload
 @dispatch
 def _is_scalar(obj: Union[np.ndarray,  # type: ignore
-                          'torch.Tensor', 'tensorflow.Tensor']):
-    """Check if a ``np.ndarray`` | ``torch.Tensor`` | ``tensorflow.Tensor`` is
-    a scalar."""
+                          'torch.Tensor', 'oneflow.Tensor',
+                          'tensorflow.Tensor']):
+    """Check if a ``np.ndarray`` | ``torch.Tensor`` | ``oneflow.Tensor``
+
+    |``tensorflow.Tensor`` is a scalar.
+    """
     return obj.ndim == 0
 
 
@@ -56,6 +62,13 @@ def _torch_topk(inputs: 'torch.Tensor',
     return inputs.topk(k, dim=dim)
 
 
+def _oneflow_topk(inputs: 'oneflow.Tensor',
+                  k: int,
+                  dim: Optional[int] = None) -> Tuple:
+    """Invoke the OneFlow topk."""
+    return inputs.topk(k, dim=dim)
+
+
 def _numpy_topk(inputs: np.ndarray,
                 k: int,
                 axis: Optional[int] = None) -> Tuple:
@@ -73,10 +86,15 @@ def _numpy_topk(inputs: np.ndarray,
         tuple: The values and indices of the k largest elements.
 
     Note:
-        If PyTorch is available, the ``_torch_topk`` would be used.
+        If PyTorch/OneFlow is available, the ``_torch_topk`` or
+        ``_oneflow_topk`` would be used.
     """
     if torch is not None:
         values, indices = _torch_topk(torch.from_numpy(inputs), k, dim=axis)
+        return values.numpy(), indices.numpy()
+
+    if flow is not None:
+        values, indices = _oneflow_topk(flow.from_numpy(inputs), k, dim=axis)
         return values.numpy(), indices.numpy()
 
     indices = np.argsort(inputs * -1.0, axis=axis)
@@ -115,9 +133,10 @@ class Accuracy(BaseMetric):
 
     This metric computes the accuracy based on the given topk and thresholds.
 
-    Currently, this metric supports 4 kinds of inputs, i.e. ``numpy.ndarray``,
-    ``torch.Tensor``, ``tensorflow.Tensor`` and ``paddle.Tensor``, and the
-    implementation for the calculation depends on the inputs type.
+    Currently, this metric supports 5 kinds of inputs, i.e. ``numpy.ndarray``,
+    ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor`` and
+    ``paddle.Tensor``, and the implementation for the calculation depends on
+    the inputs type.
 
     Args:
         topk (int | Sequence[int]): If the predictions in ``topk``
@@ -252,6 +271,58 @@ class Accuracy(BaseMetric):
                     thr_corrects = corrects
                 corrects_per_sample[:, i, j] = thr_corrects[:k].sum(
                     0, keepdim=True).float()
+        return corrects_per_sample
+
+    @overload  # type: ignore
+    @dispatch
+    def _compute_corrects(  # type: ignore
+        self, predictions: Union['oneflow.Tensor', Sequence['oneflow.Tensor']],
+        labels: Union['oneflow.Tensor',
+                      Sequence['oneflow.Tensor']]) -> 'oneflow.Tensor':
+        """Compute the correct number of per topk and threshold with OneFlow.
+
+        Args:
+            prediction (oneflow.Tensor | Sequence): Predictions from the model.
+                Same as ``self.add``.
+            labels (oneflow.Tensor | Sequence): The ground truth labels.
+                Same as ``self.add``.
+
+        Returns:
+            oneflow.Tensor: Correct number with the following 2 shapes.
+
+            - (N, ): If the ``predictions`` is a label tensor instead of score.
+              Only return a top-1 correct tensor, and ignore the argument
+              ``topk`` and ``thrs``.
+            - (N, num_topk, num_thr): If the ``prediction`` is a score tensor
+              (number of dimensions is 2). Return the correct number on each
+              ``topk`` and ``thrs``.
+        """
+        if not isinstance(predictions, flow.Tensor):
+            predictions = flow.stack(predictions)
+        if not isinstance(labels, flow.Tensor):
+            labels = flow.stack(labels)
+
+        if predictions.ndim == 1:
+            corrects = (predictions.int() == labels)
+            return corrects.float()
+
+        pred_scores, pred_label = _oneflow_topk(predictions, self.maxk, dim=1)
+        pred_label = pred_label.t()
+
+        corrects = (pred_label == labels.view(1, -1).expand_as(pred_label))
+
+        # compute the corrects corresponding to all topk and thrs per sample
+        corrects_per_sample = flow.zeros(
+            (len(predictions), len(self.topk), len(self.thrs)))
+        for i, k in enumerate(self.topk):
+            for j, thr in enumerate(self.thrs):
+                # Only prediction socres larger than thr are counted as correct
+                if thr is not None:
+                    thr_corrects = corrects & (pred_scores.t() > thr)
+                else:
+                    thr_corrects = corrects
+                corrects_per_sample[:, i, j] = thr_corrects[:k].sum(
+                    0, keepdim=False).float()
         return corrects_per_sample
 
     @overload  # type: ignore
@@ -483,7 +554,7 @@ class Accuracy(BaseMetric):
         self, results: List[Union[Iterable,
                                   Union[np.number, 'torch.Tensor',
                                         'tensorflow.Tensor', 'paddle.Tensor',
-                                        'jax.Array']]]
+                                        'jax.Array','flow.Tensor']]]
     ) -> Dict[str, float]:
         """Compute the accuracy metric.
 

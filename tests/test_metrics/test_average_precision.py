@@ -7,11 +7,10 @@ import pytest
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import AveragePrecision
+from mmeval.utils import try_import
 
-try:
-    import torch
-except ImportError:
-    torch = None
+torch = try_import('torch')
+flow = try_import('oneflow')
 
 
 def test_metric_init_assertion():
@@ -62,6 +61,32 @@ def test_metric_input_builtin(preds, labels):
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
 def test_metric_input_torch(preds, labels):
     """Test torch inputs."""
+    average_precision = AveragePrecision()
+    results = average_precision(preds, labels)
+    assert isinstance(results, dict)
+
+
+@pytest.mark.parametrize('preds', [
+    np.array([[0.1, 0.9], [0.5, 0.6]]),  # scores in a ndarray
+    [[0.1, 0.9], [0.5, 0.6]],  # scores in Sequence
+])
+@pytest.mark.parametrize('labels', [
+    np.array([[1, 0], [0, 1]]),  # one-hot encodings labels in a ndarray
+    # one-hot encodings labels in Sequence
+    [[1, 0], [0, 1]],
+    [[0], [1]],  # label-format labels in Sequence
+])
+@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+def test_metric_input_flow(preds, labels):
+    """Test oneflow inputs."""
+    if isinstance(preds, np.ndarray):
+        preds = flow.tensor(preds)
+    else:
+        preds = list(flow.tensor(pred) for pred in preds)
+    if isinstance(labels, np.ndarray):
+        labels = flow.tensor(labels)
+    else:
+        labels = list(flow.tensor(label) for label in labels)
     average_precision = AveragePrecision()
     results = average_precision(preds, labels)
     assert isinstance(results, dict)
@@ -146,3 +171,32 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
         # numpy use float64 however torch use float32
         np.testing.assert_allclose(
             np_acc_results[key], torch_acc_results[key], rtol=1e-5)
+
+
+@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+@pytest.mark.parametrize(
+    argnames=('metric_kwargs', 'classes_num', 'length'),
+    argvalues=[
+        ({}, 100, 100),
+        ({}, 1000, 10000),
+        ({'average': None}, 999, 10002)
+    ]
+)
+def test_metamorphic_numpy_oneflow(metric_kwargs, classes_num, length):
+    """Metamorphic testing for NumPy and OneFlow implementation."""
+    average_precision = AveragePrecision(**metric_kwargs)
+
+    preds = np.random.rand(length, classes_num)
+    labels = np.random.randint(0, classes_num, length)
+
+    np_acc_results = average_precision(preds, labels)
+
+    preds = flow.from_numpy(preds)
+    labels = flow.from_numpy(labels)
+    oneflow_acc_results = average_precision(preds, labels)
+
+    assert np_acc_results.keys() == oneflow_acc_results.keys()
+    for key in np_acc_results:
+        # numpy use float64 however oneflow use float32
+        np.testing.assert_allclose(
+            np_acc_results[key], oneflow_acc_results[key], rtol=1e-5)

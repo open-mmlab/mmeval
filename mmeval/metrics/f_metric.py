@@ -7,9 +7,12 @@ from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
+    import oneflow
+    import oneflow as flow
     import torch
 else:
     torch = try_import('torch')
+    flow = try_import('oneflow')
 
 
 class F1Metric(BaseMetric):
@@ -140,6 +143,29 @@ class F1Metric(BaseMetric):
         assert gts.max() < self.num_classes
 
         cared_labels = preds.new_tensor(self.cared_labels, dtype=torch.long)
+
+        hits = (preds == gts)[None, :]
+        preds_per_label = cared_labels[:, None] == preds[None, :]
+        gts_per_label = cared_labels[:, None] == gts[None, :]
+
+        tp = (hits * preds_per_label).cpu().numpy().astype(float)
+        fp = (~hits * preds_per_label).cpu().numpy().astype(float)
+        fn = (~hits * gts_per_label).cpu().numpy().astype(float)
+        return tp, fp, fn
+
+    @overload  # type: ignore
+    @dispatch
+    def _compute_tp_fp_fn(  # type: ignore
+            self, predictions: Sequence['oneflow.Tensor'],
+            labels: Sequence['oneflow.Tensor']) -> tuple:
+        """Compute tp, fp and fn from predictions and labels."""
+        preds = flow.cat(predictions).long().flatten().cpu()
+        gts = flow.cat(labels).long().flatten().cpu()
+
+        assert preds.max() < self.num_classes
+        assert gts.max() < self.num_classes
+
+        cared_labels = preds.new_tensor(self.cared_labels, dtype=flow.long)
 
         hits = (preds == gts)[None, :]
         preds_per_label = cared_labels[:, None] == preds[None, :]

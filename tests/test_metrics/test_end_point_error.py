@@ -10,6 +10,7 @@ from mmeval.metrics import EndPointError
 from mmeval.utils import try_import
 
 torch = try_import('torch')
+flow = try_import('oneflow')
 
 
 def test_metric_interface_numpy():
@@ -28,6 +29,15 @@ def test_metric_interface_torch():
     assert isinstance(epe, BaseMetric)
 
     results = epe(torch.randn(10, 10, 2), torch.randn(10, 10, 2))
+    assert isinstance(results, dict)
+
+
+@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+def test_metric_interface_oneflow():
+    epe = EndPointError()
+    assert isinstance(epe, BaseMetric)
+
+    results = epe(flow.randn(10, 10, 2), flow.randn(10, 10, 2))
     assert isinstance(results, dict)
 
 
@@ -68,6 +78,26 @@ def test_metamorphic_numpy_pytorch():
     for key in np_results:
         np.testing.assert_allclose(
             np_results[key], torch_results[key], rtol=1e-06)
+
+
+@pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
+def test_metamorphic_numpy_oneflow():
+    """Metamorphic testing for NumPy and OneFlow implementation."""
+
+    epe = EndPointError()
+    predictions = np.random.normal(size=(10, 10, 2))
+    labels = np.random.normal(size=(10, 10, 2))
+    np_results = epe(predictions, labels)
+
+    predictions = flow.from_numpy(predictions)
+    labels = flow.from_numpy(labels)
+    oneflow_results = epe(predictions, labels)
+
+    assert np_results.keys() == oneflow_results.keys()
+
+    for key in np_results:
+        np.testing.assert_allclose(
+            np_results[key], oneflow_results[key], rtol=1e-06)
 
 
 if __name__ == '__main__':

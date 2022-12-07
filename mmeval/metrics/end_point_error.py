@@ -8,9 +8,12 @@ from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
+    import oneflow
+    import oneflow as flow
     import torch
 else:
     torch = try_import('torch')
+    flow = try_import('oneflow')
 
 
 class EndPointError(BaseMetric):
@@ -19,9 +22,9 @@ class EndPointError(BaseMetric):
     EndPointError is a widely used evaluation metric for optical flow
     estimation.
 
-    This metric supports 2 kinds of inputs, i.e. `numpy.ndarray` and
-    `torch.Tensor`, and the implementation for the calculation depends on
-    the inputs type.
+    This metric supports 3 kinds of inputs, i.e. `numpy.ndarray` and
+    `torch.Tensor`, `oneflow.Tensor`, and the implementation for the
+    calculation depends on the inputs type.
 
     Args:
         **kwargs: Keyword arguments passed to :class:`BaseMetric`.
@@ -122,7 +125,7 @@ class EndPointError(BaseMetric):
         epe = epe_map.reshape(-1)[val]
         return epe.mean(keepdims=True), int(val.sum())
 
-    @dispatch
+    @dispatch  # type: ignore
     def end_point_error_map(
             self,
             prediction: 'torch.Tensor',
@@ -142,6 +145,31 @@ class EndPointError(BaseMetric):
         if valid_mask is None:
             valid_mask = torch.ones_like(prediction[..., 0])
         epe_map = torch.sqrt(torch.sum((prediction - label)**2, dim=-1))
+        val = valid_mask.reshape(-1) >= 0.5
+        epe = epe_map.reshape(-1)[val]
+        return epe.mean().cpu().numpy(), int(val.sum())
+
+    @dispatch  # noqa: F811
+    def end_point_error_map(
+        self,
+        prediction: 'oneflow.Tensor',
+        label: 'oneflow.Tensor',
+        valid_mask: Optional['oneflow.Tensor'] = None
+    ) -> Tuple[np.ndarray, int]:
+        """Calculate end point error map.
+
+        Args:
+            prediction (oneflow.Tensor): Prediction with shape (H, W, 2).
+            label (oneflow.Tensor): Ground truth with shape (H, W, 2).
+            valid_mask (oneflow.Tensor, optional): Valid mask with
+                shape (H, W).
+
+        Returns:
+            Tuple: The mean of end point error and the numbers of valid labels.
+        """
+        if valid_mask is None:
+            valid_mask = flow.ones_like(prediction[..., 0])
+        epe_map = flow.sqrt(flow.sum((prediction - label)**2, dim=-1))
         val = valid_mask.reshape(-1) >= 0.5
         epe = epe_map.reshape(-1)[val]
         return epe.mean().cpu().numpy(), int(val.sum())
