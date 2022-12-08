@@ -9,6 +9,8 @@ from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
+    import jax
+    import jax.numpy as jnp
     import oneflow
     import oneflow as flow
     import paddle
@@ -19,6 +21,8 @@ else:
     paddle = try_import('paddle')
     torch = try_import('torch')
     tf = try_import('tensorflow')
+    jnp = try_import('jax.numpy')
+    jax = try_import('jax')
     flow = try_import('oneflow')
 
 
@@ -74,7 +78,7 @@ def _numpy_topk(inputs: np.ndarray,
     elements along a given axis.
 
     Args:
-        inputs (nump.ndarray): The input numpy array.
+        inputs (numpy.ndarray): The input numpy array.
         k (int): The k in `top-k`.
         axis (int, optional): The axis to sort along.
 
@@ -96,6 +100,31 @@ def _numpy_topk(inputs: np.ndarray,
     indices = np.argsort(inputs * -1.0, axis=axis)
     indices = np.take(indices, np.arange(k), axis=axis)
     values = np.take_along_axis(inputs, indices, axis=axis)
+    return values, indices
+
+
+def _jnp_topk(inputs: 'jax.Array',
+              k: int,
+              axis: Optional[int] = None) -> Tuple:
+    """A implementation of jax.Array top-k.
+
+    This implementation returns the values and indices of the k largest
+    elements along a given axis.
+
+    Args:
+        inputs (jax.Array): The input jax Array.
+        k (int): The k in `top-k`.
+        axis (int, optional): The axis to sort along.
+
+    Returns:
+        tuple: The values and indices of the k largest elements.
+    """
+    if axis is None:
+        return jax.lax.top_k(inputs, k)
+
+    indices = jnp.argsort(inputs * -1.0, axis=axis)
+    indices = jnp.take(indices, jnp.arange(k), axis=axis)
+    values = jnp.take_along_axis(inputs, indices, axis=axis)
     return values, indices
 
 
@@ -412,6 +441,62 @@ class Accuracy(BaseMetric):
                     0, keepdim=False).cast('float64')
         return corrects_per_sample
 
+    @overload
+    @dispatch
+    def _compute_corrects(  # type: ignore
+            self, predictions: Union['jax.Array', Sequence['jax.Array']],
+            labels: Union['jax.Array', Sequence['jax.Array']]) -> 'jax.Array':
+        """Compute the correct number of per topk and threshold with JAX.
+
+        Args:
+            prediction (jax.Array | Sequence): Predictions from the model.
+                Same as ``self.add``.
+            labels (jax.Array | Sequence): The ground truth labels. Same as
+                ``self.add``.
+
+        Returns:
+            jax.Array: Correct number with the following 2 shapes.
+
+            - (N, ): If the ``predictions`` is a label array instead of score.
+              Only return a top-1 correct array, and ignore the argument
+              ``topk`` and ``thrs``.
+            - (N, num_topk, num_thr): If the ``prediction`` is a score array
+              (number of dimensions is 2). Return the correct number on each
+              ``topk`` and ``thrs``.
+        """
+        if not isinstance(predictions, jnp.ndarray):
+            predictions = jnp.stack(predictions)
+        if not isinstance(labels, jnp.ndarray):
+            labels = jnp.stack(labels)
+
+        if predictions.ndim == 1:
+            corrects = (predictions == labels)
+            return corrects.astype(jnp.int32)
+
+        pred_scores, pred_label = _jnp_topk(predictions, self.maxk, axis=1)
+        pred_label = pred_label.T
+        # broadcast `label` to the shape of `pred_label`
+        labels = jnp.broadcast_to(labels.reshape(1, -1), pred_label.shape)
+        # compute correct array
+        corrects = (pred_label == labels)
+
+        # compute the corrects corresponding to all topk and thrs per sample
+        corrects_per_sample = jnp.zeros(
+            (len(predictions), len(self.topk), len(self.thrs)))
+
+        for i, k in enumerate(self.topk):
+            for j, thr in enumerate(self.thrs):
+                # Only prediction socres larger than thr are counted as correct
+                if thr is not None:
+                    thr_corrects = corrects & (pred_scores.T > thr)
+                else:
+                    thr_corrects = corrects
+                corrects_per_sample = corrects_per_sample.at[:, i, j].set(
+                    thr_corrects[:k].sum(0,
+                                         keepdims=True).astype(jnp.int32)[0])
+
+        return corrects_per_sample
+
     @dispatch
     def _compute_corrects(
             self, predictions: Union[np.ndarray, Sequence[np.ndarray]],
@@ -468,8 +553,8 @@ class Accuracy(BaseMetric):
     def compute_metric(
         self, results: List[Union[Iterable,
                                   Union[np.number, 'torch.Tensor',
-                                        'flow.Tensor', 'tensorflow.Tensor',
-                                        'paddle.Tensor']]]
+                                        'tensorflow.Tensor', 'paddle.Tensor',
+                                        'jax.Array', 'flow.Tensor']]]
     ) -> Dict[str, float]:
         """Compute the accuracy metric.
 

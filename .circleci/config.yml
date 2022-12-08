@@ -53,6 +53,10 @@ jobs:
           command: |
             pip install tensorflow==<< parameters.tensorflow >>
       - run:
+          name: Install JAX via pip
+          command: |
+            pip install "jax[cpu]"
+      - run:
           name: Install OneFlow via pip
           command: |
             pip install -f https://release.oneflow.info oneflow==0.8.0+cpu
