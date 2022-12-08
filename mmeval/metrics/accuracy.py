@@ -554,7 +554,7 @@ class Accuracy(BaseMetric):
         self, results: List[Union[Iterable,
                                   Union[np.number, 'torch.Tensor',
                                         'tensorflow.Tensor', 'paddle.Tensor',
-                                        'jax.Array','flow.Tensor']]]
+                                        'jax.Array', 'flow.Tensor']]]
     ) -> Dict[str, float]:
         """Compute the accuracy metric.
 
