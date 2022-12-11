@@ -32,6 +32,59 @@ def filter_by_bboxes_area_rotated(bboxes: np.ndarray,
 
 
 class DOTAMeanAP(VOCMeanAP):
+    """DOTA evaluation metric.
+    This metric computes the DOTA mAP (mean Average Precision) with the given
+    IoU thresholds and scale ranges.
+    Args:
+        iou_thrs (float ｜ List[float]): IoU thresholds. Defaults to 0.5.
+        scale_ranges (List[tuple], optional): Scale ranges for evaluating
+            mAP. If not specified, all bounding boxes would be included in
+            evaluation. Defaults to None.
+        num_classes (int, optional): The number of classes. If None, it will be
+            obtained from the 'CLASSES' field in ``self.dataset_meta``.
+            Defaults to None.
+        eval_mode (str): 'area' or '11points', 'area' means calculating the
+            area under precision-recall curve, '11points' means calculating
+            the average precision of recalls at [0, 0.1, ..., 1].
+            The PASCAL VOC2007 defaults to use '11points', while PASCAL
+            VOC2012 defaults to use 'area'.
+            Defaults to '11points'.
+        nproc (int): Processes used for computing TP and FP. If nproc
+            is less than or equal to 1, multiprocessing will not be used.
+            Defaults to 4.
+        drop_class_ap (bool): Whether to drop the class without ground truth
+            when calculating the average precision for each class.
+        classwise (bool): Whether to return the computed results of each
+            class. Defaults to False.
+        **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+    Examples:
+        >>> import numpy as np
+        >>> from mmeval import DOTAMetric
+        >>> num_classes = 15
+        >>> dota_metric = DOTAMetric(num_classes=15)
+        >>>
+        >>> def _gen_bboxes(num_bboxes, img_w=256, img_h=256):
+        ...     # random generate bounding boxes in 'xywha' formart.
+        ...     x = np.random.rand(num_bboxes, ) * img_w
+        ...     y = np.random.rand(num_bboxes, ) * img_h
+        ...     w = np.random.rand(num_bboxes, ) * (img_w - x)
+        ...     h = np.random.rand(num_bboxes, ) * (img_h - y)
+        ...     a = np.random.rand(num_bboxes, ) * np.pi / 2
+        ...     return np.stack([x, y, w, h, a], axis=1)
+        >>> prediction = {
+        ...     'bboxes': _gen_bboxes(10),
+        ...     'scores': np.random.rand(10, ),
+        ...     'labels': np.random.randint(0, num_classes, size=(10, ))
+        ... }
+        >>> groundtruth = {
+        ...     'bboxes': _gen_bboxes(10),
+        ...     'labels': np.random.randint(0, num_classes, size=(10, )),
+        ...     'bboxes_ignore': _gen_bboxes(5),
+        ...     'labels_ignore': np.random.randint(0, num_classes, size=(5, ))
+        ... }
+        >>> dota_metric(predictions=[prediction, ], groundtruths=[groundtruth, ])  # doctest: +ELLIPSIS  # noqa: E501
+        {'mAP@0.5': ..., 'mAP': ...}
+    """
 
     def __init__(self, eval_mode: str = '11points', **kwargs) -> None:
         super().__init__(eval_mode=eval_mode, **kwargs)
