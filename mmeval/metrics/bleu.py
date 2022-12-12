@@ -48,10 +48,8 @@ def _get_brevity_penalty(pred_len: np.array,
     Returns:
         np.array: penalty factor.
     """
-    if pred_len >= references_len:
+    if pred_len > references_len:
         return np.array(1.)
-    elif pred_len == np.array(0.) or references_len == np.array(0.):
-        return np.array(0.)
     return np.array(np.exp(1 - references_len / pred_len))
 
 
@@ -117,7 +115,6 @@ class Bleu(BaseMetric):
         references_token: Sequence[Sequence[Sequence[str]]] = [[
             tokenizer_fn(line) if line is not None else [] for line in r
         ] for r in references]
-        print(predictions)
         predictions_token: Sequence[Sequence[str]] = [
             tokenizer_fn(line) if line else [] for line in predictions
         ]
