@@ -120,6 +120,7 @@ class Bleu(BaseMetric):
         ]
         for prediction, references in zip(predictions_token, references_token):
             pred_len = len(prediction)
+            # Find the reference that is closest in length to the prediction
             references_len = len(
                 min(references, key=lambda x: abs(len(x) - pred_len)))
 
