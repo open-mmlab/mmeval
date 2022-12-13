@@ -11,7 +11,7 @@ def get_n_gram(token: Sequence[str], n_gram: int) -> Counter:
 
     Args:
         token (Sequence[str]): A series of tokens about sentences.
-        n_gram (int):The maximum number of words contained in a phrase
+        n_gram (int): The maximum number of words contained in a phrase
                when calculating word fragments. Defaults to 4.
 
     Returns:
@@ -32,7 +32,7 @@ def tokenizer_fn(sentence: str) -> Sequence[str]:
         sentence(str): A sentence.
 
     Returns:
-        Sequence[str]:A Sequence of tokens after word segmentation.
+        Sequence[str]: A Sequence of tokens after word segmentation.
     """
     return sentence.split()
 
@@ -71,16 +71,16 @@ class Bleu(BaseMetric):
 
     Examples:
 
-        >>> predictions = ['the cat is on the mat','There is a big tree near the park here']  # noqa: E501
-        >>> references = [['a cat is on the mat'],['A big tree is growing near the park here']]  # noqa: E501
+        >>> predictions = ['the cat is on the mat', 'There is a big tree near the park here']  # noqa: E501
+        >>> references = [['a cat is on the mat'], ['A big tree is growing near the park here']]  # noqa: E501
         >>> bleu = Bleu()
         >>> bleu_results = bleu(predictions, references)
         {'bleu': ...}
 
     Calculate Bleu with smooth:
 
-        >>> predictions = ['the cat is on the mat','There is a big tree near the park here']  # noqa: E501
-        >>> references = [['a cat is on the mat'],['A big tree is growing near the park here']]  # noqa: E501
+        >>> predictions = ['the cat is on the mat', 'There is a big tree near the park here']  # noqa: E501
+        >>> references = [['a cat is on the mat'], ['A big tree is growing near the park here']]  # noqa: E501
         >>> bleu = Bleu(smooth = True)
         >>> bleu_results = bleu(predictions, references)
         {'bleu': ...}
@@ -118,24 +118,16 @@ class Bleu(BaseMetric):
         predictions_token: Sequence[Sequence[str]] = [
             tokenizer_fn(line) if line else [] for line in predictions
         ]
-        pred_len = 0
-        references_len = 0
         for prediction, references in zip(predictions_token, references_token):
             pred_len = len(prediction)
-            references_len_list = [len(reference) for reference in references]
-            references_len_diff = [
-                abs(len(prediction) - length) for length in references_len_list
-            ]
-            # In the multi sentence reference, the one whose length is closest
-            # to the predicted sentence is selected to record the length.
-            min_index = references_len_diff.index(min(references_len_diff))
-            references_len = references_len_list[min_index]
+            references_len = len(min(references, key=lambda x: abs(len(x) - pred_len)))
 
             pred_counter: Counter = get_n_gram(prediction, self.n_gram)
             reference_counter: Counter = Counter()
             for reference in references:
                 # Take intersection for the n_gram of references.
                 reference_counter |= get_n_gram(reference, self.n_gram)
+
             # Union the n_gram of prediction and references.
             counter_clip = pred_counter & reference_counter
             precision_matches = np.zeros(self.n_gram)
@@ -144,6 +136,7 @@ class Bleu(BaseMetric):
                 precision_matches[len(counter) - 1] += counter_clip[counter]
             for counter in pred_counter:
                 precision_total[len(counter) - 1] += pred_counter[counter]
+
             result = (pred_len, references_len, precision_matches,
                       precision_total)
             self._results.append(result)
@@ -178,6 +171,7 @@ class Bleu(BaseMetric):
 
         if min(precision_matches) == 0.0:
             return {'bleu': np.array(0.0)}
+
         if self.smooth:
             precision_score = np.add(precision_matches, np.ones(
                 self.n_gram)) / np.add(precision_total, np.ones(self.n_gram))
