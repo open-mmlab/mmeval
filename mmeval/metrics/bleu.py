@@ -120,7 +120,8 @@ class Bleu(BaseMetric):
         ]
         for prediction, references in zip(predictions_token, references_token):
             pred_len = len(prediction)
-            references_len = len(min(references, key=lambda x: abs(len(x) - pred_len)))
+            references_len = len(
+                min(references, key=lambda x: abs(len(x) - pred_len)))
 
             pred_counter: Counter = get_n_gram(prediction, self.n_gram)
             reference_counter: Counter = Counter()
