@@ -171,7 +171,7 @@ class Bleu(BaseMetric):
             precision_total += result[3]
 
         if min(precision_matches) == 0.0:
-            return {'bleu': np.array(0.0)}
+            return {'bleu': 0.0}
 
         if self.smooth:
             precision_score = np.add(precision_matches, np.ones(
