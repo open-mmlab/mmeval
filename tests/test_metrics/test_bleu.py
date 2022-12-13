@@ -24,12 +24,12 @@ def test_bleu():
         bleu.add([predictions[i]], [references[i]])
     bleu_results = bleu.compute()
     assert isinstance(bleu_results, dict)
-    np.testing.assert_almost_equal(bleu_results['bleu'], 0.400674)
+    np.testing.assert_almost_equal(bleu_results['bleu'], 0.4006741601366701)
 
     bleu = Bleu(smooth=True)
     bleu_results = bleu(predictions, references)
     assert isinstance(bleu_results, dict)
-    np.testing.assert_almost_equal(bleu_results['bleu'], 0.425048)
+    np.testing.assert_almost_equal(bleu_results['bleu'], 0.42504770796962527)
 
 
 @pytest.mark.parametrize('n_gram', [1, 2, 3, 4])

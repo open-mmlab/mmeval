@@ -56,34 +56,34 @@ def _get_brevity_penalty(pred_len: np.array,
 class Bleu(BaseMetric):
     """Bilingual Evaluation Understudy metric.
 
-       This metric is a tool for evaluating the quality of machine translation.
-       The closer the translation is to human translation,
-       the higher the score will be.
+    This metric is a tool for evaluating the quality of machine translation.
+    The closer the translation is to human translation,
+    the higher the score will be.
 
-       Args:
-           n_gram (int):The maximum number of words contained in a phrase
-               when calculating word fragments. Defaults to 4.
-           smooth(bool): Whether or not to apply smoothing. Default to False.
-           ngram_weights(optional | Sequence[float]): Weights used
-               for unigrams, bigrams, etc. to calculate BLEU score.
-               If not provided, uniform weights are used.Default to None.
-           **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+    Args:
+        n_gram (int): The maximum number of words contained in a phrase
+            when calculating word fragments. Defaults to 4.
+        smooth(bool): Whether or not to apply smoothing. Default to False.
+        ngram_weights(Sequence[float], optional): Weights used
+            for unigrams, bigrams, etc. to calculate BLEU score.
+            If not provided, uniform weights are used. Default to None.
+        **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
-       Examples:
+    Examples:
 
-            >>> predictions = ['the cat is on the mat','There is a big tree near the park here'] # type: ignore  # noqa: E501
-            >>> references = [['a cat is on the mat'],['A big tree is growing near the park here']] # type: ignore # noqa: E501
-            >>> bleu = Bleu()
-            >>> bleu_results = bleu(predictions, references)
-            {'bleu': ...}
+        >>> predictions = ['the cat is on the mat','There is a big tree near the park here']  # noqa: E501
+        >>> references = [['a cat is on the mat'],['A big tree is growing near the park here']]  # noqa: E501
+        >>> bleu = Bleu()
+        >>> bleu_results = bleu(predictions, references)
+        {'bleu': ...}
 
-        Calculate Bleu with smooth:
+    Calculate Bleu with smooth:
 
-            >>> predictions = ['the cat is on the mat','There is a big tree near the park here'] # type: ignore # noqa: E501
-            >>> references = [['a cat is on the mat'],['A big tree is growing near the park here']] # type: ignore # noqa: E501
-            >>> bleu = Bleu(smooth = True)
-            >>> bleu_results = bleu(predictions, references)
-            {'bleu': ...}
+        >>> predictions = ['the cat is on the mat','There is a big tree near the park here']  # noqa: E501
+        >>> references = [['a cat is on the mat'],['A big tree is growing near the park here']]  # noqa: E501
+        >>> bleu = Bleu(smooth = True)
+        >>> bleu_results = bleu(predictions, references)
+        {'bleu': ...}
     """
 
     def __init__(self,
@@ -98,9 +98,9 @@ class Bleu(BaseMetric):
             raise ValueError(
                 f'List of weights has different weights than `n_gram`: '
                 f'{len(ngram_weights)} != {n_gram}')
-        self.ngram_weights = ngram_weights if ngram_weights is not None else [
-            1.0 / n_gram
-        ] * n_gram
+        if ngram_weights is None:
+            ngram_weights = [1.0 / n_gram] * n_gram
+        self.ngram_weights = ngram_weights
 
     def add(self, predictions: Sequence[str], references: Sequence[Sequence[str]]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
@@ -120,10 +120,8 @@ class Bleu(BaseMetric):
         ]
         pred_len = 0
         references_len = 0
-        precision_matches = np.zeros(self.n_gram)
-        precision_total = np.zeros(self.n_gram)
         for prediction, references in zip(predictions_token, references_token):
-            pred_len += len(prediction)
+            pred_len = len(prediction)
             references_len_list = [len(reference) for reference in references]
             references_len_diff = [
                 abs(len(prediction) - length) for length in references_len_list
@@ -131,7 +129,7 @@ class Bleu(BaseMetric):
             # In the multi sentence reference, the one whose length is closest
             # to the predicted sentence is selected to record the length.
             min_index = references_len_diff.index(min(references_len_diff))
-            references_len += references_len_list[min_index]
+            references_len = references_len_list[min_index]
 
             pred_counter: Counter = get_n_gram(prediction, self.n_gram)
             reference_counter: Counter = Counter()
@@ -140,13 +138,15 @@ class Bleu(BaseMetric):
                 reference_counter |= get_n_gram(reference, self.n_gram)
             # Union the n_gram of prediction and references.
             counter_clip = pred_counter & reference_counter
-
+            precision_matches = np.zeros(self.n_gram)
+            precision_total = np.zeros(self.n_gram)
             for counter in counter_clip:
                 precision_matches[len(counter) - 1] += counter_clip[counter]
             for counter in pred_counter:
                 precision_total[len(counter) - 1] += pred_counter[counter]
-        result = (pred_len, references_len, precision_matches, precision_total)
-        self._results.append(result)
+            result = (pred_len, references_len, precision_matches,
+                      precision_total)
+            self._results.append(result)
 
     def compute_metric(
             self, results: List[Tuple[int, int, np.ndarray,
@@ -189,5 +189,5 @@ class Bleu(BaseMetric):
             self.ngram_weights) * np.log(precision_score)
         brevity_penalty = _get_brevity_penalty(pred_len, references_len)
         bleu = brevity_penalty * np.exp(np.sum(precision_score))
-        result = {'bleu': round(float(bleu), 6)}
+        result = {'bleu': float(bleu)}
         return result
