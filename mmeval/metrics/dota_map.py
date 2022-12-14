@@ -1,11 +1,19 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import logging
 import numpy as np
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from mmeval.metrics.voc_map import VOCMeanAP
-from .utils.bbox_iou_rotated import (bbox_iou_rotated,
-                                     calculate_bboxes_area_rotated)
+from .utils.bbox_iou_rotated import calculate_bboxes_area_rotated
+
+logger = logging.getLogger(__name__)
+try:
+    # we prefer to use bbox_iou_rotated in mmcv
+    from mmcv.ops import box_iou_rotated as bbox_iou_rotated
+except Exception as e:  # noqa F841
+    logger.info('mmcv is not installed, using bbox_iou_rotated with OpenCV.')
+    from .utils.bbox_iou_rotated import bbox_iou_rotated
 
 
 def filter_by_bboxes_area_rotated(bboxes: np.ndarray,
