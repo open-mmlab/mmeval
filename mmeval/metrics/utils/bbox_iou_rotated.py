@@ -9,6 +9,7 @@ def le90_to_oc(bboxes: np.ndarray):
     Args:
         bboxes (np.ndarray): The shape of bboxes should be [N,5],
         the format is [x,y,w,h,angle]
+
     Returns:
         np.ndarray: An numpy.ndarray with the same shape of input.
     """
@@ -34,6 +35,7 @@ def calculate_bboxes_area_rotated(bboxes: np.ndarray) -> np.ndarray:
     Args:
         bboxes (np.ndarray): The bboxes with shape (n, 5) or (5, )
         in 'xywha'format.
+
     Returns:
         np.ndarray: The area of bboxes.
     """
@@ -53,6 +55,7 @@ def bbox_iou_rotated(bboxes1: np.ndarray,
         bboxes2 (np.ndarray): The bboxes with shape (k, 5) in 'xywha' format.
         clockwise (bool, optional): flag indicating whether the positive
         angular orientation is clockwise. Defaults to True.
+
     Returns:
         np.ndarray: IoUs with shape (n, k).
     """

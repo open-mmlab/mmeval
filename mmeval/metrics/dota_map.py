@@ -19,6 +19,7 @@ def filter_by_bboxes_area_rotated(bboxes: np.ndarray,
             the minimum area.
         max_area (Optional[float]): The maximum area. If None, does not filter
             the maximum area.
+
     Returns:
         numpy.ndarray: A mask of ``bboxes`` identify which bbox are filtered.
     """
