@@ -33,8 +33,12 @@ def filter_by_bboxes_area_rotated(bboxes: np.ndarray,
 
 class DOTAMeanAP(VOCMeanAP):
     """DOTA evaluation metric.
-    This metric computes the DOTA mAP (mean Average Precision) with the given
-    IoU thresholds and scale ranges.
+
+    DOTA is a large-scale dataset for object detection in aerial images which
+    is introduced in https://arxiv.org/abs/1711.10398. This metric computes
+    the DOTA mAP (mean Average Precision) with the given IoU thresholds and
+    scale ranges.
+
     Args:
         iou_thrs (float ｜ List[float]): IoU thresholds. Defaults to 0.5.
         scale_ranges (List[tuple], optional): Scale ranges for evaluating
@@ -57,6 +61,7 @@ class DOTAMeanAP(VOCMeanAP):
         classwise (bool): Whether to return the computed results of each
             class. Defaults to False.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
     Examples:
         >>> import numpy as np
         >>> from mmeval import DOTAMetric
@@ -90,8 +95,8 @@ class DOTAMeanAP(VOCMeanAP):
         super().__init__(eval_mode=eval_mode, **kwargs)
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
-
         """Add the intermediate results to ``self._results``.
+
         Args:
             predictions (Sequence[Dict]):  A sequence of dict. Each dict
                 representing a detection result for an image, with the
@@ -131,6 +136,7 @@ class DOTAMeanAP(VOCMeanAP):
         area_ranges: List[Tuple[Optional[float], Optional[float]]],
     ) -> Tuple[np.ndarray, np.ndarray]:
         """Calculate the true positive and false positive on an image.
+
         Args:
             pred_bboxes (numpy.ndarray): Predicted bboxes of this image, with
                 shape (N, 6). The scores The predicted score of the bbox is
@@ -141,12 +147,14 @@ class DOTAMeanAP(VOCMeanAP):
                 this image, with shape (K, 5).
             iou_thrs (List[float]): The IoU thresholds.
             area_ranges (List[Tuple]): The area ranges.
+
         Returns:
             tuple (tp, fp):
             - tp (numpy.ndarray): Shape (num_ious, num_scales, N),
               the true positive flag of each predicted bbox on this image.
             - fp (numpy.ndarray): Shape (num_ious, num_scales, N),
               the false positive flag of each predicted bbox on this image.
+
         Note:
             This method should be a staticmethod to avoid resource competition
             during multiple processes.
@@ -220,6 +228,7 @@ class DOTAMeanAP(VOCMeanAP):
                              groundtruths: List[dict], class_index: int,
                              pool: Optional[Pool]) -> Tuple:
         """Calculate the tp and fp of the given class index.
+
         Args:
             predictions (List[dict]): A list of dict. Each dict is the
                 detection result of an image.
@@ -228,6 +237,7 @@ class DOTAMeanAP(VOCMeanAP):
             class_index (int): The class index.
             pool (Optional[Pool]): A instance of :class:`multiprocessing.Pool`.
                 If None, do not use multiprocessing.
+
         Returns:
             tuple (tp, fp, num_gts):
             - tp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),

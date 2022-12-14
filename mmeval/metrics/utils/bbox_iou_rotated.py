@@ -4,7 +4,7 @@ import numpy as np
 
 
 def le90_to_oc(bboxes: np.ndarray):
-    """convert bboxes with le90 version to opencv version.
+    """convert bboxes with le90 angle version to OpenCV angle version.
 
     Args:
         bboxes (np.ndarray): The shape of bboxes should be [N,5],
