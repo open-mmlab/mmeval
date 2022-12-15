@@ -45,9 +45,9 @@ def calculate_bboxes_area_rotated(bboxes: np.ndarray) -> np.ndarray:
     return areas
 
 
-def bbox_iou_rotated(bboxes1: np.ndarray,
-                     bboxes2: np.ndarray,
-                     clockwise: bool = True) -> np.ndarray:
+def calculate_overlaps_rotated(bboxes1: np.ndarray,
+                               bboxes2: np.ndarray,
+                               clockwise: bool = True) -> np.ndarray:
     """Calculate the overlap between each rotated bbox of bboxes1 and bboxes2.
 
     Args:

@@ -5,15 +5,16 @@ from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from mmeval.metrics.voc_map import VOCMeanAP
-from .utils.bbox_iou_rotated import calculate_bboxes_area_rotated
+from .utils.bbox_overlaps_rotated import calculate_bboxes_area_rotated
 
 logger = logging.getLogger(__name__)
 try:
     # we prefer to use bbox_iou_rotated in mmcv
-    from mmcv.ops import box_iou_rotated as bbox_iou_rotated
+    from mmcv.ops import box_iou_rotated as calculate_overlaps_rotated
 except Exception as e:  # noqa F841
-    logger.info('mmcv is not installed, using bbox_iou_rotated with OpenCV.')
-    from .utils.bbox_iou_rotated import bbox_iou_rotated
+    logger.info(
+        'mmcv is not installed, using iou calculating method with OpenCV.')
+    from .utils.bbox_overlaps_rotated import calculate_overlaps_rotated
 
 
 def filter_by_bboxes_area_rotated(bboxes: np.ndarray,
@@ -191,7 +192,7 @@ class DOTAMeanAP(VOCMeanAP):
 
         # Step 4. Calculate the IoUs between the predicted bboxes and the
         # ground truth bboxes.
-        ious = bbox_iou_rotated(pred_bboxes[:, :5], all_gt_bboxes)
+        ious = calculate_overlaps_rotated(pred_bboxes[:, :5], all_gt_bboxes)
         # For each pred bbox, the max iou with all gts.
         ious_max = ious.max(axis=1)
         # For each pred bbox, which gt overlaps most with it.
