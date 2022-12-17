@@ -2,7 +2,6 @@
 
 # yapf: disable
 
-import jax
 import numpy as np
 import pytest
 from distutils.version import LooseVersion
@@ -12,6 +11,7 @@ from mmeval.metrics import MeanIoU
 from mmeval.utils import try_import
 
 torch = try_import('torch')
+jax = try_import('jax')
 jnp = try_import('jax.numpy')
 paddle = try_import('paddle')
 tf = try_import('tensorflow')
