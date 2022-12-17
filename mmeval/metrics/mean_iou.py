@@ -33,10 +33,10 @@ class MeanIoU(BaseMetric):
     In addition to mean iou, it will also compute and return accuracy, mean
     accuracy, mean dice, mean precision, mean recall and mean f-score.
 
-    This metric supports 5 kinds of inputs, i.e. ``numpy.ndarray``,
-    ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor`` and
-    ``paddle.Tensor``, and the implementation for the calculation depends
-    on the inputs type.
+    This metric supports 6 kinds of inputs, i.e. ``numpy.ndarray``,
+    ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor``,
+    ``paddle.Tensor``and``jax.DeviceArray``, and the implementation for
+    the calculation dependson the inputs type.
 
     Args:
         num_classes (int, optional): The number of classes. If None, it will be
