@@ -2,10 +2,10 @@
 
 # yapf: disable
 
+import jax
 import numpy as np
 import pytest
 from distutils.version import LooseVersion
-from jax import random
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.metrics import MeanIoU
@@ -47,8 +47,8 @@ def test_metric_interface_jnp():
     assert isinstance(miou, BaseMetric)
 
     results = miou(
-        random.randint(random.PRNGKey(0), (2, 10, 10), 0, 4),
-        random.randint(random.PRNGKey(0), (2, 10, 10), 0, 4)
+        jax.random.randint(jax.random.PRNGKey(0), (2, 10, 10), 0, 4),
+        jax.random.randint(jax.random.PRNGKey(0), (2, 10, 10), 0, 4)
     )
     assert isinstance(results, dict)
 
