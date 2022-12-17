@@ -235,8 +235,7 @@ class MeanIoU(BaseMetric):
             num_classes * label + prediction, minlength=num_classes**2)
         confusion_matrix = confusion_matrix_1d.reshape(num_classes,
                                                        num_classes)
-        confusion_matrix = np.asarray(confusion_matrix)
-        return confusion_matrix
+        return np.asarray(confusion_matrix)
 
     @overload  # type: ignore
     @dispatch
