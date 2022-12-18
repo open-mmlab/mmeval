@@ -36,7 +36,7 @@ class MeanIoU(BaseMetric):
     This metric supports 6 kinds of inputs, i.e. ``numpy.ndarray``,
     ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor``,
     ``paddle.Tensor``and``jax.Array``, and the implementation for
-    the calculation dependson the inputs type.
+    the calculation depends on the inputs type.
 
     Args:
         num_classes (int, optional): The number of classes. If None, it will be
