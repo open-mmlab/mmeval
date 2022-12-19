@@ -135,7 +135,7 @@ jobs:
             python -V
             pip install torch==1.7.1+cu110 -f https://download.pytorch.org/whl/torch_stable.html
             pip install paddlepaddle-gpu==2.3.2.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
-            pip install --pre oneflow -f https://staging.oneflow.info/branch/master/cu112
+            pip install --pre oneflow -f https://staging.oneflow.info/branch/master/cu112 "numpy<1.24.0"
       - run:
           name: Install mmeval and dependencies
           command: |
