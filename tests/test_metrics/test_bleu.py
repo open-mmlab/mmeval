@@ -7,9 +7,9 @@ from mmeval.metrics import BLEU
 from mmeval.metrics.bleu import get_n_gram
 
 
-def test_get_n_gram():
+@pytest.mark.parametrize('n_gram', [1, 2, 3, 4])
+def test_get_n_gram(n_gram):
     token = ['a', 'cat', 'is', 'on', 'the', 'mat']
-    n_gram = 4
     result = get_n_gram(token, n_gram)
     assert isinstance(result, Counter)
 
