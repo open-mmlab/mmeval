@@ -59,7 +59,7 @@ jobs:
       - run:
           name: Install OneFlow via pip
           command: |
-            pip install -f https://release.oneflow.info oneflow==0.8.0+cpu
+            pip install -f https://release.oneflow.info oneflow==0.8.0+cpu "numpy<1.24.0"
       - run:
           name: Install mmeval and dependencies
           command: |
