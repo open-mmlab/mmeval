@@ -2,7 +2,7 @@
 import numpy as np
 import pytest
 
-from mmeval.metrics import Bleu
+from mmeval.metrics import BLEU
 
 
 def test_bleu():
@@ -19,14 +19,14 @@ def test_bleu():
                   ['I went to work too late today for the rainy'],
                   ['I am Barry']]
 
-    bleu = Bleu()
+    bleu = BLEU()
     for i in range(len(predictions)):
         bleu.add([predictions[i]], [references[i]])
     bleu_results = bleu.compute()
     assert isinstance(bleu_results, dict)
     np.testing.assert_almost_equal(bleu_results['bleu'], 0.4006741601366701)
 
-    bleu = Bleu(smooth=True)
+    bleu = BLEU(smooth=True)
     bleu_results = bleu(predictions, references)
     assert isinstance(bleu_results, dict)
     np.testing.assert_almost_equal(bleu_results['bleu'], 0.42504770796962527)
@@ -47,6 +47,6 @@ def test_bleu_ngram(n_gram):
                   ['I went to work too late today for the rainy'],
                   ['I am Barry']]
 
-    bleu = Bleu(n_gram=n_gram)
+    bleu = BLEU(n_gram=n_gram)
     bleu_results = bleu(predictions, references)
     assert isinstance(bleu_results, dict)

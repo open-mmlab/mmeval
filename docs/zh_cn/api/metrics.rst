@@ -41,4 +41,4 @@ Metrics
    PSNR
    MAE
    MSE
-   Bleu
+   BLEU

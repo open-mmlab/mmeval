@@ -12,7 +12,7 @@ def get_n_gram(token: Sequence[str], n_gram: int) -> Counter:
     Args:
         token (Sequence[str]): A series of tokens about sentences.
         n_gram (int): The maximum number of words contained in a phrase
-               when calculating word fragments. Defaults to 4.
+            when calculating word fragments. Defaults to 4.
 
     Returns:
         Counter: The n_gram contained in sentences with Counter format.
@@ -25,14 +25,14 @@ def get_n_gram(token: Sequence[str], n_gram: int) -> Counter:
     return counter
 
 
-def tokenizer_fn(sentence: str) -> Sequence[str]:
+def tokenizer_fn(sentence: str) -> List[str]:
     """This function is used to segment a sentence.
 
     Args:
-        sentence(str): A sentence.
+        sentence (str): A sentence.
 
     Returns:
-        Sequence[str]: A Sequence of tokens after word segmentation.
+        List[str]: A list of tokens after word segmentation.
     """
     return sentence.split()
 
@@ -42,8 +42,8 @@ def _get_brevity_penalty(pred_len: np.array,
     """This function is used to calculate penalty factor.
 
     Args:
-        pred_len(np.array): number of grams in the predicted sentence.
-        references_len(np.array): number of grams in the references.
+        pred_len (np.array): number of grams in the predicted sentence.
+        references_len (np.array): number of grams in the references.
 
     Returns:
         np.array: penalty factor.
@@ -53,35 +53,36 @@ def _get_brevity_penalty(pred_len: np.array,
     return np.array(np.exp(1 - references_len / pred_len))
 
 
-class Bleu(BaseMetric):
+class BLEU(BaseMetric):
     """Bilingual Evaluation Understudy metric.
 
-    This metric is a tool for evaluating the quality of machine translation.
+    This metric proposed in `BLEU: a Method for Automatic Evaluation of Machine Translation
+    <https://aclanthology.org/P02-1040.pdf>`_ is a tool for evaluating the quality of machine translation.
     The closer the translation is to human translation,
     the higher the score will be.
 
     Args:
         n_gram (int): The maximum number of words contained in a phrase
             when calculating word fragments. Defaults to 4.
-        smooth(bool): Whether or not to apply smoothing. Default to False.
+        smooth (bool): Whether or not to apply to smooth. Defaults to False.
         ngram_weights(Sequence[float], optional): Weights used
             for unigrams, bigrams, etc. to calculate BLEU score.
-            If not provided, uniform weights are used. Default to None.
+            If not provided, uniform weights are used. Defaults to None.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
-
+        >>> from mmeval import BLEU
         >>> predictions = ['the cat is on the mat', 'There is a big tree near the park here']  # noqa: E501
         >>> references = [['a cat is on the mat'], ['A big tree is growing near the park here']]  # noqa: E501
-        >>> bleu = Bleu()
+        >>> bleu = BLEU()
         >>> bleu_results = bleu(predictions, references)
         {'bleu': ...}
 
-    Calculate Bleu with smooth:
-
+    Calculate BLEU with smooth:
+        >>> from mmeval import BLEU
         >>> predictions = ['the cat is on the mat', 'There is a big tree near the park here']  # noqa: E501
         >>> references = [['a cat is on the mat'], ['A big tree is growing near the park here']]  # noqa: E501
-        >>> bleu = Bleu(smooth = True)
+        >>> bleu = BLEU(smooth = True)
         >>> bleu_results = bleu(predictions, references)
         {'bleu': ...}
     """
@@ -96,7 +97,7 @@ class Bleu(BaseMetric):
         self.smooth = smooth
         if ngram_weights is not None and len(ngram_weights) != n_gram:
             raise ValueError(
-                f'List of weights has different weights than `n_gram`: '
+                'The length of ngram_weights is not equal to `n_gram`: '
                 f'{len(ngram_weights)} != {n_gram}')
         if ngram_weights is None:
             ngram_weights = [1.0 / n_gram] * n_gram
