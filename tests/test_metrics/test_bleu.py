@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import pytest
+
 from mmeval.metrics import BLEU
 
 
