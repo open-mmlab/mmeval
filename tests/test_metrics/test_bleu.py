@@ -1,8 +1,17 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import pytest
+from collections import Counter
 
 from mmeval.metrics import BLEU
+from mmeval.metrics.bleu import get_n_gram
+
+
+def test_get_n_gram():
+    token = ['a', 'cat', 'is', 'on', 'the', 'mat']
+    n_gram = 4
+    result = get_n_gram(token, n_gram)
+    assert isinstance(result, Counter)
 
 
 def test_bleu():

@@ -1,4 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+# This class is modified from `torchmetrics
+# <https://github.com/Lightning-AI/metrics/blob/master/src/torchmetrics/text/bleu.py>`_.
 import numpy as np
 from collections import Counter
 from typing import List, Optional, Sequence, Tuple
@@ -78,7 +80,7 @@ class BLEU(BaseMetric):
         >>> bleu_results = bleu(predictions, references)
         {'bleu': 0.5226045319355426}
 
-        >>> #Calculate BLEU with smooth:
+        >>> # Calculate BLEU with smooth:
         >>> from mmeval import BLEU
         >>> predictions = ['the cat is on the mat', 'There is a big tree near the park here']  # noqa: E501
         >>> references = [['a cat is on the mat'], ['A big tree is growing near the park here']]  # noqa: E501
@@ -113,11 +115,11 @@ class BLEU(BaseMetric):
                 iterables of reference corpus.
         """
 
-        references_token: Sequence[Sequence[Sequence[str]]] = [[
-            tokenizer_fn(line) if line is not None else [] for line in r
-        ] for r in references]
+        references_token: Sequence[Sequence[Sequence[str]]] = [
+            [tokenizer_fn(line) for line in r] for r in references
+        ]
         predictions_token: Sequence[Sequence[str]] = [
-            tokenizer_fn(line) if line else [] for line in predictions
+            tokenizer_fn(line) for line in predictions
         ]
         for prediction, references in zip(predictions_token, references_token):
             pred_len = len(prediction)
@@ -128,10 +130,10 @@ class BLEU(BaseMetric):
             pred_counter: Counter = get_n_gram(prediction, self.n_gram)
             reference_counter: Counter = Counter()
             for reference in references:
-                # Take intersection for the n_gram of references.
+                # Take union for the n_gram of references.
                 reference_counter |= get_n_gram(reference, self.n_gram)
 
-            # Union the n_gram of prediction and references.
+            # Take the intersection of n_gram of prediction and references.
             counter_clip = pred_counter & reference_counter
             precision_matches = np.zeros(self.n_gram)
             precision_total = np.zeros(self.n_gram)
