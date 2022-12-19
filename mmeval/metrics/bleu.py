@@ -76,15 +76,15 @@ class BLEU(BaseMetric):
         >>> references = [['a cat is on the mat'], ['A big tree is growing near the park here']]  # noqa: E501
         >>> bleu = BLEU()
         >>> bleu_results = bleu(predictions, references)
-        {'bleu': ...}
+        {'bleu': 0.5226045319355426}
 
-    Calculate BLEU with smooth:
+        >>> #Calculate BLEU with smooth:
         >>> from mmeval import BLEU
         >>> predictions = ['the cat is on the mat', 'There is a big tree near the park here']  # noqa: E501
         >>> references = [['a cat is on the mat'], ['A big tree is growing near the park here']]  # noqa: E501
         >>> bleu = BLEU(smooth = True)
         >>> bleu_results = bleu(predictions, references)
-        {'bleu': ...}
+        {'bleu': 0.566315716093867}
     """
 
     def __init__(self,
