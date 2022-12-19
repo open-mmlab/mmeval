@@ -8,6 +8,8 @@ from mmeval.core.dispatcher import dispatch
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
+    import jax
+    import jax.numpy as jnp
     import oneflow
     import oneflow as flow
     import paddle
@@ -15,6 +17,8 @@ if TYPE_CHECKING:
     import tensorflow as tf
     import torch
 else:
+    jax = try_import('jax')
+    jnp = try_import('jax.numpy')
     paddle = try_import('paddle')
     torch = try_import('torch')
     tf = try_import('tensorflow')
@@ -29,10 +33,10 @@ class MeanIoU(BaseMetric):
     In addition to mean iou, it will also compute and return accuracy, mean
     accuracy, mean dice, mean precision, mean recall and mean f-score.
 
-    This metric supports 5 kinds of inputs, i.e. ``numpy.ndarray``,
-    ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor`` and
-    ``paddle.Tensor``, and the implementation for the calculation depends
-    on the inputs type.
+    This metric supports 6 kinds of inputs, i.e. ``numpy.ndarray``,
+    ``torch.Tensor``, ``oneflow.Tensor``, ``tensorflow.Tensor``,
+    ``paddle.Tensor``and``jax.Array``, and the implementation for
+    the calculation depends on the inputs type.
 
     Args:
         num_classes (int, optional): The number of classes. If None, it will be
@@ -209,6 +213,29 @@ class MeanIoU(BaseMetric):
         confusion_matrix = confusion_matrix_1d.reshape(num_classes,
                                                        num_classes)
         return confusion_matrix.cpu().numpy()
+
+    @overload  # type: ignore
+    @dispatch
+    def compute_confusion_matrix(  # type: ignore
+            self, prediction: 'jax.Array', label: 'jax.Array',
+            num_classes: int) -> np.ndarray:
+        """Compute confusion matrix with JAX.
+
+        Args:
+            prediction (jax.Array): The predicition.
+            label (jax.Array): The ground truth.
+            num_classes (int): The number of classes.
+
+        Returns:
+            numpy.ndarray: The computed confusion matrix.
+        """
+        mask = (label != self.ignore_index)
+        prediction, label = prediction[mask], label[mask]
+        confusion_matrix_1d = jnp.bincount(
+            num_classes * label + prediction, minlength=num_classes**2)
+        confusion_matrix = confusion_matrix_1d.reshape(num_classes,
+                                                       num_classes)
+        return np.asarray(confusion_matrix)
 
     @overload  # type: ignore
     @dispatch
