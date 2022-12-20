@@ -252,9 +252,9 @@ class DOTAMeanAP(VOCMeanAP):
 
         return tp, fp
 
-    def filter_by_bboxes_area(self, bboxes: np.ndarray,
-                              min_area: Optional[float],
-                              max_area: Optional[float]):
+    def _filter_by_bboxes_area(self, bboxes: np.ndarray,
+                               min_area: Optional[float],
+                               max_area: Optional[float]):
         """Filter the bboxes with an area range.
 
         Args:

@@ -448,7 +448,7 @@ class VOCMeanAP(BaseMetric):
 
         num_gts = np.zeros((self.num_iou, self.num_scale), dtype=int)
         for idx, (min_area, max_area) in enumerate(self._area_ranges):
-            area_mask = self.filter_by_bboxes_area(
+            area_mask = self._filter_by_bboxes_area(
                 np.vstack(class_gts), min_area, max_area)
             num_gts[:, idx] = np.sum(area_mask)
 
@@ -561,9 +561,9 @@ class VOCMeanAP(BaseMetric):
 
         return eval_results
 
-    def filter_by_bboxes_area(self, bboxes: np.ndarray,
-                              min_area: Optional[float],
-                              max_area: Optional[float]):
+    def _filter_by_bboxes_area(self, bboxes: np.ndarray,
+                               min_area: Optional[float],
+                               max_area: Optional[float]):
         """Filter the bboxes with an area range.
 
         Args:
