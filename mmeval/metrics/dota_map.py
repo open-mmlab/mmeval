@@ -8,13 +8,14 @@ from mmeval.metrics.voc_map import VOCMeanAP
 from .utils.bbox_overlaps_rotated import calculate_bboxes_area_rotated
 
 logger = logging.getLogger(__name__)
+
 try:
-    # we prefer to use bbox_iou_rotated in mmcv
+    # we prefer to use `bbox_iou_rotated` in mmcv
     from mmcv.ops import box_iou_rotated as calculate_overlaps_rotated
 except Exception as e:  # noqa F841
-    logger.info(
-        'mmcv is not installed, using iou calculating method with OpenCV.')
     from .utils.bbox_overlaps_rotated import calculate_overlaps_rotated
+    logger.debug(
+        'mmcv is not installed, calculating IoU of rotated bbox with OpenCV.')
 
 
 def filter_by_bboxes_area_rotated(bboxes: np.ndarray,
