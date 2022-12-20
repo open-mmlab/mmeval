@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import logging
 import numpy as np
 from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
 
@@ -94,8 +95,14 @@ class SSIM(BaseMetric):
                 samples. If not passed, will set as :attr:`self.channel_order`.
                 Defaults to None.
         """
-        channel_order = self.channel_order \
-            if channel_order is None else channel_order
+        if channel_order is None:
+            channel_order = self.channel_order
+        else:
+            if (self.channel_order is not None
+                    and channel_order != self.channel_order):
+                logging.warning(
+                    f'Input \'channel_order\'({channel_order}) is different '
+                    f'from \'self.channel_order\'({self.channel_order}).')
 
         for pred, gt in zip(predictions, groundtruths):
             assert pred.shape == gt.shape, (

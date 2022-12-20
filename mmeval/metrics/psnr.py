@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import logging
 import numpy as np
 from typing import Dict, List, Optional, Sequence
 
@@ -67,6 +68,7 @@ class PSNR(BaseMetric):
         self.input_order = input_order
         self.convert_to = convert_to
         self.channel_order = channel_order
+        self._channel_order_warning_raised = False
 
     def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add PSNR score of batch to ``self._results``
@@ -81,6 +83,12 @@ class PSNR(BaseMetric):
 
         if channel_order is None:
             channel_order = self.channel_order
+        else:
+            if (self.channel_order is not None
+                    and channel_order != self.channel_order):
+                logging.warning(
+                    f'Input \'channel_order\'({channel_order}) is different '
+                    f'from \'self.channel_order\'({self.channel_order}).')
 
         for prediction, groundtruth in zip(predictions, groundtruths):
             assert groundtruth.shape == prediction.shape, (
@@ -91,13 +99,13 @@ class PSNR(BaseMetric):
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
+                channel_order=channel_order)
             prediction = reorder_and_crop(
                 prediction,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
+                channel_order=channel_order)
 
             self._results.append(self.compute_psnr(prediction, groundtruth))
 
