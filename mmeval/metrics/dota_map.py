@@ -73,6 +73,7 @@ class DOTAMeanAP(VOCMeanAP):
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
+
         >>> import numpy as np
         >>> from mmeval import DOTAMetric
         >>> num_classes = 15
