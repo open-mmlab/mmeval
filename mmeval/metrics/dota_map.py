@@ -1,8 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import logging
 import numpy as np
-from multiprocessing.pool import Pool
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from mmeval.metrics.voc_map import VOCMeanAP
 from .utils.bbox_overlaps_rotated import calculate_bboxes_area_rotated
@@ -101,8 +100,25 @@ class DOTAMeanAP(VOCMeanAP):
         {'mAP@0.5': ..., 'mAP': ...}
     """
 
-    def __init__(self, eval_mode: str = '11points', **kwargs) -> None:
-        super().__init__(eval_mode=eval_mode, **kwargs)
+    def __init__(self,
+                 iou_thrs: Union[float, List[float]] = 0.5,
+                 scale_ranges: Optional[List[Tuple]] = None,
+                 num_classes: Optional[int] = None,
+                 eval_mode: str = '11points',
+                 nproc: int = 4,
+                 drop_class_ap: bool = True,
+                 classwise: bool = False,
+                 **kwargs) -> None:
+        super().__init__(
+            iou_thrs=iou_thrs,
+            scale_ranges=scale_ranges,
+            num_classes=num_classes,
+            eval_mode=eval_mode,
+            use_legacy_coordinate=False,
+            nproc=nproc,
+            drop_class_ap=drop_class_ap,
+            classwise=classwise,
+            **kwargs)
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
@@ -234,61 +250,21 @@ class DOTAMeanAP(VOCMeanAP):
 
         return tp, fp
 
-    def calculate_class_tpfp(self, predictions: List[dict],
-                             groundtruths: List[dict], class_index: int,
-                             pool: Optional[Pool]) -> Tuple:
-        """Calculate the tp and fp of the given class index.
+    def filter_by_bboxes_area(self, bboxes: np.ndarray,
+                              min_area: Optional[float],
+                              max_area: Optional[float]):
+        """Filter the bboxes with an area range.
 
         Args:
-            predictions (List[dict]): A list of dict. Each dict is the
-                detection result of an image.
-            groundtruths (List[dict]): A list of dict. Each dict is the
-                ground truth of an image.
-            class_index (int): The class index.
-            pool (Optional[Pool]): A instance of :class:`multiprocessing.Pool`.
-                If None, do not use multiprocessing.
+            bboxes (numpy.ndarray): The bboxes with shape (n, 5) in 'xywha'
+                format.
+            min_area (Optional[float]): The minimum area. If None, does not
+                filter the minimum area.
+            max_area (_type_): The maximum area. If None, does not filter
+                the maximum area.
 
         Returns:
-            tuple (tp, fp, num_gts):
-            - tp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
-              the true positive flag of each predicted bbox for this class.
-            - fp (numpy.ndarray): Shape (num_ious, num_scales, num_pred),
-              the false positive flag of each predicted bbox for this class.
-            - num_gts (numpy.ndarray): Shape (num_ious, num_scales), the
-              number of ground truths.
+            numpy.ndarray: A mask of ``bboxes`` identify which bbox are
+                filtered.
         """
-        class_preds = self.get_class_predictions(predictions, class_index)
-        class_gts, class_ignore_gts = self.get_class_gts(
-            groundtruths, class_index)
-        if pool is not None:
-            num_images = len(class_preds)
-            tpfp_list = pool.starmap(
-                self._calculate_image_tpfp,
-                zip(
-                    class_preds,
-                    class_gts,
-                    class_ignore_gts,
-                    [self.iou_thrs] * num_images,
-                    [self._area_ranges] * num_images,
-                ))
-        else:
-            tpfp_list = []
-            for img_idx in range(len(class_preds)):
-                tpfp = self._calculate_image_tpfp(class_preds[img_idx],
-                                                  class_gts[img_idx],
-                                                  class_ignore_gts[img_idx],
-                                                  self.iou_thrs,
-                                                  self._area_ranges)
-                tpfp_list.append(tpfp)
-
-        image_tp_list, image_fp_list = tuple(zip(*tpfp_list))
-        sorted_indices = np.argsort(-np.vstack(class_preds)[:, -1])
-        tp = np.concatenate(image_tp_list, axis=2)[..., sorted_indices]
-        fp = np.concatenate(image_fp_list, axis=2)[..., sorted_indices]
-        num_gts = np.zeros((self.num_iou, self.num_scale), dtype=int)
-        for idx, (min_area, max_area) in enumerate(self._area_ranges):
-            area_mask = filter_by_bboxes_area_rotated(
-                np.vstack(class_gts), min_area, max_area)
-            num_gts[:, idx] = np.sum(area_mask)
-
-        return tp, fp, num_gts
+        return filter_by_bboxes_area_rotated(bboxes, min_area, max_area)

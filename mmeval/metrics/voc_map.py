@@ -448,7 +448,7 @@ class VOCMeanAP(BaseMetric):
 
         num_gts = np.zeros((self.num_iou, self.num_scale), dtype=int)
         for idx, (min_area, max_area) in enumerate(self._area_ranges):
-            area_mask = filter_by_bboxes_area(
+            area_mask = self.filter_by_bboxes_area(
                 np.vstack(class_gts), min_area, max_area)
             num_gts[:, idx] = np.sum(area_mask)
 
@@ -560,3 +560,22 @@ class VOCMeanAP(BaseMetric):
             eval_results[key] = np.array(ap_per_ious).mean().item()
 
         return eval_results
+
+    def filter_by_bboxes_area(self, bboxes: np.ndarray,
+                              min_area: Optional[float],
+                              max_area: Optional[float]):
+        """Filter the bboxes with an area range.
+
+        Args:
+            bboxes (numpy.ndarray): The bboxes with shape (n, 4) in
+                'xyxy' format.
+            min_area (Optional[float]): The minimum area. If None, does
+                not filter the minimum area.
+            max_area (_type_): The maximum area. If None, does not filter
+                the maximum area.
+
+        Returns:
+            numpy.ndarray: A mask of ``bboxes`` identify which bbox
+                are filtered.
+        """
+        return filter_by_bboxes_area(bboxes, min_area, max_area)
