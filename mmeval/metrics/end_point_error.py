@@ -149,13 +149,13 @@ class EndPointError(BaseMetric):
         epe = epe_map.reshape(-1)[val]
         return epe.mean().cpu().numpy(), int(val.sum())
 
-    @dispatch  # noqa: F811
-    def end_point_error_map(
+    @dispatch
+    def end_point_error_map(  # noqa: F811
         self,
         prediction: 'oneflow.Tensor',
         label: 'oneflow.Tensor',
-        valid_mask: Optional['oneflow.Tensor'] = None
-    ) -> Tuple[np.ndarray, int]:
+        valid_mask: Optional['oneflow.Tensor'] = None) -> Tuple[np.ndarray,
+                                                                int]:
         """Calculate end point error map.
 
         Args:
