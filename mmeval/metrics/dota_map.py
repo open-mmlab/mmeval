@@ -9,10 +9,13 @@ from .utils.bbox_overlaps_rotated import calculate_bboxes_area_rotated
 logger = logging.getLogger(__name__)
 
 try:
-    # we prefer to use `bbox_iou_rotated` in mmcv
-    from mmcv.ops import box_iou_rotated as calculate_overlaps_rotated
+    # we prefer to use `bbox_iou_rotated` in mmcv to calculate ious
+    from mmcv.ops import box_iou_rotated
+    from torch import Tensor
+    HAS_MMCV = True
 except Exception as e:  # noqa F841
     from .utils.bbox_overlaps_rotated import calculate_overlaps_rotated
+    HAS_MMCV = False
     logger.debug(
         'mmcv is not installed, calculating IoU of rotated bbox with OpenCV.')
 
@@ -157,12 +160,10 @@ class DOTAMeanAP(VOCMeanAP):
 
     @staticmethod
     def _calculate_image_tpfp(  # type: ignore
-        pred_bboxes: np.ndarray,
-        gt_bboxes: np.ndarray,
-        ignore_gt_bboxes: np.ndarray,
-        iou_thrs: List[float],
-        area_ranges: List[Tuple[Optional[float], Optional[float]]],
-    ) -> Tuple[np.ndarray, np.ndarray]:
+            pred_bboxes: np.ndarray, gt_bboxes: np.ndarray,
+            ignore_gt_bboxes: np.ndarray, iou_thrs: List[float],
+            area_ranges: List[Tuple[Optional[float], Optional[float]]], *args,
+            **kwargs) -> Tuple[np.ndarray, np.ndarray]:
         """Calculate the true positive and false positive on an image.
 
         Args:
@@ -210,7 +211,14 @@ class DOTAMeanAP(VOCMeanAP):
 
         # Step 4. Calculate the IoUs between the predicted bboxes and the
         # ground truth bboxes.
-        ious = calculate_overlaps_rotated(pred_bboxes[:, :5], all_gt_bboxes)
+        if HAS_MMCV:
+            # the input and output of box_iou_rotated are torch.Tensor
+            ious = np.array(
+                box_iou_rotated(
+                    Tensor(pred_bboxes[:, :5]), Tensor(all_gt_bboxes)))
+        else:
+            ious = calculate_overlaps_rotated((pred_bboxes[:, :5]),
+                                              all_gt_bboxes)
         # For each pred bbox, the max iou with all gts.
         ious_max = ious.max(axis=1)
         # For each pred bbox, which gt overlaps most with it.
