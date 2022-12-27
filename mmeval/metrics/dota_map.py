@@ -4,7 +4,8 @@ import numpy as np
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from mmeval.metrics.voc_map import VOCMeanAP
-from .utils.bbox_overlaps_rotated import calculate_bboxes_area_rotated
+from .utils.bbox_overlaps_rotated import (calculate_bboxes_area_rotated,
+                                          qbox_to_rbox)
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +74,8 @@ class DOTAMeanAP(VOCMeanAP):
             when calculating the average precision for each class.
         classwise (bool): Whether to return the computed results of each
             class. Defaults to False.
+        predict_box_type (str): Box type of model results. If the QuadriBoxes
+            is used, you need to specify 'qbox'. Defaults to 'rbox'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -113,6 +116,7 @@ class DOTAMeanAP(VOCMeanAP):
                  nproc: int = 4,
                  drop_class_ap: bool = True,
                  classwise: bool = False,
+                 predict_box_type: str = 'rbox',
                  **kwargs) -> None:
         super().__init__(
             iou_thrs=iou_thrs,
@@ -124,6 +128,7 @@ class DOTAMeanAP(VOCMeanAP):
             drop_class_ap=drop_class_ap,
             classwise=classwise,
             **kwargs)
+        self.predict_box_type = predict_box_type
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
@@ -132,7 +137,9 @@ class DOTAMeanAP(VOCMeanAP):
             predictions (Sequence[Dict]):  A sequence of dict. Each dict
                 representing a detection result for an image, with the
                 following keys:
-                - bboxes (numpy.ndarray): Shape (N, 5), the predicted
+                - bboxes (numpy.ndarray): Shape (N, 5) or shape (N,8).
+                  If the QuadriBoxes is used, the bboxes' shape is (N,8).
+                  Otherwise the bboxes' shape should be (N,5).
                   bounding bboxes of this image, in 'xywha' foramrt.
                 - scores (numpy.ndarray): Shape (N, ), the predicted scores
                   of bounding boxes.
@@ -154,6 +161,9 @@ class DOTAMeanAP(VOCMeanAP):
         for prediction, groundtruth in zip(predictions, groundtruths):
             assert isinstance(prediction, dict), 'The prediciton should be ' \
                 f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
+            if self.predict_box_type == 'qbox':
+                # convert qbox to rbox
+                prediction['bboxes'] = qbox_to_rbox(prediction['bboxes'])
             assert isinstance(groundtruth, dict), 'The label should be ' \
                 f'a sequence of dict, but got a sequence of {type(groundtruth)}.'  # noqa: E501
             self._results.append((prediction, groundtruth))

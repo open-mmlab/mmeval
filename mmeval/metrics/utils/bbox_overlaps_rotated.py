@@ -3,6 +3,25 @@ import cv2
 import numpy as np
 
 
+def qbox_to_rbox(boxes: np.ndarray) -> np.ndarray:
+    """Convert quadrilateral boxes to rotated boxes.
+
+    Args:
+        boxes (np.ndarray): Quadrilateral box tensor with shape of (..., 8).
+
+    Returns:
+        np.ndarray: Rotated box tensor with shape of (..., 5).
+    """
+    original_shape = boxes.shape[:-1]
+    points = boxes.reshape(-1, 4, 2)
+    rboxes = []
+    for pts in points:
+        (x, y), (w, h), angle = cv2.minAreaRect(pts)
+        rboxes.append([x, y, w, h, angle / 180 * np.pi])
+    rboxes = np.array(rboxes)
+    return rboxes.reshape(*original_shape, 5)
+
+
 def le90_to_oc(bboxes: np.ndarray):
     """convert bboxes with le90 angle version to OpenCV angle version.
 
