@@ -127,10 +127,71 @@ class InstanceSegMetric(BaseMetric):
     """3D instance segmentation evaluation metric.
 
     Args:
-        prefix (str): The prefix that will be added in the metric
-            names to disambiguate homonymous metrics of different evaluators.
-            If prefix is not provided in the argument, self.default_prefix
-            will be used instead. Default: None
+        dataset_meta (dict): Provide dataset meta information.
+
+    Example:
+        >>> import numpy as np
+        >>> from mmeval import InstanceSegMetric
+        >>> seg_valid_class_ids = (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 24,
+        >>>                 28, 33, 34, 36, 39)
+        >>> class_labels = ('cabinet', 'bed', 'chair', 'sofa', 'table', 'door',
+        ...         'window', 'bookshelf', 'picture', 'counter', 'desk',
+        ...         'curtain', 'refrigerator', 'showercurtrain', 'toilet',
+        ...         'sink', 'bathtub', 'garbagebin')
+        >>> dataset_meta = dict(
+        ...     seg_valid_class_ids=seg_valid_class_ids, classes=class_labels)
+        >>>
+        >>> def _demo_mm_model_output(self):
+        ...     n_points_list = [3300, 3000]
+        ...     gt_labels_list = [[0, 0, 0, 0, 0, 0, 14, 14, 2, 1],
+        ...                       [13, 13, 2, 1, 3, 3, 0, 0, 0]]
+        ...
+        ...     predictions = []
+        ...     groundtruths = []
+        ...
+        ...     for n_points, gt_labels in zip(n_points_list, gt_labels_list):
+        ...         gt_instance_mask = np.ones(n_points, dtype=int) * -1
+        ...         gt_semantic_mask = np.ones(n_points, dtype=int) * -1
+        ...         for i, gt_label in enumerate(gt_labels):
+        ...             begin = i * 300
+        ...             end = begin + 300
+        ...             gt_instance_mask[begin:end] = i
+        ...             gt_semantic_mask[begin:end] = gt_label
+        ...
+        ...         ann_info_data = dict()
+        ...         ann_info_data['pts_instance_mask'] = torch.tensor(
+        ...             gt_instance_mask)
+        ...         ann_info_data['pts_semantic_mask'] = torch.tensor(
+        ...             gt_semantic_mask)
+        ...
+        ...         results_dict = dict()
+        ...         pred_instance_mask = np.ones(n_points, dtype=int) * -1
+        ...         labels = []
+        ...         scores = []
+        ...         for i, gt_label in enumerate(gt_labels):
+        ...             begin = i * 300
+        ...             end = begin + 300
+        ...             pred_instance_mask[begin:end] = i
+        ...             labels.append(gt_label)
+        ...             scores.append(.99)
+        ...
+        ...         results_dict['pts_instance_mask'] = torch.tensor(
+        ...             pred_instance_mask)
+        ...         results_dict['instance_labels'] = torch.tensor(labels)
+        ...         results_dict['instance_scores'] = torch.tensor(scores)
+        ...
+        ...         predictions.append(results_dict)
+        ...         groundtruths.append(ann_info_data)
+        ...
+        ...     return predictions, groundtruths
+        >>>
+        >>> instance_seg_metric = InstanceSegMetric(dataset_meta=dataset_meta)
+        >>> res = instance_seg_metric(predictions, groundtruths)
+        >>> res
+        {'all_ap': 1.0, 'all_ap_50%': 1.0, 'all_ap_25%': 1.0,
+         'classes':
+           {'cabinet': {'ap': 1.0, 'ap50%': 1.0, 'ap25%': 1.0},
+            'bed': {'ap': 1.0, 'ap50%': 1.0, 'ap25%': 1.0}, ...}}
     """
 
     def __init__(self, **kwargs):
