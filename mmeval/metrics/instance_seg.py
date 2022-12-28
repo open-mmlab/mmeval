@@ -1,19 +1,20 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
+from copy import deepcopy
 from terminaltables import AsciiTable
-from typing import Sequence
+from typing import Dict, List, Sequence
 
 from mmeval.core.base_metric import BaseMetric
-from .utils.evaluate_semantic_instance import scannet_eval
+from mmeval.metrics.utils import scannet_eval
 
 
 def aggregate_predictions(masks, labels, scores, valid_class_ids):
     """Maps predictions to ScanNet evaluator format.
 
     Args:
-        masks (list[torch.Tensor]): Per scene predicted instance masks.
-        labels (list[torch.Tensor]): Per scene predicted instance labels.
-        scores (list[torch.Tensor]): Per scene predicted instance scores.
+        masks (list[numpy.ndarray]): Per scene predicted instance masks.
+        labels (list[numpy.ndarray]): Per scene predicted instance labels.
+        scores (list[numpy.ndarray]): Per scene predicted instance scores.
         valid_class_ids (tuple[int]): Ids of valid categories.
 
     Returns:
@@ -21,16 +22,13 @@ def aggregate_predictions(masks, labels, scores, valid_class_ids):
     """
     infos = []
     for id, (mask, label, score) in enumerate(zip(masks, labels, scores)):
-        mask = mask.clone().numpy()
-        label = label.clone().numpy()
-        score = score.clone().numpy()
         info = dict()
         n_instances = mask.max() + 1
         for i in range(n_instances):
             # match pred_instance['filename'] from assign_instances_for_scan
             file_name = f'{id}_{i}'
             info[file_name] = dict()
-            info[file_name]['mask'] = (mask == i).astype(np.int)
+            info[file_name]['mask'] = (mask == i).astype(int)
             info[file_name]['label_id'] = valid_class_ids[label[i]]
             info[file_name]['conf'] = score[i]
         infos.append(info)
@@ -42,8 +40,8 @@ def rename_gt(gt_semantic_masks, gt_instance_masks, valid_class_ids):
     evaluator.
 
     Args:
-        gt_semantic_masks (list[torch.Tensor]): Per scene gt semantic masks.
-        gt_instance_masks (list[torch.Tensor]): Per scene gt instance masks.
+        gt_semantic_masks (list[numpy.ndarray]): Per scene gt semantic masks.
+        gt_instance_masks (list[numpy.ndarray]): Per scene gt instance masks.
         valid_class_ids (tuple[int]): Ids of valid categories.
 
     Returns:
@@ -52,8 +50,6 @@ def rename_gt(gt_semantic_masks, gt_instance_masks, valid_class_ids):
     renamed_instance_masks = []
     for semantic_mask, instance_mask in zip(gt_semantic_masks,
                                             gt_instance_masks):
-        semantic_mask = semantic_mask.clone().numpy()
-        instance_mask = instance_mask.clone().numpy()
         unique = np.unique(instance_mask)
         assert len(unique) < 1000
         for i in unique:
@@ -81,11 +77,11 @@ def instance_seg_eval(gt_semantic_masks,
     Evaluate the result of the instance segmentation.
 
     Args:
-        gt_semantic_masks (list[torch.Tensor]): Ground truth semantic masks.
-        gt_instance_masks (list[torch.Tensor]): Ground truth instance masks.
-        pred_instance_masks (list[torch.Tensor]): Predicted instance masks.
-        pred_instance_labels (list[torch.Tensor]): Predicted instance labels.
-        pred_instance_scores (list[torch.Tensor]): Predicted instance labels.
+        gt_semantic_masks (list[numpy.ndarray]): Ground truth semantic masks.
+        gt_instance_masks (list[numpy.ndarray]): Ground truth instance masks.
+        pred_instance_masks (list[numpy.ndarray]): Predicted instance masks.
+        pred_instance_labels (list[numpy.ndarray]): Predicted instance labels.
+        pred_instance_scores (list[numpy.ndarray]): Predicted instance labels.
         valid_class_ids (tuple[int]): Ids of valid categories.
         class_labels (tuple[str]): Names of valid categories.
         options (dict, optional): Additional options. Keys may contain:
@@ -143,29 +139,29 @@ class InstanceSegMetric(BaseMetric):
         self.classes = self.dataset_meta['classes']
         self.valid_class_ids = self.dataset_meta['seg_valid_class_ids']
 
-    def add(self, predictions: Sequence[dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Process one batch of data samples and predictions.
 
         The processed results should be stored in ``self.results``,
         which will be used to compute the metrics when all batches
         have been processed.
         Args:
-            data_batch (dict): A batch of data from the dataloader.
-            data_samples (Sequence[dict]): A batch of outputs from
-                the model.
-        """
-        for data_sample in predictions:
-            pred_3d = data_sample['pred_pts_seg']
-            eval_ann_info = data_sample['eval_ann_info']
-            cpu_pred_3d = dict()
-            for k, v in pred_3d.items():
-                if hasattr(v, 'to'):
-                    cpu_pred_3d[k] = v.to('cpu')
-                else:
-                    cpu_pred_3d[k] = v
-            self._results.append((eval_ann_info, cpu_pred_3d))
+            predictions (Sequence[Dict]): A sequence of dict. Each dict
+                representing a detection result, with the following keys:
 
-    def compute_metrics(self, results: list):
+            - pts_instance_mask(numpy.ndarray): Haha
+            - instance_labels(numpy.ndarray): Haha
+            - instance_scores(numpy.ndarray): Haha
+            groundtruths (Sequence[Dict]): A sequence of dict. Each dict
+                represents a groundtruths for an image, with the following
+                keys:
+            - pts_instance_mask(numpy.ndarray): Haha
+            - pts_semantic_mask(numpy.ndarray): Haha
+        """
+        for prediction, groundtruth in zip(predictions, groundtruths):
+            self._results.append((deepcopy(prediction), deepcopy(groundtruth)))
+
+    def compute_metric(self, results: List[List[Dict]]) -> Dict[str, float]:
         """Compute the metrics from processed results.
 
         Args:
@@ -180,13 +176,12 @@ class InstanceSegMetric(BaseMetric):
         pred_instance_labels = []
         pred_instance_scores = []
 
-        for eval_ann, sinlge_pred_results in results:
-            gt_semantic_masks.append(eval_ann['pts_semantic_mask'])
-            gt_instance_masks.append(eval_ann['pts_instance_mask'])
-            pred_instance_masks.append(
-                sinlge_pred_results['pts_instance_mask'])
-            pred_instance_labels.append(sinlge_pred_results['instance_labels'])
-            pred_instance_scores.append(sinlge_pred_results['instance_scores'])
+        for result_pred, result_gt in results:
+            gt_semantic_masks.append(result_gt['pts_semantic_mask'])
+            gt_instance_masks.append(result_gt['pts_instance_mask'])
+            pred_instance_masks.append(result_pred['pts_instance_mask'])
+            pred_instance_labels.append(result_pred['instance_labels'])
+            pred_instance_scores.append(result_pred['instance_scores'])
 
         ret_dict = instance_seg_eval(
             gt_semantic_masks,
