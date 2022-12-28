@@ -81,11 +81,7 @@ class TestInstanceSegMetric(unittest.TestCase):
         predictions[0]['pts_instance_mask'][2700:3000] = 8
         predictions[0]['instance_labels'][9] = 2
 
-        instance_seg_metric.reset()
-
         res = instance_seg_metric(predictions, groundtruths)
-
-        print(res)
 
         assert abs(res['classes']['cabinet']['ap50%'] - 0.72916) < 0.01
         assert abs(res['classes']['cabinet']['ap25%'] - 0.88888) < 0.01
