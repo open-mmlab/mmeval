@@ -188,10 +188,29 @@ class InstanceSegMetric(BaseMetric):
         >>> instance_seg_metric = InstanceSegMetric(dataset_meta=dataset_meta)
         >>> res = instance_seg_metric(predictions, groundtruths)
         >>> res
-        {'all_ap': 1.0, 'all_ap_50%': 1.0, 'all_ap_25%': 1.0,
-         'classes':
-           {'cabinet': {'ap': 1.0, 'ap50%': 1.0, 'ap25%': 1.0},
-            'bed': {'ap': 1.0, 'ap50%': 1.0, 'ap25%': 1.0}, ...}}
+        {
+        'all_ap': 1.0,
+        'all_ap_50%': 1.0,
+        'all_ap_25%': 1.0,
+        'classes': {
+            'cabinet': {
+                'ap': 1.0,
+                'ap50%': 1.0,
+                'ap25%': 1.0
+            },
+            'bed': {
+                'ap': 1.0,
+                'ap50%': 1.0,
+                'ap25%': 1.0
+            },
+            'chair': {
+                'ap': 1.0,
+                'ap50%': 1.0,
+                'ap25%': 1.0
+            },
+            ...
+        }
+    }
     """
 
     def __init__(self, **kwargs):
