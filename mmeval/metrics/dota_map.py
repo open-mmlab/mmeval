@@ -133,14 +133,19 @@ class DOTAMeanAP(VOCMeanAP):
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
 
+        Note: The box shape of ``predictions`` and ``groundtruths`` is depends
+        on the ``self.predict_box_type``. If ``self.predict_box_type`` is
+        'rbox', the box shape should be (N, 5) which represents the (x,y,w,h,
+        angle), otherwise the box shape should be (N, 8) which represents the
+        (x1,y1,x2,y2,x3,y3,x4,y4).
+
         Args:
             predictions (Sequence[Dict]):  A sequence of dict. Each dict
                 representing a detection result for an image, with the
                 following keys:
-                - bboxes (numpy.ndarray): Shape (N, 5) or shape (N,8).
-                  If the QuadriBoxes is used, the bboxes' shape is (N,8).
-                  Otherwise the bboxes' shape should be (N,5).
-                  bounding bboxes of this image, in 'xywha' foramrt.
+                - bboxes (numpy.ndarray): Shape (N, 5) or shape (N, 8).
+                  bounding bboxes of this image. The box format is depend on
+                  ``self.predict_box_type``. Details in upper note.
                 - scores (numpy.ndarray): Shape (N, ), the predicted scores
                   of bounding boxes.
                 - labels (numpy.ndarray): Shape (N, ), the predicted labels
@@ -148,22 +153,22 @@ class DOTAMeanAP(VOCMeanAP):
             groundtruths (Sequence[Dict]):  A sequence of dict. Each dict
                 represents a groundtruths for an image, with the following
                 keys:
-                - bboxes (numpy.ndarray): Shape (M, 5), the ground truth
-                  bounding bboxes of this image, in 'xywha' foramrt.
+                - bboxes (numpy.ndarray): Shape (M, 5) or shape (M, 8), the
+                  groundtruth bounding bboxes of this image, The box format
+                  is depend on ``self.predict_box_type``.Details in upper
+                  note.
                 - labels (numpy.ndarray): Shape (M, ), the ground truth
                   labels of bounding boxes.
-                - bboxes_ignore (numpy.ndarray): Shape (K, 5), the ground
-                  truth ignored bounding bboxes of this image,
-                  in 'xywha' foramrt.
+                - bboxes_ignore (numpy.ndarray): Shape (K, 5) or shape(K, 8),
+                  the groundtruth ignored bounding bboxes of this image. The
+                  box format is depend on ``self.predict_box_type``.Details in
+                  upper note.
                 - labels_ignore (numpy.ndarray): Shape (K, ), the ground
                   truth ignored labels of bounding boxes.
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             assert isinstance(prediction, dict), 'The prediciton should be ' \
                 f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
-            if self.predict_box_type == 'qbox':
-                # convert qbox to rbox
-                prediction['bboxes'] = qbox_to_rbox(prediction['bboxes'])
             assert isinstance(groundtruth, dict), 'The label should be ' \
                 f'a sequence of dict, but got a sequence of {type(groundtruth)}.'  # noqa: E501
             self._results.append((prediction, groundtruth))
@@ -178,12 +183,14 @@ class DOTAMeanAP(VOCMeanAP):
 
         Args:
             pred_bboxes (numpy.ndarray): Predicted bboxes of this image, with
-                shape (N, 6). The scores The predicted score of the bbox is
+                shape (N, 6) or shape (N,9) which depends on
+                ``self.predict_box_type`` attribute.
+                The predicted score of the bbox is
                 concatenated behind the predicted bbox.
             gt_bboxes (numpy.ndarray): Ground truth bboxes of this image, with
-                shape (M, 5).
+                shape (M, 5) or shape (M, 8).
             ignore_gt_bboxes (numpy.ndarray): Ground truth ignored bboxes of
-                this image, with shape (K, 5).
+                this image, with shape (K, 5) or shape (K, 8).
             iou_thrs (List[float]): The IoU thresholds.
             area_ranges (List[Tuple]): The area ranges.
 
@@ -198,6 +205,14 @@ class DOTAMeanAP(VOCMeanAP):
             This method should be a staticmethod to avoid resource competition
             during multiple processes.
         """
+        # Step 0. (optional)
+        # we need to convert qbox type box to rbox type because OpenCV only
+        # support rbox format iou calculation.
+        if gt_bboxes.shape[-1] == 8:  # qbox shape (M, 8)
+            pred_bboxes = qbox_to_rbox(pred_bboxes[:, :8])
+            gt_bboxes = qbox_to_rbox(gt_bboxes)
+            ignore_gt_bboxes = qbox_to_rbox(ignore_gt_bboxes)
+
         # Step 1. Concatenate `gt_bboxes` and `ignore_gt_bboxes`, then set
         # the `ignore_gt_flags`.
         all_gt_bboxes = np.concatenate((gt_bboxes, ignore_gt_bboxes))

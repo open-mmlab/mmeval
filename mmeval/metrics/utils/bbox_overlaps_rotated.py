@@ -13,7 +13,7 @@ def qbox_to_rbox(boxes: np.ndarray) -> np.ndarray:
         np.ndarray: Rotated box tensor with shape of (..., 5).
     """
     original_shape = boxes.shape[:-1]
-    points = boxes.reshape(-1, 4, 2)
+    points = boxes.reshape(-1, 4, 2).astype(np.int64)
     rboxes = []
     for pts in points:
         (x, y), (w, h), angle = cv2.minAreaRect(pts)
