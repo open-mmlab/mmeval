@@ -81,7 +81,7 @@ def instance_seg_eval(gt_semantic_masks,
         gt_instance_masks (list[numpy.ndarray]): Ground truth instance masks.
         pred_instance_masks (list[numpy.ndarray]): Predicted instance masks.
         pred_instance_labels (list[numpy.ndarray]): Predicted instance labels.
-        pred_instance_scores (list[numpy.ndarray]): Predicted instance labels.
+        pred_instance_scores (list[numpy.ndarray]): Predicted instance scores.
         valid_class_ids (tuple[int]): Ids of valid categories.
         class_labels (tuple[str]): Names of valid categories.
         options (dict, optional): Additional options. Keys may contain:
@@ -229,14 +229,14 @@ class InstanceSeg(BaseMetric):
             predictions (Sequence[Dict]): A sequence of dict. Each dict
                 representing a detection result, with the following keys:
 
-            - pts_instance_mask(numpy.ndarray): Haha
-            - instance_labels(numpy.ndarray): Haha
-            - instance_scores(numpy.ndarray): Haha
+            - pts_instance_mask(numpy.ndarray): Predicted instance masks.
+            - instance_labels(numpy.ndarray): Predicted instance labels.
+            - instance_scores(numpy.ndarray): Predicted instance scores.
             groundtruths (Sequence[Dict]): A sequence of dict. Each dict
                 represents a groundtruths for an image, with the following
                 keys:
-            - pts_instance_mask(numpy.ndarray): Haha
-            - pts_semantic_mask(numpy.ndarray): Haha
+            - pts_instance_mask(numpy.ndarray): Ground truth instance masks.
+            - pts_semantic_mask(numpy.ndarray): Ground truth semantic masks.
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             self._results.append((deepcopy(prediction), deepcopy(groundtruth)))
