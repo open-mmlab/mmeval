@@ -3,7 +3,7 @@ import numpy as np
 import torch
 import unittest
 
-from mmeval.metrics import InstanceSegMetric
+from mmeval.metrics import InstanceSeg
 
 
 class TestInstanceSegMetric(unittest.TestCase):
@@ -66,7 +66,7 @@ class TestInstanceSegMetric(unittest.TestCase):
                         'sink', 'bathtub', 'garbagebin')
         dataset_meta = dict(
             seg_valid_class_ids=seg_valid_class_ids, classes=class_labels)
-        instance_seg_metric = InstanceSegMetric(dataset_meta=dataset_meta)
+        instance_seg_metric = InstanceSeg(dataset_meta=dataset_meta)
         res = instance_seg_metric(predictions, groundtruths)
         self.assertIsInstance(res, dict)
         for label in [

@@ -7,7 +7,7 @@ from .coco_detection import COCODetectionMetric
 from .end_point_error import EndPointError
 from .f_metric import F1Metric
 from .hmean_iou import HmeanIoU
-from .instance_seg import InstanceSegMetric
+from .instance_seg import InstanceSeg
 from .mae import MAE
 from .mean_iou import MeanIoU
 from .mse import MSE
@@ -26,5 +26,5 @@ __all__ = [
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'InstanceSegMetric'
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'InstanceSeg'
 ]

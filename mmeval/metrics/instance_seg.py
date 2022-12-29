@@ -123,7 +123,7 @@ def instance_seg_eval(gt_semantic_masks,
     return metrics
 
 
-class InstanceSegMetric(BaseMetric):
+class InstanceSeg(BaseMetric):
     """3D instance segmentation evaluation metric.
 
     Args:
