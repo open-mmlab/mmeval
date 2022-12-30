@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 from copy import deepcopy
-from terminaltables import AsciiTable
 from typing import Dict, List, Sequence
 
 from mmeval.core.base_metric import BaseMetric
@@ -111,15 +110,6 @@ def instance_seg_eval(gt_semantic_masks,
         valid_class_ids=valid_class_ids,
         class_labels=class_labels,
         id_to_label=id_to_label)
-    header = ['classes', 'AP_0.25', 'AP_0.50', 'AP']
-    rows = []
-    for label, data in metrics['classes'].items():
-        aps = [data['ap25%'], data['ap50%'], data['ap']]
-        rows.append([label] + [f'{ap:.4f}' for ap in aps])
-    aps = metrics['all_ap_25%'], metrics['all_ap_50%'], metrics['all_ap']
-    footer = ['Overall'] + [f'{ap:.4f}' for ap in aps]
-    table = AsciiTable([header] + rows + [footer])
-    table.inner_footing_row_border = True
     return metrics
 
 
