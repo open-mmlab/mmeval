@@ -4,7 +4,7 @@ from copy import deepcopy
 from typing import Dict, List, Sequence
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.metrics.utils import scannet_eval
+from mmeval.metrics._vendor.scannet import scannet_eval
 
 
 def aggregate_predictions(masks, labels, scores, valid_class_ids):
