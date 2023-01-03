@@ -35,7 +35,7 @@ def compute_precision_recall(scores, labels, num_gt):
             instances. This value is None if no ground truth labels are
             present.
     """
-    if (not isinstance(labels, np.ndarray) or labels.dtype != np.bool
+    if (not isinstance(labels, np.ndarray) or labels.dtype != np.bool_
             or len(labels.shape) != 1):
         raise ValueError('labels must be single dimension bool numpy array')
 
