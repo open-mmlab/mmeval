@@ -5,27 +5,6 @@ from typing import Dict, List, Sequence
 from mmeval.core import BaseMetric
 
 
-def average(results, key):
-    """Average of key in results(list[dict]).
-
-    Args:
-        results (list[dict]): A list of dict containing the necessary data.
-        key (str): The key of target data.
-
-    Returns:
-        result: The average result.
-    """
-
-    total = 0
-    n = 0
-    for batch_result in results:
-        batch_size = batch_result.get('batch_size', 1)
-        total += batch_result[key] * batch_size
-        n += batch_size
-
-    return total / n
-
-
 class MattingMSE(BaseMetric):
     """Mean Squared Error metric for image matting.
 
@@ -76,9 +55,9 @@ class MattingMSE(BaseMetric):
         """Add MattingMSE score of batch to ``self._results``
 
         Args:
-        pred_alpha: Pred_alpha data of predictions.
-        ori_alpha: Ori_alpha data of data_batch.
-        ori_trimap: Ori_trimap data of data_batch.
+            pred_alpha( Sequence ): Pred_alpha data of predictions.
+            ori_alpha( Sequence ): Ori_alpha data of data_batch.
+            ori_trimap( Sequence ): Ori_trimap data of data_batch.
         """
 
         for pred_alpha, gt_alpha, trimap in zip(pred_alphas, gt_alphas,
@@ -93,7 +72,7 @@ class MattingMSE(BaseMetric):
             else:
                 mse_result = 0
 
-            self._results.append({'mse': mse_result})
+            self._results.append(mse_result)
 
     def compute_metric(self, results: List) -> Dict[str, float]:
         """Compute the MattingMSE metric.
@@ -107,6 +86,5 @@ class MattingMSE(BaseMetric):
             The keys are the names of the metrics,
             and the values are corresponding results.
         """
-        mse = average(results, 'mse')
 
-        return {'MattingMSE': mse}
+        return {'MattingMSE': float(np.array(results).mean())}
