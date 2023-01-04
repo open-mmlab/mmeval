@@ -2,20 +2,17 @@ import datetime
 import numpy as np
 import os.path as osp
 import tempfile
-import logging
 import itertools
-from collections import OrderedDict
 from json import dump
 from typing import Dict, List, Optional, Sequence, Union, Tuple
 import multiprocessing
+from PIL import Image
 from terminaltables import AsciiTable
 from tqdm.contrib import tzip
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.fileio import get_local_path, load, get
 from mmeval.metrics.utils.coco_wrapper import COCOPanoptic
-
-
 
 try:
     import panopticapi
@@ -28,8 +25,6 @@ except ImportError:
     VOID = None
     PQStat = None
     OFFSET = 256 * 256 * 256
-logging.basicConfig(level=logging.INFO)
-
 
 CLASSES = [
     'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train',
@@ -90,7 +85,8 @@ MISSING_ID = [12, 26, 29, 30, 45, 66, 68, 69, 71, 83, 91, 94, 96, 97, 98,
     99, 101, 102, 103, 104, 105, 106, 108, 110, 111, 113, 114, 115, 116, 117,
     120, 121, 123, 124, 126, 127, 129, 131, 132, 134, 135, 136, 137, 139, 140,
     142, 143, 146, 150, 152, 153, 157, 158, 160, 162, 163, 164, 165, 167, 169, 
-    170, 172, 173, 174, 179, 182, 183]  
+    170, 172, 173, 174, 179, 182, 183
+]  
 
 
 class COCOPanopticMetric(BaseMetric):
@@ -101,9 +97,8 @@ class COCOPanopticMetric(BaseMetric):
         ann_file (str, optional): Path to the coco format annotation file.
             If not specified, ground truth annotations from the dataset will
             be converted to coco format. Defaults to None.
-        seg_prefix (str, optional): Path to the directory which contains the
-            coco panoptic segmentation mask. It should be specified when
-            evaluate. Defaults to None.
+        gt_folder (str): Path to the groundtruth panoptic image folder.
+        pred_folder (str): Path to the predicted panoptic image folder.
         classwise (bool): Whether to evaluate the metric class-wise.
             Defaults to False.
         outfile_prefix (str, optional): The prefix of json files. It includes
@@ -119,14 +114,15 @@ class COCOPanopticMetric(BaseMetric):
     """
     def __init__(self,
                  ann_file: Optional[str] = None,
-                 seg_prefix: Optional[str] = None,
+                 gt_folder: str = None,
+                 pred_folder: str = None,
                  classwise: bool = False,
                  nproc: int = 4,
                  outfile_prefix: Optional[str] = None,
                  backend_args: Optional[dict] = None,
                  categories: list = None,
                  **kwargs) -> None:
-        if panopticapi is None:
+        if panopticapi is None or PQStat is None:
             raise RuntimeError(
                 'panopticapi is not installed, please install it by: '
                 'pip install git+https://github.com/cocodataset/'
@@ -140,7 +136,13 @@ class COCOPanopticMetric(BaseMetric):
         if outfile_prefix is None:
             self.tmp_dir = tempfile.TemporaryDirectory()
             self.outfile_prefix = self.tmp_dir.name 
-        
+
+        if gt_folder is None or not osp.isdir(gt_folder):
+            raise Exception("Folder {} with ground truth segmentations doesn't exist".format(gt_folder))
+        if pred_folder is None or not osp.isdir(pred_folder):
+            raise Exception("Folder {} with predicted segmentations doesn't exist".format(pred_folder))
+        self.gt_folder = gt_folder
+        self.pred_folder = pred_folder
         self.nproc = min(nproc, multiprocessing.cpu_count())
         self.categories = categories  
 
@@ -152,9 +154,11 @@ class COCOPanopticMetric(BaseMetric):
             self.categories = self._coco_api.cats
         else:
             self._coco_api = None
+            self.gt_img_list = []
+            self.pred_img_list = []
         
         if self.categories is None:
-            # use defalut coco categories
+            # use default coco categories
             self.categories = []
             idx = 1
             for name in CLASSES:
@@ -172,8 +176,7 @@ class COCOPanopticMetric(BaseMetric):
                 idx += 1
                 self.categories.append(cat_item)
 
-
-    def convert_to_coco_json(self, ann_list: Sequence[list], img_list: Sequence[list],
+    def convert_to_coco_json(self, ann_list: Sequence[list], img_list: str,
                         outfile_prefix: str) -> str:
         """Convert the annotation in list format to coco panoptic segmentation format json file.
         Args:
@@ -194,41 +197,39 @@ class COCOPanopticMetric(BaseMetric):
         img_count = 0
         idx = 0
         print("Processing annotations to coco json format...")
-
-        #In the ascending order of image_id
+            
         if 'image_id' in ann_list[0]:
+            ann_list = list(ann_list)
             ann_list.sort(key=lambda x:int(x['image_id']))
-            
+
         for img_ann, pan_png in tzip(ann_list, img_list):
-            
+
+            assert 'segments_info' in img_ann.keys() and 'file_name' in img_ann.keys(), 'You should at least put in segments_info and file_name in the annotation!'
             # Build 'images' in json file
-
-            for ann_item in img_ann:
-                if 'image_id' not in ann_item.keys():  # only segmentd_info
-                    img_count += 1
-                    image_info = {
-                        'id': img_count,
-                        'width': pan_png.shape[1],
-                        'height': pan_png.shape[0],
-                        'file_name': 'fake_img' + str(img_count) + '.jpg'
-                    }
-                else:
-
-                    image_info = {
-                        'id': ann_item['image_id'],
-                        'width': pan_png.shape[1],
-                        'height': pan_png.shape[0],
-                        'file_name': ann_item['file_name']
-                    }
-                image_infos.append(image_info)
-                break  
+            if 'image_id' not in img_ann.keys():
+                img_count += 1
+                image_info = {
+                    'id': img_count,
+                    'width': pan_png.shape[1],
+                    'height': pan_png.shape[0],
+                    'file_name': img_ann['file_name']
+                }
+            else:
+                image_info = {
+                    'id': img_ann['image_id'],
+                    'width': pan_png.shape[1],
+                    'height': pan_png.shape[0],
+                    'file_name': img_ann['file_name']
+                }
+            image_infos.append(image_info) 
 
             # Build 'annotations' in json file
             pan_png = rgb2id(pan_png)
-            segments_info = []
-            for each_segment_info in img_ann:
-
-                if 'segments_info' not in each_segment_info.keys():  
+            segments_info = img_ann['segments_info']
+            # check the segments_info
+            if not set(['id', 'category_id', 'isthing', 'iscrowd', 'area']).issubset(segments_info[0].keys()):
+                segments_info = []
+                for each_segment_info in img_ann['segments_info']:
                     id = each_segment_info['id']
                     label = each_segment_info['category_id']
                     mask = pan_png == id  
@@ -242,9 +243,6 @@ class COCOPanopticMetric(BaseMetric):
                         'area': mask.sum()
                     }
                     segments_info.append(new_segment_info)
-                else:
-                    segments_info = each_segment_info['segments_info']
-                    break
 
             segm_file = image_info['file_name'].replace('jpg', 'png')
             annotation = dict(
@@ -253,8 +251,6 @@ class COCOPanopticMetric(BaseMetric):
                 file_name=segm_file)
             annotations.append(annotation)
             pan_png = id2rgb(pan_png)
-
-
 
         # Build 'info' in json file
         info = dict(
@@ -276,44 +272,74 @@ class COCOPanopticMetric(BaseMetric):
             dump(coco_json, f, ensure_ascii=False, default=self.default_dump)
         return converted_json_path
 
-    def add(self, image_pairs: Sequence[Tuple], ann_pairs: Sequence[Tuple]) -> None:  
-        """Add images and annotations.
-        Args:
-            image_pairs (Sequence[Tuple]): A sequence of tuple. The first element is 
-                the list of ground truth image array with shape(W, H, 3), the second 
-                element is the list of predicted image array.
-            ann_pairs (Sequence[Tuple]): A sequence of tuple. The first element is 
-            the annotation of ground truth, which can be 'str' or 'list' to indicate 
-            its path or list of annotation. The second element is the annotation of 
-            prediction.
-            
-            If load from
-                `ann_file`, the first element can be empty. Else, each element
-                represents the annotation for an image, at lease with the following
-                keys:
-                - id (int): Segmentation id.
-                - category_id (int): Category id.
-                - iscrowd (int): 0 for single object and 1 for multiple objects.
-                - bboxes (numpy.ndarray): Shape (K, 4), the ground truth
-                  bounding bboxes of this image, in 'xyxy' foramrt.
-        """
-        # for image_pair, ann_pair in zip(image_pairs, ann_pairs):
-        assert isinstance(image_pairs, tuple), 'The prediciton should be ' \
-            f'a sequence of tuple, but got a sequence of {type(image_pairs)}.'  # noqa: E501
-        assert isinstance(ann_pairs, tuple), 'The label should be ' \
-            f'a sequence of tuple, but got a sequence of {type(ann_pairs)}.'   # noqa: E501
-        self.gt_img_list = image_pairs[0]
-        self.pred_img_list = image_pairs[1]
-        self.gt_ann_list = ann_pairs[0]
-        self.pred_ann_list = ann_pairs[1]
+    def gen_img_array_list(self, img_folder, annotations):
+        """Use PIL to process the image into an array and return a list contained all images.
 
+        Args:
+            img_folder (str): Path to the images.
+            annotations (list): The 'annotations' in the coco json file.
+
+        Returns:
+            list: A list contains all arrays of the images.
+        """
+        #In the ascending order of image_id
+        if 'image_id' in annotations[0]:
+            annotations = list(annotations)
+            annotations.sort(key=lambda x:int(x['image_id']))
+        img_list = []
+        for img_ann in annotations:
+            name = img_ann['file_name']
+            img_path = osp.join(img_folder, name)
+            image = Image.open(img_path)
+            image_pil = np.array(image, dtype=np.uint32)
+            img_list.append(image_pil)
+
+        return img_list
+
+    def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  
+        """Add the intermediate results to `self._results`.
+
+        Args:
+            predictions (Sequence[dict]): A sequence of dict. Each dict
+                representing a panoptic segmentation result for an image, with the
+                following keys:
+
+                - image_id (Optional, int): Image id.
+                - segments_info (list): A list of COCO panoptic annotations.
+                - file_name (str): Image name. 
+
+            groundtruths (Sequence[dict]): A sequence of dict. If load from
+                `ann_file`, the dict inside can be empty. Else, each dict
+                represents a groundtruths for an image, with the following
+                keys:
+
+                - image_id (Optional, int): Image id.
+                - segments_info (list): A list of COCO panoptic annotations.
+                - file_name (str): Image name. 
+        """
+        if self._coco_api is not None:
+            groundtruths = self._coco_api.dataset['annotations']
+        for prediction, groundtruth in zip(predictions, groundtruths):
+            assert isinstance(prediction, dict), 'The prediciton should be ' \
+                f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
+            assert isinstance(groundtruth, dict), 'The label should be ' \
+                f'a sequence of dict, but got a sequence of {type(groundtruth)}.'   # noqa: E501
+            self._results.append((prediction, groundtruth)) 
 
     def check_categories(self, categories):
+        """Check the type of categories and convert into dict.
+
+        Args:
+            categories (dict|list): The categories of the panoptic segmentation.
+
+        Returns:
+            dict: return a dict with shaped like {cat_id: 'cat'}
+        """
         if isinstance(categories, dict):
             assert "categories" in categories, "The key 'categories' must in the dict"
             return categories
         elif isinstance(categories, list):
-            if isinstance(categories[0], str): # only name
+            if isinstance(categories[0], str): 
                 new_cat_list = []
                 for name in categories:
                     cat_info = {
@@ -325,7 +351,6 @@ class COCOPanopticMetric(BaseMetric):
             if 'id' not in categories[0]:
                 for i, item in enumerate(categories):
                     item['id'] = i
-                #list2dict =  {el['id']: el for el in categories}
 
             return {el['id']: el for el in categories}
 
@@ -336,15 +361,11 @@ class COCOPanopticMetric(BaseMetric):
         cache_results = self._results
         cache_coco_api = self._coco_api
 
-
         self._results = []
-        self.gt_img_list = []
-        self.pred_img_list = []
         self.gt_ann_list = []
         self.pred_img_list = []
         self.add(*args, **kwargs)
-        self.categories = self.check_categories(self.categories)
-        metric_result = self.compute_metric()
+        metric_result = self.compute_metric(self._results)
 
         # recover states from cache
         self._results = cache_results
@@ -352,7 +373,6 @@ class COCOPanopticMetric(BaseMetric):
 
         return metric_result
 
-    
     def default_dump(self, obj):
         """Convert numpy classes to JSON serializable objects."""
         if isinstance(obj, (np.integer, np.floating, np.bool_)):
@@ -361,7 +381,6 @@ class COCOPanopticMetric(BaseMetric):
             return obj.tolist()
         else:
             return obj
-    
     
     def parse_pq_results(self, pq_results: dict) -> dict:
         """Parse the Panoptic Quality results.
@@ -382,7 +401,6 @@ class COCOPanopticMetric(BaseMetric):
         result['RQ_st'] = 100 * pq_results['Stuff']['rq']
         return result
 
-
     def print_panoptic_table(self, pq_results, classwise_results=None):
         """Print the panoptic evaluation results table.
 
@@ -391,7 +409,6 @@ class COCOPanopticMetric(BaseMetric):
             classwise_results(dict | None): The classwise Panoptic Quality results.
                 The keys are class names and the values are metrics.
         """
-
         headers = ['', 'PQ', 'SQ', 'RQ', 'categories']
         data = [headers]
         for name in ['All', 'Things', 'Stuff']:
@@ -429,19 +446,13 @@ class COCOPanopticMetric(BaseMetric):
         Similar to the function with the same name in `panopticapi`. 
         Args:
             proc_id (int): The id of the mini process.
+            annotation_set (list): The list of matched annotations tuple.
             gt_dict (str): The path of the ground truth images.
             pred_dict (str): The path of the prediction images.
             categories (str): The categories of the dataset.
             print_log (bool): Whether to print the log. Defaults to False.
-        """
-        if PQStat is None:
-            raise RuntimeError(
-                'panopticapi is not installed, please install it by: '
-                'pip install git+https://github.com/cocodataset/'
-                'panopticapi.git.')
-                
+        """     
         pq_stat = PQStat()
-
         idx = 0
         for gt_ann, pred_ann in annotation_set:
             if print_log and idx % 100 == 0:
@@ -571,9 +582,6 @@ class COCOPanopticMetric(BaseMetric):
                 Defaults to 4. When `nproc` exceeds the number of cpu cores,
                 the number of cpu cores is used.
         """
-
-        # cpu_num = min(nproc, multiprocessing.cpu_count())
-
         annotations_split = np.array_split(matched_annotations_list, nproc)
         print('Number of cores: {}, images per core: {}'.format(
             nproc, len(annotations_split[0])))
@@ -596,9 +604,12 @@ class COCOPanopticMetric(BaseMetric):
 
         return pq_stat
 
-    def compute_metric(self, show = True) -> Dict[str, float]:
+    def compute_metric(self, results: list, show = True) -> Dict[str, float]:
         """Compute the metrics from processed results.
         Args:
+            results (List[tuple]): A list of tuple. Each tuple is the
+                prediction and ground truth of an image. This list has already
+                been synced across all ranks.
             show (bool, optional): Indicates whether the results are 
                 displayed in the console.
         Returns:
@@ -606,6 +617,9 @@ class COCOPanopticMetric(BaseMetric):
                 the metrics, and the values are corresponding results.
         """
         self.results = []
+        # split gt and prediction list
+        preds, gts = zip(*results)
+
         if self.outfile_prefix is None:
             tmp_dir = tempfile.TemporaryDirectory()
             outfile_prefix = osp.join(tmp_dir.name, 'results')
@@ -614,18 +628,23 @@ class COCOPanopticMetric(BaseMetric):
 
         if self.tmp_dir is not None:
             # do evaluation after collect all the results
-
             if self._coco_api is None:  # 
                 # split gt and prediction list
-                gts_json = self.convert_to_coco_json(ann_list=self.gt_ann_list, img_list = self.gt_img_list ,outfile_prefix=osp.join(outfile_prefix, 'gts'))
+                self.categories = self.check_categories(self.categories)
+                self.gt_img_list = self.gen_img_array_list(img_folder=self.gt_folder, annotations=gts)
+                self.pred_img_list = self.gen_img_array_list(img_folder=self.pred_folder, annotations=preds)
+                # convert groundtruths to coco format and dump to json file
+                gts_json = self.convert_to_coco_json(ann_list=gts, img_list= self.gt_img_list, outfile_prefix=osp.join(outfile_prefix, 'gts'))
                 # convert predictions to coco format and dump to json file
-                pred_json = self.convert_to_coco_json(ann_list=self.pred_ann_list, img_list = self.pred_img_list ,outfile_prefix=osp.join(outfile_prefix, 'pred'))
+                pred_json = self.convert_to_coco_json(ann_list=preds, img_list=self.pred_img_list, outfile_prefix=osp.join(outfile_prefix, 'pred'))
                 self._coco_api = COCOPanoptic(gts_json)
             else:
-                if not isinstance(self.pred_ann_list, str):  
-                    pred_json = self.convert_to_coco_json(ann_list=self.pred_ann_list, img_list = self.pred_img_list ,outfile_prefix=osp.join(outfile_prefix, 'pred'))
+                self.gt_img_list = self.gen_img_array_list(self.gt_folder, annotations=gts)
+                self.pred_img_list = self.gen_img_array_list(self.pred_folder, annotations=preds)
+                if not isinstance(preds, str):  
+                    pred_json = self.convert_to_coco_json(ann_list=preds, img_list=self.pred_img_list ,outfile_prefix=osp.join(outfile_prefix, 'pred'))
                 else:
-                    pred_json = self.pred_ann_list
+                    pred_json = preds
 
             self.img_ids = self._coco_api.get_img_ids()
             self.categories = self._coco_api.cats
@@ -633,6 +652,7 @@ class COCOPanopticMetric(BaseMetric):
             assert len(self.img_ids) == len(self.gt_img_list)
             assert len(self.gt_img_list) == len(self.pred_img_list)
 
+            self.img_ids.sort()
             self.gt_imgs_id_arrlist = {_id: _arr for _id, _arr in zip(self.img_ids, self.gt_img_list)}
             self.pred_imgs_id_arrlist = {_id: _arr for _id, _arr in zip(self.img_ids, self.pred_img_list)}
 
