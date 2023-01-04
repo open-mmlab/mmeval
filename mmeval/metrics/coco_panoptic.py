@@ -91,6 +91,7 @@ MISSING_ID = [12, 26, 29, 30, 45, 66, 68, 69, 71, 83, 91, 94, 96, 97, 98,
 
 class COCOPanopticMetric(BaseMetric):
     """COCO panoptic segmentation evaluation metric.
+    
     Evaluate PQ, SQ RQ for panoptic segmentation tasks. Please refer to
     https://cocodataset.org/#panoptic-eval for more details.
     Args:
