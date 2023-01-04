@@ -143,6 +143,7 @@ class DOTAMeanAP(VOCMeanAP):
             predictions (Sequence[Dict]):  A sequence of dict. Each dict
                 representing a detection result for an image, with the
                 following keys:
+                
                 - bboxes (numpy.ndarray): Shape (N, 5) or shape (N, 8).
                   bounding bboxes of this image. The box format is depend on
                   ``self.predict_box_type``. Details in upper note.
@@ -150,9 +151,11 @@ class DOTAMeanAP(VOCMeanAP):
                   of bounding boxes.
                 - labels (numpy.ndarray): Shape (N, ), the predicted labels
                   of bounding boxes.
+
             groundtruths (Sequence[Dict]):  A sequence of dict. Each dict
                 represents a groundtruths for an image, with the following
                 keys:
+
                 - bboxes (numpy.ndarray): Shape (M, 5) or shape (M, 8), the
                   groundtruth bounding bboxes of this image, The box format
                   is depend on ``self.predict_box_type``.Details in upper

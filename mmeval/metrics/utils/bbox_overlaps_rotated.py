@@ -10,7 +10,7 @@ def qbox_to_rbox(boxes: np.ndarray) -> np.ndarray:
         boxes (np.ndarray): Quadrilateral box tensor with shape of (..., 8).
 
     Returns:
-        np.ndarray: Rotated box tensor with shape of (..., 5).
+        np.ndarray: Rotated box array with shape of (..., 5).
     """
     original_shape = boxes.shape[:-1]
     points = boxes.reshape(-1, 4, 2).astype(np.int64)
@@ -26,13 +26,13 @@ def le90_to_oc(bboxes: np.ndarray):
     """convert bboxes with le90 angle version to OpenCV angle version.
 
     Args:
-        bboxes (np.ndarray): The shape of bboxes should be [N,5],
-        the format is [x,y,w,h,angle]
+        bboxes (np.ndarray): The shape of bboxes should be (N, 5),
+        the format is 'xywha'.
 
     Returns:
         np.ndarray: An numpy.ndarray with the same shape of input.
     """
-    assert bboxes.shape[1] == 5, 'The boxes shape should be [N,5]'
+    assert bboxes.shape[1] == 5, 'The boxes shape should be (N, 5)'
 
     # a mask to indicate if input angles belong to (0,pi/2]
     mask = bboxes[:, 4] <= 0.0
@@ -53,7 +53,7 @@ def calculate_bboxes_area_rotated(bboxes: np.ndarray) -> np.ndarray:
 
     Args:
         bboxes (np.ndarray): The bboxes with shape (n, 5) or (5, )
-        in 'xywha'format.
+        in 'xywha' format.
 
     Returns:
         np.ndarray: The area of bboxes.
@@ -73,7 +73,7 @@ def calculate_overlaps_rotated(bboxes1: np.ndarray,
         bboxes1 (np.ndarray): The bboxes with shape (n, 5) in 'xywha' format.
         bboxes2 (np.ndarray): The bboxes with shape (k, 5) in 'xywha' format.
         clockwise (bool, optional): flag indicating whether the positive
-        angular orientation is clockwise. Defaults to True.
+            angular orientation is clockwise. Defaults to True.
 
     Returns:
         np.ndarray: IoUs with shape (n, k).
