@@ -26,74 +26,13 @@ except ImportError:
     PQStat = None
     OFFSET = 256 * 256 * 256
 
-CLASSES = [
-    'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train',
-    ' truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign',
-    'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep',
-    'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella',
-    'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard',
-    'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard',
-    'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork',
-    'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange',
-    'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
-    'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv',
-    'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-    'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase',
-    'scissors', 'teddy bear', 'hair drier', 'toothbrush', 'banner',
-    'blanket', 'bridge', 'cardboard', 'counter', 'curtain', 'door-stuff',
-    'floor-wood', 'flower', 'fruit', 'gravel', 'house', 'light',
-    'mirror-stuff', 'net', 'pillow', 'platform', 'playingfield',
-    'railroad', 'river', 'road', 'roof', 'sand', 'sea', 'shelf', 'snow',
-    'stairs', 'tent', 'towel', 'wall-brick', 'wall-stone', 'wall-tile',
-    'wall-wood', 'water-other', 'window-blind', 'window-other',
-    'tree-merged', 'fence-merged', 'ceiling-merged', 'sky-other-merged',
-    'cabinet-merged', 'table-merged', 'floor-other-merged',
-    'pavement-merged', 'mountain-merged', 'grass-merged', 'dirt-merged',
-    'paper-merged', 'food-other-merged', 'building-other-merged',
-    'rock-merged', 'wall-other-merged', 'rug-merged'
-]
-THING_CLASSES = [
-    'person', 'bicycle', 'car', 'motorcycle', 'airplane', 'bus', 'train',
-    'truck', 'boat', 'traffic light', 'fire hydrant', 'stop sign',
-    'parking meter', 'bench', 'bird', 'cat', 'dog', 'horse', 'sheep',
-    'cow', 'elephant', 'bear', 'zebra', 'giraffe', 'backpack', 'umbrella',
-    'handbag', 'tie', 'suitcase', 'frisbee', 'skis', 'snowboard',
-    'sports ball', 'kite', 'baseball bat', 'baseball glove', 'skateboard',
-    'surfboard', 'tennis racket', 'bottle', 'wine glass', 'cup', 'fork',
-    'knife', 'spoon', 'bowl', 'banana', 'apple', 'sandwich', 'orange',
-    'broccoli', 'carrot', 'hot dog', 'pizza', 'donut', 'cake', 'chair',
-    'couch', 'potted plant', 'bed', 'dining table', 'toilet', 'tv',
-    'laptop', 'mouse', 'remote', 'keyboard', 'cell phone', 'microwave',
-    'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase',
-    'scissors', 'teddy bear', 'hair drier', 'toothbrush'
-]
-STUFF_CLASSES = [
-    'banner', 'blanket', 'bridge', 'cardboard', 'counter', 'curtain',
-    'door-stuff', 'floor-wood', 'flower', 'fruit', 'gravel', 'house',
-    'light', 'mirror-stuff', 'net', 'pillow', 'platform', 'playingfield',
-    'railroad', 'river', 'road', 'roof', 'sand', 'sea', 'shelf', 'snow',
-    'stairs', 'tent', 'towel', 'wall-brick', 'wall-stone', 'wall-tile',
-    'wall-wood', 'water-other', 'window-blind', 'window-other',
-    'tree-merged', 'fence-merged', 'ceiling-merged', 'sky-other-merged',
-    'cabinet-merged', 'table-merged', 'floor-other-merged',
-    'pavement-merged', 'mountain-merged', 'grass-merged', 'dirt-merged',
-    'paper-merged', 'food-other-merged', 'building-other-merged',
-    'rock-merged', 'wall-other-merged', 'rug-merged'
-]
-
-MISSING_ID = [12, 26, 29, 30, 45, 66, 68, 69, 71, 83, 91, 94, 96, 97, 98,
-    99, 101, 102, 103, 104, 105, 106, 108, 110, 111, 113, 114, 115, 116, 117,
-    120, 121, 123, 124, 126, 127, 129, 131, 132, 134, 135, 136, 137, 139, 140,
-    142, 143, 146, 150, 152, 153, 157, 158, 160, 162, 163, 164, 165, 167, 169, 
-    170, 172, 173, 174, 179, 182, 183
-]  
-
 
 class COCOPanopticMetric(BaseMetric):
     """COCO panoptic segmentation evaluation metric.
     
     Evaluate PQ, SQ RQ for panoptic segmentation tasks. Please refer to
     https://cocodataset.org/#panoptic-eval for more details.
+
     Args:
         ann_file (str, optional): Path to the coco format annotation file.
             If not specified, ground truth annotations from the dataset will
@@ -142,50 +81,31 @@ class COCOPanopticMetric(BaseMetric):
             raise Exception("Folder {} with ground truth segmentations doesn't exist".format(gt_folder))
         if pred_folder is None or not osp.isdir(pred_folder):
             raise Exception("Folder {} with predicted segmentations doesn't exist".format(pred_folder))
+        self.ann_file = ann_file
+        self.backend_args = backend_args
         self.gt_folder = gt_folder
         self.pred_folder = pred_folder
         self.nproc = min(nproc, multiprocessing.cpu_count())
         self.categories = categories  
-
-        if ann_file is not None:
-            with get_local_path(
-                    filepath=ann_file,
-                    backend_args=backend_args) as local_path:
-                self._coco_api = COCOPanoptic(local_path)
-            self.categories = self._coco_api.cats
-        else:
-            self._coco_api = None
-            self.gt_img_list = []
-            self.pred_img_list = []
         
         if self.categories is None:
             # use default coco categories
-            self.categories = []
-            idx = 1
-            for name in CLASSES:
-                if name in STUFF_CLASSES:
-                    isthing = 0
-                else:
-                    isthing = 1
-                while(idx in MISSING_ID): idx += 1
-                cat_item = {
-                    "supercategory": None,
-                    "isthing": isthing,
-                    "id": idx,
-                    "name" : name
-                }
-                idx += 1
-                self.categories.append(cat_item)
+            self.categories = [
+            dict(id=id, name=name) for id, name in enumerate(
+                self.dataset_meta['classes'])  # type:ignore
+        ]
 
     def convert_to_coco_json(self, ann_list: Sequence[list], img_list: str,
                         outfile_prefix: str) -> str:
         """Convert the annotation in list format to coco panoptic segmentation format json file.
+
         Args:
             ann_list (Sequence[list]): The annotation list.
             img_list (Sequence[list]): The image array list.
             outfile_prefix (str): The filename prefix of the json file. If the
                 prefix is "somepath/xxx", the json file will be named
                 "somepath/xxx.gt.json".
+
         Returns:
             str: The filename of the json file.
         """
@@ -363,8 +283,6 @@ class COCOPanopticMetric(BaseMetric):
         cache_coco_api = self._coco_api
 
         self._results = []
-        self.gt_ann_list = []
-        self.pred_img_list = []
         self.add(*args, **kwargs)
         metric_result = self.compute_metric(self._results)
 
@@ -385,8 +303,10 @@ class COCOPanopticMetric(BaseMetric):
     
     def parse_pq_results(self, pq_results: dict) -> dict:
         """Parse the Panoptic Quality results.
+
         Args:
             pq_results (dict): Panoptic Quality results.
+
         Returns:
             dict: Panoptic Quality results parsed.
         """
@@ -435,6 +355,7 @@ class COCOPanopticMetric(BaseMetric):
             table = AsciiTable(data)
             print(msg='Classwise Panoptic Evaluation Results:\n' + table.table)
 
+#TODO: 写一下这里的return结果
     def pq_compute_single_core(self, proc_id,
                            annotation_set,
                            gt_dict,
@@ -445,6 +366,7 @@ class COCOPanopticMetric(BaseMetric):
         The single core function to evaluate the metric of Panoptic
         Segmentation.
         Similar to the function with the same name in `panopticapi`. 
+
         Args:
             proc_id (int): The id of the mini process.
             annotation_set (list): The list of matched annotations tuple.
@@ -452,6 +374,9 @@ class COCOPanopticMetric(BaseMetric):
             pred_dict (str): The path of the prediction images.
             categories (str): The categories of the dataset.
             print_log (bool): Whether to print the log. Defaults to False.
+
+        Return:
+
         """     
         pq_stat = PQStat()
         idx = 0
@@ -563,6 +488,7 @@ class COCOPanopticMetric(BaseMetric):
                 proc_id, len(annotation_set)))
         return pq_stat
 
+#TODO: 写一下这里的return 结果
     def pq_compute_multi_core(self, matched_annotations_list,
                             gt_dict,
                             pred_dict,
@@ -570,6 +496,7 @@ class COCOPanopticMetric(BaseMetric):
                             nproc):
         """Evaluate the metrics of Panoptic Segmentation with multithreading.
         Same as the function with the same name in `panopticapi`.
+
         Args:
             matched_annotations_list (list): The matched annotation list. Each
                 element is a tuple of annotations of the same image with the
@@ -582,6 +509,8 @@ class COCOPanopticMetric(BaseMetric):
             nproc (int): Number of processes for panoptic quality computing.
                 Defaults to 4. When `nproc` exceeds the number of cpu cores,
                 the number of cpu cores is used.
+
+        Return:
         """
         annotations_split = np.array_split(matched_annotations_list, nproc)
         print('Number of cores: {}, images per core: {}'.format(
@@ -607,17 +536,19 @@ class COCOPanopticMetric(BaseMetric):
 
     def compute_metric(self, results: list, show = True) -> Dict[str, float]:
         """Compute the metrics from processed results.
+
         Args:
             results (List[tuple]): A list of tuple. Each tuple is the
                 prediction and ground truth of an image. This list has already
                 been synced across all ranks.
             show (bool, optional): Indicates whether the results are 
                 displayed in the console.
+
         Returns:
             Dict[str, float]: The computed metrics. The keys are the names of
                 the metrics, and the values are corresponding results.
         """
-        self.results = []
+        metric_results = []
         # split gt and prediction list
         preds, gts = zip(*results)
 
@@ -627,35 +558,44 @@ class COCOPanopticMetric(BaseMetric):
         else:
             outfile_prefix = self.outfile_prefix
 
+        if self.ann_file is not None:
+            with get_local_path(
+                    filepath=self.ann_file,
+                    backend_args=self.backend_args) as local_path:
+                self._coco_api = COCOPanoptic(local_path)
+            self.categories = self._coco_api.cats
+        else:
+            self._coco_api = None
+
         if self.tmp_dir is not None:
             # do evaluation after collect all the results
             if self._coco_api is None:  # 
                 # split gt and prediction list
                 self.categories = self.check_categories(self.categories)
-                self.gt_img_list = self.gen_img_array_list(img_folder=self.gt_folder, annotations=gts)
-                self.pred_img_list = self.gen_img_array_list(img_folder=self.pred_folder, annotations=preds)
+                gt_img_list = self.gen_img_array_list(img_folder=self.gt_folder, annotations=gts)
+                pred_img_list = self.gen_img_array_list(img_folder=self.pred_folder, annotations=preds)
                 # convert groundtruths to coco format and dump to json file
-                gts_json = self.convert_to_coco_json(ann_list=gts, img_list= self.gt_img_list, outfile_prefix=osp.join(outfile_prefix, 'gts'))
+                gts_json = self.convert_to_coco_json(ann_list=gts, img_list= gt_img_list, outfile_prefix=osp.join(outfile_prefix, 'gts'))
                 # convert predictions to coco format and dump to json file
-                pred_json = self.convert_to_coco_json(ann_list=preds, img_list=self.pred_img_list, outfile_prefix=osp.join(outfile_prefix, 'pred'))
+                pred_json = self.convert_to_coco_json(ann_list=preds, img_list=pred_img_list, outfile_prefix=osp.join(outfile_prefix, 'pred'))
                 self._coco_api = COCOPanoptic(gts_json)
             else:
-                self.gt_img_list = self.gen_img_array_list(self.gt_folder, annotations=gts)
-                self.pred_img_list = self.gen_img_array_list(self.pred_folder, annotations=preds)
+                gt_img_list = self.gen_img_array_list(self.gt_folder, annotations=gts)
+                pred_img_list = self.gen_img_array_list(self.pred_folder, annotations=preds)
                 if not isinstance(preds, str):  
-                    pred_json = self.convert_to_coco_json(ann_list=preds, img_list=self.pred_img_list ,outfile_prefix=osp.join(outfile_prefix, 'pred'))
+                    pred_json = self.convert_to_coco_json(ann_list=preds, img_list=pred_img_list ,outfile_prefix=osp.join(outfile_prefix, 'pred'))
                 else:
                     pred_json = preds
 
             self.img_ids = self._coco_api.get_img_ids()
             self.categories = self._coco_api.cats
 
-            assert len(self.img_ids) == len(self.gt_img_list)
-            assert len(self.gt_img_list) == len(self.pred_img_list)
+            assert len(self.img_ids) == len(gt_img_list)
+            assert len(gt_img_list) == len(pred_img_list)
 
             self.img_ids.sort()
-            self.gt_imgs_id_arrlist = {_id: _arr for _id, _arr in zip(self.img_ids, self.gt_img_list)}
-            self.pred_imgs_id_arrlist = {_id: _arr for _id, _arr in zip(self.img_ids, self.pred_img_list)}
+            self.gt_imgs_id_arrlist = {_id: _arr for _id, _arr in zip(self.img_ids, gt_img_list)}
+            self.pred_imgs_id_arrlist = {_id: _arr for _id, _arr in zip(self.img_ids, pred_img_list)}
 
             imgs = self._coco_api.imgs
             gt_json = self._coco_api.img_ann_map   
@@ -690,10 +630,10 @@ class COCOPanopticMetric(BaseMetric):
                     pred_dict=self.pred_imgs_id_arrlist,
                     categories=self.categories)
 
-                self.results.append(pq_stats)
+                metric_results.append(pq_stats)
 
                 pq_stat = PQStat()
-                for result in self.results:
+                for result in metric_results:
                     pq_stat += result
 
         metrics = [('All', None), ('Things', True), ('Stuff', False)]

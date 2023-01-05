@@ -5,16 +5,11 @@ import os
 
 from coco_panoptic import COCOPanopticMetric
 
-fake_dataset_metas = [
-    {
-        "name": '0',
-        "isthing": 0
-    },
-    {
-        "name": '1',
-        "isthing": 1
-    }
-]
+fake_dataset_metas = {
+            'classes': ('person', 'dog', 'wall'),
+            'thing_classes': ('person', 'dog'),
+            'stuff_classes': ('wall', )
+        }
 
 if __name__ == '__main__':
 
