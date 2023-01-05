@@ -430,7 +430,7 @@ class MultiLabelMetric(MultiLabelMixin, BaseMetric):
             pos_inds = (preds >= self.thr).long()
         else:
             # top-k labels will be predicted positive for any example
-            _, topk_indices = preds.topk(self.topk)
+            _, topk_indices = preds.topk(self.topk, dim=-1)
             pos_inds = flow.zeros_like(preds).scatter_(1, topk_indices, 1)
             pos_inds = pos_inds.long()
 
