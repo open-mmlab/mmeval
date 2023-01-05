@@ -236,6 +236,7 @@ class InstanceSeg(BaseMetric):
 
         Args:
             results (list): The processed results of each batch.
+ 
         Returns:
             Dict[str, float]: The computed metrics. The keys are the names of
             the metrics, and the values are corresponding results.
