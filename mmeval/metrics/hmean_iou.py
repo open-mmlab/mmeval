@@ -184,7 +184,7 @@ class HmeanIoU(BaseMetric):
             pred_polys = polys2shapely(pred_polygons)
             pred_scores = np.array(pred_scores, dtype=np.float32)
             gt_polys = polys2shapely(gt_polygons)
-            gt_ignore_flags = np.array(gt_ignore_flags, dtype=bool)
+            gt_ignore_flags = np.array(gt_ignore_flags, dtype=np.bool_)
 
             self._results.append(
                 (pred_polys, pred_scores, gt_polys, gt_ignore_flags))
