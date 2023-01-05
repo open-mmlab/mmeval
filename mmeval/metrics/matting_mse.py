@@ -10,7 +10,7 @@ class MattingMSE(BaseMetric):
 
     This metric compute per-pixel squared error average across all
     pixels.
-    i.e. mean((a-b)^2) / norm_const
+    i.e. mean((a-b)^2)
 
     .. note::
 
@@ -22,15 +22,9 @@ class MattingMSE(BaseMetric):
         pred_alpha should be masked by trimap before passing
         into this metric
 
-    Default prefix: ''
-
     Args:
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
-        norm_const (int): Divide the result to reduce its magnitude.
-            Default to 1000.
 
-    Metrics:
-        - MattingMSE (float): Mean of Squared Error
 
     Examples:
 
@@ -38,26 +32,25 @@ class MattingMSE(BaseMetric):
         >>> import numpy as np
         >>>
         >>> mattingmse = MattingMSE()
-        >>> gts = np.random.randint(0, 255, size=(3, 32, 32))
-        >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
-        >>> trimap = np.random.choice(a=(0,128,255), size=(3, 32, 32))
-        >>> mattingmse(preds, gts, trimap)  # doctest: +ELLIPSIS
+        >>> pred_alpha = np.zeros((32, 32), dtype=np.uint8)
+        >>> gt_alpha = np.ones((32, 32), dtype=np.uint8) * 255
+        >>> trimap = np.zeros((32, 32), dtype=np.uint8)
+        >>> trimap[:16, :16] = 128
+        >>> trimap[16:, 16:] = 255
+        >>> mattingmse(pred_alpha, gt_alpha,trimap)  # doctest: +ELLIPSIS
         {'MattingMSE': ...}
     """
 
-    default_prefix = ''
-
-    def __init__(self, norm_const=1000, **kwargs) -> None:
-        self.norm_const = norm_const
+    def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
 
     def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray], trimaps: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add MattingMSE score of batch to ``self._results``
 
         Args:
-            pred_alpha( Sequence ): Pred_alpha data of predictions.
-            ori_alpha( Sequence ): Ori_alpha data of data_batch.
-            ori_trimap( Sequence ): Ori_trimap data of data_batch.
+            pred_alpha(Sequence[np.ndarray]): Pred_alpha data of predictions.
+            ori_alpha(Sequence[np.ndarray]): Ori_alpha data of data_batch.
+            ori_trimap(Sequence[np.ndarray]): Ori_trimap data of data_batch.
         """
 
         for pred_alpha, gt_alpha, trimap in zip(pred_alphas, gt_alphas,
