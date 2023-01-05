@@ -215,18 +215,21 @@ class InstanceSeg(BaseMetric):
         The processed results should be stored in ``self.results``,
         which will be used to compute the metrics when all batches
         have been processed.
+        
         Args:
             predictions (Sequence[Dict]): A sequence of dict. Each dict
                 representing a detection result, with the following keys:
 
-            - pts_instance_mask(numpy.ndarray): Predicted instance masks.
-            - instance_labels(numpy.ndarray): Predicted instance labels.
-            - instance_scores(numpy.ndarray): Predicted instance scores.
+                - pts_instance_mask(numpy.ndarray): Predicted instance masks.
+                - instance_labels(numpy.ndarray): Predicted instance labels.
+                - instance_scores(numpy.ndarray): Predicted instance scores.
+            
             groundtruths (Sequence[Dict]): A sequence of dict. Each dict
                 represents a groundtruths for an image, with the following
                 keys:
-            - pts_instance_mask(numpy.ndarray): Ground truth instance masks.
-            - pts_semantic_mask(numpy.ndarray): Ground truth semantic masks.
+            
+                - pts_instance_mask(numpy.ndarray): Ground truth instance masks.
+                - pts_semantic_mask(numpy.ndarray): Ground truth semantic masks.
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             self._results.append((deepcopy(prediction), deepcopy(groundtruth)))
