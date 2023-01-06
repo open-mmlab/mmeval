@@ -16,16 +16,16 @@ class MattingMSE(BaseMetric):
         **kwargs:Keyword parameters passed to :class:`BaseMetric`.
 
     Note:
-        1.Current implementation assume image / alpha / trimap array
+        Current implementation assume image / alpha / trimap array
         in numpy format and with pixel value ranging from 0 to 255.
 
-        2.pred_alpha should be masked by trimap before passing
+        The pred_alpha should be masked by trimap before passing
         into this metric
 
-        3. Trimap is the most commonly used prior knowledge. As the
-        name implies,Trimap is a ternary graph, and each pixel takes
-        one of {0,128,255},representing the foreground, the unknown
-        and the background respectively.
+        Trimap is the most commonly used prior knowledge. As the
+        name implies, Trimap is a ternary graph, and each pixel
+        takes one of {0,128,255}, representing the foreground, the
+        unknown and the background respectively.
 
     Examples:
 
