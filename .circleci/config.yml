@@ -1,6 +1,7 @@
 version: 2.1
 
 jobs:
+
   lint:
     docker:
       - image: cimg/python:3.7.4
@@ -147,6 +148,7 @@ jobs:
           name: Run unittests
           command: |
             pytest -vv tests/
+
 
 workflows:
   unit_tests:
