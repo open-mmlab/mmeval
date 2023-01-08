@@ -31,6 +31,7 @@ Metrics
    OIDMeanAP
    F1Metric
    HmeanIoU
+   InstanceSeg
    EndPointError
    PCKAccuracy
    MpiiPCKAccuracy
