@@ -8,7 +8,7 @@ from mmeval.core import BaseMetric
 class MattingMSE(BaseMetric):
     """Mean Squared Error metric for image matting.
 
-    This metric compute per-pixel squared error average across all
+    This metric computes the per-pixel squared error average across all
     pixels.
     i.e. mean((a-b)^2)
 
@@ -16,15 +16,15 @@ class MattingMSE(BaseMetric):
         **kwargs:Keyword parameters passed to :class:`BaseMetric`.
 
     Note:
-        Current implementation assume image / alpha / trimap array
-        in numpy format and with pixel value ranging from 0 to 255.
+        The current implementation assumes the image / alpha / trimap 
+        a numpy array with pixel values ranging from 0 to 255.
 
         The pred_alpha should be masked by trimap before passing
-        into this metric
+        into this metric.
 
-        Trimap is the most commonly used prior knowledge. As the
-        name implies, Trimap is a ternary graph, and each pixel
-        takes one of {0,128,255}, representing the foreground, the
+        The trimap is the most commonly used prior knowledge. As the
+        name implies, trimap is a ternary graph and each pixel
+        takes one of {0, 128, 255}, representing the foreground, the
         unknown and the background respectively.
 
     Examples:
@@ -38,7 +38,7 @@ class MattingMSE(BaseMetric):
         >>> trimap = np.zeros((32, 32), dtype=np.uint8)
         >>> trimap[:16, :16] = 128
         >>> trimap[16:, 16:] = 255
-        >>> mattingmse(pred_alpha, gt_alpha,trimap)  # doctest: +ELLIPSIS
+        >>> mattingmse(pred_alpha, gt_alpha, trimap)  # doctest: +ELLIPSIS
         {'MattingMSE': ...}
     """
 
