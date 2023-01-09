@@ -16,7 +16,7 @@ class MattingMSE(BaseMetric):
         **kwargs:Keyword parameters passed to :class:`BaseMetric`.
 
     Note:
-        The current implementation assumes the image / alpha / trimap 
+        The current implementation assumes the image / alpha / trimap
         a numpy array with pixel values ranging from 0 to 255.
 
         The pred_alpha should be masked by trimap before passing
