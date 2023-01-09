@@ -8,6 +8,7 @@ from .end_point_error import EndPointError
 from .f_metric import F1Metric
 from .hmean_iou import HmeanIoU
 from .mae import MAE
+from .matting_sad import MattingSAD
 from .mean_iou import MeanIoU
 from .mse import MSE
 from .multi_label import AveragePrecision, MultiLabelMetric
@@ -25,5 +26,5 @@ __all__ = [
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU'
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'MattingSAD'
 ]
