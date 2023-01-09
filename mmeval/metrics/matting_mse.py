@@ -13,7 +13,7 @@ class MattingMSE(BaseMetric):
     i.e. mean((a-b)^2)
 
     Args:
-        **kwargs:Keyword parameters passed to :class:`BaseMetric`.
+        **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Note:
         The current implementation assumes the image / alpha / trimap
