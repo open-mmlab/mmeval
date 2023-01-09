@@ -27,17 +27,14 @@ class MattingSAD(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import MattingMSE
+        >>> from mmeval import MattingSAD
         >>> import numpy as np
         >>>
-        >>> mattingmse = MattingMSE()
+        >>> mattingsad = MattingSAD()
         >>> pred_alpha = np.zeros((32, 32), dtype=np.uint8)
         >>> gt_alpha = np.ones((32, 32), dtype=np.uint8) * 255
-        >>> trimap = np.zeros((32, 32), dtype=np.uint8)
-        >>> trimap[:16, :16] = 128
-        >>> trimap[16:, 16:] = 255
-        >>> mattingmse(pred_alpha, gt_alpha, trimap)  # doctest: +ELLIPSIS
-        {'MattingMSE': ...}
+        >>> mattingsad(pred_alpha, gt_alpha)  # doctest: +ELLIPSIS
+        {'MattingSAD': ...}
     """
 
     def __init__(self, norm_const=1000, **kwargs) -> None:
@@ -52,10 +49,7 @@ class MattingSAD(BaseMetric):
             ori_alpha(Sequence[np.ndarray]): Ori_alpha data of data_batch.
         """
 
-        for pred_alpha, gt_alpha in zip(
-                pred_alphas,
-                gt_alphas,
-        ):
+        for pred_alpha, gt_alpha in zip(pred_alphas, gt_alphas):
             assert pred_alpha.shape == gt_alpha.shape, 'The shape of ' \
                 '`pred_alpha` and `gt_alpha` should be the same, but got: ' \
                 f'{pred_alpha.shape} and {gt_alpha.shape}'
