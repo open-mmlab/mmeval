@@ -59,14 +59,14 @@ class MattingSAD(BaseMetric):
             self._results.append(sad_sum)
 
     def compute_metric(self, results: List) -> Dict[str, float]:
-        """Compute the MattingMSE metric.
+        """Compute the MattingSAD metric.
 
         Args:
-            results (List): A list that consisting the MattingMSE score.
+            results (List): A list that consisting the MattingSAD score.
                 This list has already been synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed MattingMSE metric.
+            Dict[str, float]: The computed MattingSAD metric.
             The keys are the names of the metrics,
             and the values are corresponding results.
         """
