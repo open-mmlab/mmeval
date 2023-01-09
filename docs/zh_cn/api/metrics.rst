@@ -43,3 +43,4 @@ Metrics
    MSE
    BLEU
    MattingMSE
+   MattingSAD
