@@ -13,9 +13,9 @@ class MattingSAD(BaseMetric):
     i.e. sum(abs(a-b)) / norm_const
 
     Args:
-        **kwargs:Keyword parameters passed to :class:`BaseMetric`.
         norm_const (int): Divide the result to reduce its magnitude.
             Default to 1000.
+        **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Note:
         The current implementation assumes the image / alpha / trimap
@@ -23,8 +23,6 @@ class MattingSAD(BaseMetric):
 
         The pred_alpha should be masked by trimap before passing
         into this metric.
-
-
     Examples:
 
         >>> from mmeval import MattingSAD
