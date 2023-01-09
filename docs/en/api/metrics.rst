@@ -42,4 +42,4 @@ Metrics
    MAE
    MSE
    BLEU
-   MattingSAD
+   SAD

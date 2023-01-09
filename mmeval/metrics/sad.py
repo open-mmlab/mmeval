@@ -5,8 +5,8 @@ from typing import Dict, List, Sequence
 from mmeval.core import BaseMetric
 
 
-class MattingSAD(BaseMetric):
-    """Sum of Absolute Differences metric for image matting.
+class SAD(BaseMetric):
+    """Sum of Absolute Differences metric for image.
 
     This metric compute per-pixel absolute difference and sum across all
     pixels.
@@ -23,21 +23,22 @@ class MattingSAD(BaseMetric):
 
         The pred_alpha should be masked by trimap before passing
         into this metric.
+
     Examples:
 
-        >>> from mmeval import MattingSAD
+        >>> from mmeval import SAD
         >>> import numpy as np
         >>>
-        >>> mattingsad = MattingSAD()
+        >>> sad = SAD()
         >>> pred_alpha = np.zeros((32, 32), dtype=np.uint8)
         >>> gt_alpha = np.ones((32, 32), dtype=np.uint8) * 255
-        >>> mattingsad(pred_alpha, gt_alpha)  # doctest: +ELLIPSIS
-        {'MattingSAD': ...}
+        >>> sad(pred_alpha, gt_alpha)  # doctest: +ELLIPSIS
+        {'SAD': ...}
     """
 
     def __init__(self, norm_const=1000, **kwargs) -> None:
-        self.norm_const = norm_const
         super().__init__(**kwargs)
+        self.norm_const = norm_const
 
     def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add SAD score of batch to ``self._results``
@@ -57,16 +58,16 @@ class MattingSAD(BaseMetric):
             self._results.append(sad_sum)
 
     def compute_metric(self, results: List) -> Dict[str, float]:
-        """Compute the MattingSAD metric.
+        """Compute the SAD metric.
 
         Args:
-            results (List): A list that consisting the MattingSAD score.
+            results (List): A list that consisting the SAD score.
                 This list has already been synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed MattingSAD metric.
+            Dict[str, float]: The computed SAD metric.
             The keys are the names of the metrics,
             and the values are corresponding results.
         """
 
-        return {'MattingSAD': float(np.array(results).mean())}
+        return {'SAD': float(np.array(results).mean())}
