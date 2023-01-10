@@ -297,7 +297,7 @@ class DOTAMeanAP(VOCMeanAP):
                 format.
             min_area (Optional[float]): The minimum area. If None, does not
                 filter the minimum area.
-            max_area (_type_): The maximum area. If None, does not filter
+            max_area (Optional[float]): The maximum area. If None, does not filter
                 the maximum area.
 
         Returns:
