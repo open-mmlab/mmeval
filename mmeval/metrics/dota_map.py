@@ -133,11 +133,12 @@ class DOTAMeanAP(VOCMeanAP):
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
 
-        Note: The box shape of ``predictions`` and ``groundtruths`` is depends
-        on the ``self.predict_box_type``. If ``self.predict_box_type`` is
-        'rbox', the box shape should be (N, 5) which represents the (x,y,w,h,
-        angle), otherwise the box shape should be (N, 8) which represents the
-        (x1,y1,x2,y2,x3,y3,x4,y4).
+        Note:
+            The box shape of ``predictions`` and ``groundtruths`` is depends
+            on the ``self.predict_box_type``. If ``self.predict_box_type`` is
+            'rbox', the box shape should be (N, 5) which represents the (x, y, w, h,
+            angle), otherwise the box shape should be (N, 8) which represents the
+            (x1, y1, x2, y2, x3, y3, x4, y4).
 
         Args:
             predictions (Sequence[Dict]):  A sequence of dict. Each dict
