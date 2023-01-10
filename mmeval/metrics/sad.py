@@ -33,7 +33,7 @@ class SAD(BaseMetric):
         {'SAD': ...}
     """
 
-    def __init__(self, norm_const=1000, **kwargs) -> None:
+    def __init__(self, norm_const: int = 1000, **kwargs) -> None:
         super().__init__(**kwargs)
         self.norm_const = norm_const
 
