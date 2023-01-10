@@ -41,8 +41,8 @@ class SAD(BaseMetric):
         """Add SAD score of batch to ``self._results``
 
         Args:
-            predictions(Sequence[np.ndarray]): A sequence of prediction image arrays.
-            groundtruths(Sequence[np.ndarray]): A sequence of groundtruth image arrays.
+            predictions (Sequence[np.ndarray]): Sequence of predicted image.
+            groundtruths (Sequence[np.ndarray]): Sequence of groundtruth image.
         """
 
         for prediction, groundtruth in zip(predictions, groundtruths):
