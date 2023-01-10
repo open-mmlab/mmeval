@@ -74,8 +74,6 @@ class DOTAMeanAP(VOCMeanAP):
             when calculating the average precision for each class.
         classwise (bool): Whether to return the computed results of each
             class. Defaults to False.
-        predict_box_type (str): Box type of model results. If the QuadriBoxes
-            is used, you need to specify 'qbox'. Defaults to 'rbox'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -116,7 +114,6 @@ class DOTAMeanAP(VOCMeanAP):
                  nproc: int = 4,
                  drop_class_ap: bool = True,
                  classwise: bool = False,
-                 predict_box_type: str = 'rbox',
                  **kwargs) -> None:
         super().__init__(
             iou_thrs=iou_thrs,
@@ -128,17 +125,9 @@ class DOTAMeanAP(VOCMeanAP):
             drop_class_ap=drop_class_ap,
             classwise=classwise,
             **kwargs)
-        self.predict_box_type = predict_box_type
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
-
-        Note:
-            The box shape of ``predictions`` and ``groundtruths`` is depends
-            on the ``self.predict_box_type``. If ``self.predict_box_type`` is
-            'rbox', the box shape should be (N, 5) which represents the (x, y, w, h,
-            angle), otherwise the box shape should be (N, 8) which represents the
-            (x1, y1, x2, y2, x3, y3, x4, y4).
 
         Args:
             predictions (Sequence[Dict]):  A sequence of dict. Each dict
@@ -146,7 +135,7 @@ class DOTAMeanAP(VOCMeanAP):
                 following keys:
                 - bboxes (numpy.ndarray): Shape (N, 5) or shape (N, 8).
                   bounding bboxes of this image. The box format is depend on
-                  ``self.predict_box_type``. Details in upper note.
+                  predict_box_type. Details in Note.
                 - scores (numpy.ndarray): Shape (N, ), the predicted scores
                   of bounding boxes.
                 - labels (numpy.ndarray): Shape (N, ), the predicted labels
@@ -158,8 +147,7 @@ class DOTAMeanAP(VOCMeanAP):
 
                 - bboxes (numpy.ndarray): Shape (M, 5) or shape (M, 8), the
                   groundtruth bounding bboxes of this image, The box format
-                  is depend on ``self.predict_box_type``.Details in upper
-                  note.
+                  is depend on predict_box_type. Details in Note.
                 - labels (numpy.ndarray): Shape (M, ), the ground truth
                   labels of bounding boxes.
                 - bboxes_ignore (numpy.ndarray): Shape (K, 5) or shape(K, 8),
@@ -168,6 +156,13 @@ class DOTAMeanAP(VOCMeanAP):
                   upper note.
                 - labels_ignore (numpy.ndarray): Shape (K, ), the ground
                   truth ignored labels of bounding boxes.
+
+        Note:
+            The box shape of ``predictions`` and ``groundtruths`` is depends
+            on the predict_box_type. If predict_box_type is 'rbox', the box
+            shape should be (N, 5) which represents the (x, y,w, h, angle),
+            otherwise the box shape should be (N, 8) which represents the
+            (x1, y1, x2, y2, x3, y3, x4, y4).
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             assert isinstance(prediction, dict), 'The prediciton should be ' \
@@ -186,10 +181,10 @@ class DOTAMeanAP(VOCMeanAP):
 
         Args:
             pred_bboxes (numpy.ndarray): Predicted bboxes of this image, with
-                shape (N, 6) or shape (N,9) which depends on
-                ``self.predict_box_type`` attribute.
-                The predicted score of the bbox is
-                concatenated behind the predicted bbox.
+                shape (N, 6) or shape (N,9) which depends on predict_box_type.
+                If the predict_box_type is
+                The predicted score of the bbox is concatenated behind the
+                predicted bbox.
             gt_bboxes (numpy.ndarray): Ground truth bboxes of this image, with
                 shape (M, 5) or shape (M, 8).
             ignore_gt_bboxes (numpy.ndarray): Ground truth ignored bboxes of
@@ -298,8 +293,8 @@ class DOTAMeanAP(VOCMeanAP):
                 format.
             min_area (Optional[float]): The minimum area. If None, does not
                 filter the minimum area.
-            max_area (Optional[float]): The maximum area. If None, does not filter
-                the maximum area.
+            max_area (Optional[float]): The maximum area. If None, does not
+                filter the maximum area.
 
         Returns:
             numpy.ndarray: A mask of ``bboxes`` identify which bbox are
