@@ -18,11 +18,8 @@ class SAD(BaseMetric):
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Note:
-        The current implementation assumes the image / alpha / trimap
-        a numpy array with pixel values ranging from 0 to 255.
-
-        The pred_alpha should be masked by trimap before passing
-        into this metric.
+        The current implementation assumes the image a numpy array
+        with pixel values ranging from 0 to 255.
 
     Examples:
 
@@ -30,9 +27,9 @@ class SAD(BaseMetric):
         >>> import numpy as np
         >>>
         >>> sad = SAD()
-        >>> pred_alpha = np.zeros((32, 32), dtype=np.uint8)
-        >>> gt_alpha = np.ones((32, 32), dtype=np.uint8) * 255
-        >>> sad(pred_alpha, gt_alpha)  # doctest: +ELLIPSIS
+        >>> prediction = np.zeros((32, 32), dtype=np.uint8)
+        >>> groundtruth = np.ones((32, 32), dtype=np.uint8) * 255
+        >>> sad(prediction, groundtruth)  # doctest: +ELLIPSIS
         {'SAD': ...}
     """
 
@@ -40,20 +37,20 @@ class SAD(BaseMetric):
         super().__init__(**kwargs)
         self.norm_const = norm_const
 
-    def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add SAD score of batch to ``self._results``
 
         Args:
-            pred_alpha(Sequence[np.ndarray]): Pred_alpha data of predictions.
-            ori_alpha(Sequence[np.ndarray]): Ori_alpha data of data_batch.
+            prediction(Sequence[np.ndarray]): prediction data of predictions.
+            groundtruth(Sequence[np.ndarray]): groundtruth data of data_batch.
         """
 
-        for pred_alpha, gt_alpha in zip(pred_alphas, gt_alphas):
-            assert pred_alpha.shape == gt_alpha.shape, 'The shape of ' \
-                '`pred_alpha` and `gt_alpha` should be the same, but got: ' \
-                f'{pred_alpha.shape} and {gt_alpha.shape}'
+        for prediction, groundtruth in zip(predictions, groundtruths):
+            assert prediction.shape == groundtruth.shape, 'The shape of ' \
+                '`prediction` and `groundtruth` should be the same, but got:' \
+                f'{prediction.shape} and {groundtruth.shape}'
 
-            sad_sum = np.abs(pred_alpha - gt_alpha).sum() / self.norm_const
+            sad_sum = np.abs(prediction - groundtruth).sum() / self.norm_const
 
             self._results.append(sad_sum)
 
