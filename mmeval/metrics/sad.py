@@ -8,7 +8,7 @@ from mmeval.core import BaseMetric
 class SAD(BaseMetric):
     """Sum of Absolute Differences metric for image.
 
-    This metric compute per-pixel absolute difference and sum across all
+    This metric computes per-pixel absolute difference and sum across all
     pixels.
     i.e. sum(abs(a-b)) / norm_const
 
@@ -41,8 +41,8 @@ class SAD(BaseMetric):
         """Add SAD score of batch to ``self._results``
 
         Args:
-            prediction(Sequence[np.ndarray]): prediction data of predictions.
-            groundtruth(Sequence[np.ndarray]): groundtruth data of data_batch.
+            predictions(Sequence[np.ndarray]): A sequence of prediction image arrays.
+            groundtruths(Sequence[np.ndarray]): A sequence of groundtruth image arrays.
         """
 
         for prediction, groundtruth in zip(predictions, groundtruths):
