@@ -571,11 +571,12 @@ class VOCMeanAP(BaseMetric):
                 'xyxy' format.
             min_area (Optional[float]): The minimum area. If None, does
                 not filter the minimum area.
-            max_area (Optional[float]): The maximum area. If None, does not filter
-                the maximum area.
+            max_area (Optional[float]): The maximum area. If None, does
+                not filter the maximum area.
 
         Returns:
             numpy.ndarray: A mask of ``bboxes`` identify which bbox
                 are filtered.
         """
-        return filter_by_bboxes_area(bboxes, min_area, max_area)
+        return filter_by_bboxes_area(bboxes, min_area, max_area,
+                                     self.use_legacy_coordinate)
