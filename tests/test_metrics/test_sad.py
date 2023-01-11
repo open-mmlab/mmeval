@@ -4,7 +4,7 @@ import numpy as np
 from mmeval.metrics import SAD
 
 
-def test_mse():
+def test_sad():
     prediction = np.zeros((32, 32), dtype=np.uint8)
     groundtruth = np.ones((32, 32), dtype=np.uint8) * 255
 
