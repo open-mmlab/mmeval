@@ -155,7 +155,7 @@ def _gen_masks(bboxes, img_w=256, img_h=256):
         mask = np.zeros((img_h, img_w))
         bbox = bbox.astype(np.int32)
         box_mask = (np.random.rand(bbox[3] - bbox[1], bbox[2] - bbox[0]) >
-                    0.3).astype(np.int)
+                    0.3).astype(np.int32)
         mask[bbox[1]:bbox[3], bbox[0]:bbox[2]] = box_mask
         masks.append(
             coco_wrapper.mask_util.encode(

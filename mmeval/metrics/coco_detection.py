@@ -92,7 +92,7 @@ class COCODetectionMetric(BaseMetric):
         ...         bbox = bbox.astype(np.int32)
         ...         box_mask = (np.random.rand(
         ...             bbox[3] - bbox[1],
-        ...             bbox[2] - bbox[0]) > 0.3).astype(np.int)
+        ...             bbox[2] - bbox[0]) > 0.3).astype(np.int32)
         ...         mask[bbox[1]:bbox[3], bbox[0]:bbox[2]] = box_mask
         ...         masks.append(
         ...             mask_util.encode(

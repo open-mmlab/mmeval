@@ -41,4 +41,5 @@ Metrics
    PSNR
    MAE
    MSE
+   BLEU
    DOTAMeanAP
