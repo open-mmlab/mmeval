@@ -41,3 +41,4 @@ Metrics
    PSNR
    MAE
    MSE
+   DOTAMeanAP
