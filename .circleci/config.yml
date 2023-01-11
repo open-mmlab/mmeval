@@ -59,7 +59,8 @@ jobs:
       - run:
           name: Install OneFlow via pip
           command: |
-            pip install -f https://release.oneflow.info oneflow==0.8.0+cpu
+            # Install Oneflow often failed, we just skip it if failed.
+            pip install -f https://release.oneflow.info oneflow==0.8.0+cpu "numpy<1.24.0" || true
       - run:
           name: Install mmeval and dependencies
           command: |
@@ -135,7 +136,8 @@ jobs:
             python -V
             pip install torch==1.7.1+cu110 -f https://download.pytorch.org/whl/torch_stable.html
             pip install paddlepaddle-gpu==2.3.2.post112 -f https://www.paddlepaddle.org.cn/whl/linux/mkl/avx/stable.html
-            pip install --pre oneflow -f https://staging.oneflow.info/branch/master/cu112
+            # Install Oneflow often failed, we just skip it if failed.
+            pip install --pre oneflow -f https://staging.oneflow.info/branch/master/cu112 "numpy<1.24.0" || true
       - run:
           name: Install mmeval and dependencies
           command: |

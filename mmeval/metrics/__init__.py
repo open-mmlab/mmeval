@@ -2,6 +2,7 @@
 
 from .accuracy import Accuracy
 from .ava_map import AVAMeanAP
+from .bleu import BLEU
 from .coco_detection import COCODetectionMetric
 from .dota_map import DOTAMeanAP
 from .end_point_error import EndPointError
@@ -25,5 +26,5 @@ __all__ = [
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'DOTAMeanAP'
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP'
 ]

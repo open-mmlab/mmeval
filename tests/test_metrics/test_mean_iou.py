@@ -11,6 +11,8 @@ from mmeval.metrics import MeanIoU
 from mmeval.utils import try_import
 
 torch = try_import('torch')
+jax = try_import('jax')
+jnp = try_import('jax.numpy')
 paddle = try_import('paddle')
 tf = try_import('tensorflow')
 flow = try_import('oneflow')
@@ -35,6 +37,18 @@ def test_metric_interface_torch():
     results = miou(
         torch.randint(0, 4, size=(2, 10, 10)),
         torch.randint(0, 4, size=(2, 10, 10))
+    )
+    assert isinstance(results, dict)
+
+
+@pytest.mark.skipif(jnp is None, reason='JAX is not available!')
+def test_metric_interface_jnp():
+    miou = MeanIoU(num_classes=4)
+    assert isinstance(miou, BaseMetric)
+
+    results = miou(
+        jax.random.randint(jax.random.PRNGKey(0), (2, 10, 10), 0, 4),
+        jax.random.randint(jax.random.PRNGKey(0), (2, 10, 10), 0, 4)
     )
     assert isinstance(results, dict)
 
@@ -144,6 +158,36 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, length):
     for key in np_results:
         np.testing.assert_allclose(
             np_results[key], torch_results[key], rtol=1e-06)
+
+
+@pytest.mark.skipif(jnp is None, reason='JAX is not available!')
+@pytest.mark.parametrize(
+    argnames=('metric_kwargs', 'length'),
+    argvalues=[
+        ({'num_classes': 10}, 100),
+        ({'num_classes': 100}, 1000),
+        ({'num_classes': 222}, 500)
+    ]
+)
+def test_metamorphic_numpy_jnp(metric_kwargs, length):
+    """Metamorphic testing for NumPy and JAX implementation."""
+    miou = MeanIoU(**metric_kwargs)
+    num_classes = metric_kwargs.get('num_classes')
+
+    predictions = np.random.randint(0, num_classes, size=(length, 224, 224))
+    labels = np.random.randint(0, num_classes, size=(length, 224, 224))
+
+    np_results = miou(predictions, labels)
+
+    predictions = jnp.asarray(predictions)
+    labels = jnp.asarray(labels)
+    jnp_results = miou(predictions, labels)
+
+    assert np_results.keys() == jnp_results.keys()
+
+    for key in np_results:
+        np.testing.assert_allclose(
+            np_results[key], jnp_results[key], rtol=1e-06)
 
 
 @pytest.mark.skipif(flow is None or
