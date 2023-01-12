@@ -213,7 +213,7 @@ class _MMEvalDispatcher(plum.Dispatcher):
 
         # Recursively traverse nested type hints.
         if getattr(annotation, '__module__', None) == 'typing' \
-                and hasattr(annotation, '__args__'):
+                and getattr(annotation, '__args__'):
             new_tp_args = []
             for tp_arg in annotation.__args__:
                 new_tp_arg = self._traverse_type_hints(tp_arg)
