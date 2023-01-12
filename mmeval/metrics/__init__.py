@@ -20,6 +20,7 @@ from .keypoint_nme import KeypointNME
 from .mae import MeanAbsoluteError
 from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
+from .ms_ssim import MultiScaleStructureSimilarity
 from .mse import MeanSquaredError
 from .niqe import NaturalImageQualityEvaluator
 from .oid_map import OIDMeanAP
@@ -48,7 +49,7 @@ __all__ = [
     'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
     'WordAccuracy', 'PrecisionRecallF1score',
     'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score',
-    'CharRecallPrecision'
+    'CharRecallPrecision', 'MultiScaleStructureSimilarity'
 ]
 
 _deprecated_msg = (
