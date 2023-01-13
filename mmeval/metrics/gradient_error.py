@@ -1,16 +1,21 @@
-# Copyright (c) OpenMMLab. All rights reserved.
-import cv2
+# Copyright (c) OpenMMLab. All rights reserved.Dict
 import numpy as np
-from typing import Dict, List, Sequence
+from typing import TYPE_CHECKING, Dict, List, Sequence
 
 from mmeval.core import BaseMetric
+from mmeval.utils import try_import
+
+if TYPE_CHECKING:
+    import cv2
+else:
+    cv2 = try_import('cv2')
 
 
 def gaussian(x: np.ndarray, sigma: float):
     """Gaussian function.
 
     Args:
-        x (array_like): The independent variable.
+        x (np.ndarray): The independent variable.
         sigma (float): Standard deviation of the gaussian function.
 
     Returns:
@@ -24,7 +29,7 @@ def dgaussian(x: np.ndarray, sigma: float):
     """Derivative of Gaussian function.
 
     Args:
-        x (array_like): The independent variable.
+        x (np.ndarray): The independent variable.
         sigma (float): Standard deviation of the gaussian function.
 
     Returns:
@@ -66,10 +71,7 @@ def gauss_filter(sigma: float, epsilon=1e-2):
 
 
 def gauss_gradient(img: np.ndarray, sigma: float):
-    """Gaussian gradient.The first order Gaussian derivative convolution
-    calculation is carried out by using Gaussian filter. Calculate their
-    gradients separately, make a difference, and then accumulate their squares.
-    The more similar the two, the smaller the Gradient error.
+    """Gaussian gradient.
 
     Reference: https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/
     submissions/8060/versions/2/previews/gaussgradient/gaussgradient.m/
@@ -134,6 +136,10 @@ class GradientError(BaseMetric):
         super().__init__(**kwargs)
         self.sigma = sigma
         self.norm_const = norm_const
+
+        if cv2 is None:
+            raise ImportError(f'For availability of {self.__class__.__name__},'
+                              ' please install cv2 first.')
 
     def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray], trimaps: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add GradientError score of batch to ``self._results``
