@@ -15,4 +15,4 @@ def test_gradient_error():
     gradient_error = GradientError()
     metric_results = gradient_error(pred_alpha, gt_alpha, trimap)
     assert isinstance(metric_results, dict)
-    np.testing.assert_almost_equal(metric_results['GradientError'], 0.0935)
+    np.testing.assert_almost_equal(metric_results['gradient_error'], 0.0935)
