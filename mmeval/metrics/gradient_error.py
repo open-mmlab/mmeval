@@ -100,6 +100,7 @@ class GradientError(BaseMetric):
         norm_const (int): Divide the result to reduce its magnitude.
             Defaults to 1000 .
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
     Note:
         The current implementation assumes the image / alpha / trimap
         a numpy array with pixel values ranging from 0 to 255.
