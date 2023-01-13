@@ -45,7 +45,7 @@ def gauss_filter(sigma: float, epsilon=1e-2):
     Args:
         sigma (float): Standard deviation of the gaussian kernel.
         epsilon (float): Small value used when calculating kernel size.
-            Default: 1e-2.
+            Default to 1e-2.
 
     Returns:
         tuple(np.ndarray, np.ndarray): Gaussian filter along x and y axis.
@@ -100,7 +100,7 @@ class GradientError(BaseMetric):
         sigma (float): Standard deviation of the gaussian kernel.
             Defaults to 1.4 .
         norm_const (int): Divide the result to reduce its magnitude.
-            Defaults to 1000 .
+            Defaults to 1000.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Note:
