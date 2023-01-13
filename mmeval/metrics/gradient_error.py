@@ -121,7 +121,8 @@ class GradientError(BaseMetric):
         >>> import numpy as np
         >>>
         >>> gradient_error = GradientError()
-        >>> pred_alpha = np.zeros((32, 32), dtype=np.uint8)
+        >>> np.random.seed(0)
+        >>> pred_alpha = np.random.randn(32, 32).astype('uint8')
         >>> gt_alpha = np.ones((32, 32), dtype=np.uint8) * 255
         >>> trimap = np.zeros((32, 32), dtype=np.uint8)
         >>> trimap[:16, :16] = 128
