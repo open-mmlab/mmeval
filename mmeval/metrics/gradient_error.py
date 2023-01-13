@@ -116,6 +116,7 @@ class GradientError(BaseMetric):
         unknown and the background respectively.
 
     Examples:
+    
         >>> from mmeval import GradientError
         >>> import numpy as np
         >>>
