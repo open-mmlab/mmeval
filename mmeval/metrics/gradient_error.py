@@ -39,7 +39,7 @@ def dgaussian(x: np.ndarray, sigma: float):
     return -x * gaussian(x, sigma) / sigma**2
 
 
-def gauss_filter(sigma: float, epsilon=1e-2):
+def gauss_filter(sigma: float, epsilon: float = 1e-2):
     """Gaussian Filter.
 
     Args:
