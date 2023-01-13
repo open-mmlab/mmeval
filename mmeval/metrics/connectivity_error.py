@@ -62,6 +62,7 @@ class ConnectivityError(BaseMetric):
 
     def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray], trimaps: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add ConnectivityError score of batch to ``self._results``
+
         Args:
             pred_alphas (Sequence[np.ndarray]): Pred_alpha data of predictions.
             ori_alphas (Sequence[np.ndarray]): Ori_alpha data of data_batch.
@@ -97,6 +98,7 @@ class ConnectivityError(BaseMetric):
 
                 mask = (round_down_map == -1) & (omega == 0)
                 round_down_map[mask] = thresh_steps[i - 1]
+
             round_down_map[round_down_map == -1] = 1
 
             gt_alpha_diff = gt_alpha - round_down_map
