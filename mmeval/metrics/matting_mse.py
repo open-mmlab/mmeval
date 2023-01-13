@@ -49,9 +49,9 @@ class MattingMSE(BaseMetric):
         """Add MattingMSE score of batch to ``self._results``
 
         Args:
-            pred_alpha(Sequence[np.ndarray]): Pred_alpha data of predictions.
-            ori_alpha(Sequence[np.ndarray]): Ori_alpha data of data_batch.
-            ori_trimap(Sequence[np.ndarray]): Ori_trimap data of data_batch.
+            pred_alphas (Sequence[np.ndarray]): Pred_alpha data of predictions.
+            ori_alphas (Sequence[np.ndarray]): Ori_alpha data of data_batch.
+            ori_trimaps (Sequence[np.ndarray]): Ori_trimap data of data_batch.
         """
 
         for pred_alpha, gt_alpha, trimap in zip(pred_alphas, gt_alphas,
