@@ -147,9 +147,12 @@ class GradientError(BaseMetric):
         """Add GradientError score of batch to ``self._results``
 
         Args:
-            pred_alphas (Sequence[np.ndarray]): Pred_alpha data of predictions.
-            ori_alphas (Sequence[np.ndarray]): Ori_alpha data of data_batch.
-            ori_trimaps (Sequence[np.ndarray]): Ori_trimap data of data_batch.
+            pred_alphas (Sequence[np.ndarray]): Predict the probability
+                that pixels belong to the foreground.
+            gt_alphas (Sequence[np.ndarray]): Probability that the actual
+                pixel belongs to the foreground.
+            trimaps (Sequence[np.ndarray]): Broadly speaking, the trimap
+                consists of foreground and unknown region.
         """
 
         for pred_alpha, gt_alpha, trimap in zip(pred_alphas, gt_alphas,
@@ -189,4 +192,4 @@ class GradientError(BaseMetric):
             and the values are corresponding results.
         """
 
-        return {'GradientError': float(np.array(results).mean())}
+        return {'gradient_error': float(np.array(results).mean())}
