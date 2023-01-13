@@ -6,44 +6,46 @@ from typing import Dict, List, Sequence
 from mmeval.core import BaseMetric
 
 
-def gaussian(x, sigma):
+def gaussian(x: np.ndarray, sigma: float):
     """Gaussian function.
 
     Args:
         x (array_like): The independent variable.
         sigma (float): Standard deviation of the gaussian function.
 
-    Return:
+    Returns:
         np.ndarray or scalar: Gaussian value of `x`.
     """
+
     return np.exp(-x**2 / (2 * sigma**2)) / (sigma * np.sqrt(2 * np.pi))
 
 
-def dgaussian(x, sigma):
-    """Gradient of gaussian.
+def dgaussian(x: np.ndarray, sigma: float):
+    """Derivative of Gaussian function.
 
     Args:
         x (array_like): The independent variable.
         sigma (float): Standard deviation of the gaussian function.
 
-    Return:
+    Returns:
         np.ndarray or scalar: Gradient of gaussian of `x`.
     """
+
     return -x * gaussian(x, sigma) / sigma**2
 
 
-def gauss_filter(sigma, epsilon=1e-2):
-    """Gradient of gaussian.
+def gauss_filter(sigma: float, epsilon=1e-2):
+    """Gaussian Filter.
 
     Args:
         sigma (float): Standard deviation of the gaussian kernel.
         epsilon (float): Small value used when calculating kernel size.
             Default: 1e-2.
 
-    Return:
-        filter_x (np.ndarray): Gaussian filter along x axis.
-        filter_y (np.ndarray): Gaussian filter along y axis.
+    Returns:
+        tuple(np.ndarray, np.ndarray): Gaussian filter along x and y axis.
     """
+
     half_size = np.ceil(
         sigma * np.sqrt(-2 * np.log(np.sqrt(2 * np.pi) * sigma * epsilon)))
     size = int(2 * half_size + 1)
@@ -63,10 +65,13 @@ def gauss_filter(sigma, epsilon=1e-2):
     return filter_x, filter_y
 
 
-def gauss_gradient(img, sigma):
-    """Gaussian gradient.
+def gauss_gradient(img: np.ndarray, sigma: float):
+    """Gaussian gradient.The first order Gaussian derivative convolution
+    calculation is carried out by using Gaussian filter. Calculate their
+    gradients separately, make a difference, and then accumulate their squares.
+    The more similar the two, the smaller the Gradient error.
 
-    From https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/
+    Reference: https://www.mathworks.com/matlabcentral/mlc-downloads/downloads/
     submissions/8060/versions/2/previews/gaussgradient/gaussgradient.m/
     index.html
 
@@ -74,9 +79,10 @@ def gauss_gradient(img, sigma):
         img (np.ndarray): Input image.
         sigma (float): Standard deviation of the gaussian kernel.
 
-    Return:
+    Returns:
         np.ndarray: Gaussian gradient of input `img`.
     """
+
     filter_x, filter_y = gauss_filter(sigma)
     img_filtered_x = cv2.filter2D(
         img, -1, filter_x, borderType=cv2.BORDER_REPLICATE)
@@ -110,13 +116,13 @@ class GradientError(BaseMetric):
         >>> from mmeval import GradientError
         >>> import numpy as np
         >>>
-        >>> gradienterror = GradientError()
+        >>> gradient_error = GradientError()
         >>> pred_alpha = np.zeros((32, 32), dtype=np.uint8)
         >>> gt_alpha = np.ones((32, 32), dtype=np.uint8) * 255
         >>> trimap = np.zeros((32, 32), dtype=np.uint8)
         >>> trimap[:16, :16] = 128
         >>> trimap[16:, 16:] = 255
-        >>> gradienterror(pred_alpha, gt_alpha, trimap)  # doctest: +ELLIPSIS
+        >>> gradient_error(pred_alpha, gt_alpha, trimap)  # doctest: +ELLIPSIS
         {'GradientError': ...}
     """
 
@@ -132,9 +138,9 @@ class GradientError(BaseMetric):
         """Add GradientError score of batch to ``self._results``
 
         Args:
-            pred_alpha(Sequence[np.ndarray]): Pred_alpha data of predictions.
-            ori_alpha(Sequence[np.ndarray]): Ori_alpha data of data_batch.
-            ori_trimap(Sequence[np.ndarray]): Ori_trimap data of data_batch.
+            pred_alphas (Sequence[np.ndarray]): Pred_alpha data of predictions.
+            ori_alphas (Sequence[np.ndarray]): Ori_alpha data of data_batch.
+            ori_trimaps (Sequence[np.ndarray]): Ori_trimap data of data_batch.
         """
 
         for pred_alpha, gt_alpha, trimap in zip(pred_alphas, gt_alphas,
@@ -156,7 +162,7 @@ class GradientError(BaseMetric):
             grad_loss = ((gt_alpha_grad - pred_alpha_grad)**2 *
                          (trimap == 128)).sum()
 
-            # divide by 1000 to reduce the magnitude of the result
+            # divide by self.norm_const to reduce the magnitude of the result
             grad_loss /= self.norm_const
 
             self._results.append(grad_loss)
@@ -167,6 +173,7 @@ class GradientError(BaseMetric):
         Args:
             results (List): A list that consisting the GradientError score.
                 This list has already been synced across all ranks.
+
         Returns:
             Dict[str, float]: The computed GradientError metric.
             The keys are the names of the metrics,
