@@ -58,15 +58,18 @@ class ConnectivityError(BaseMetric):
 
         if cv2 is None:
             raise ImportError(f'For availability of {self.__class__.__name__},'
-                              ' please install cv2 first.')
+                              ' please pip install opencv-python first.')
 
     def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray], trimaps: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add ConnectivityError score of batch to ``self._results``
 
         Args:
-            pred_alphas (Sequence[np.ndarray]): Pred_alpha data of predictions.
-            ori_alphas (Sequence[np.ndarray]): Ori_alpha data of data_batch.
-            ori_trimaps (Sequence[np.ndarray]): Ori_trimap data of data_batch.
+            pred_alphas (Sequence[np.ndarray]): Predict the probability
+                that pixels belong to the foreground.
+            gt_alphas (Sequence[np.ndarray]): Probability that the actual
+                pixel belongs to the foreground.
+            trimaps (Sequence[np.ndarray]): Broadly speaking, the trimap
+                consists of foreground and unknown region.
         """
 
         for pred_alpha, gt_alpha, trimap in zip(pred_alphas, gt_alphas,
