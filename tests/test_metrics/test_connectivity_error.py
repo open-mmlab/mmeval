@@ -14,4 +14,4 @@ def test_connectivity_error():
     connectivity_error = ConnectivityError()
     metric_results = connectivity_error(pred_alpha, gt_alpha, trimap)
     assert isinstance(metric_results, dict)
-    np.testing.assert_almost_equal(metric_results['ConnectivityError'], 0.008)
+    np.testing.assert_almost_equal(metric_results['connectivity_error'], 0.008)
