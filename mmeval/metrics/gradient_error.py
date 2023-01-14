@@ -128,7 +128,7 @@ class GradientError(BaseMetric):
         >>> trimap[:16, :16] = 128
         >>> trimap[16:, 16:] = 255
         >>> gradient_error(pred_alpha, gt_alpha, trimap)  # doctest: +ELLIPSIS
-        {'GradientError': ...}
+        {'gradient_error': ...}
     """
 
     def __init__(self,
@@ -144,7 +144,7 @@ class GradientError(BaseMetric):
                               ' please install cv2 first.')
 
     def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray], trimaps: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
-        """Add GradientError score of batch to ``self._results``
+        """Add gradient_error score of batch to ``self._results``
 
         Args:
             pred_alphas (Sequence[np.ndarray]): Predict the probability
@@ -180,14 +180,14 @@ class GradientError(BaseMetric):
             self._results.append(grad_loss)
 
     def compute_metric(self, results: List) -> Dict[str, float]:
-        """Compute the GradientError metric.
+        """Compute the gradient_error metric.
 
         Args:
-            results (List): A list that consisting the GradientError score.
+            results (List): A list that consisting the gradient_error score.
                 This list has already been synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed GradientError metric.
+            Dict[str, float]: The computed gradient_error metric.
             The keys are the names of the metrics,
             and the values are corresponding results.
         """
