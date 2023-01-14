@@ -11,7 +11,7 @@ def test_matting_mse():
     trimap[:16, :16] = 128
     trimap[16:, 16:] = 255
 
-    mattingmse = MattingMSE()
-    mattingmse_results = mattingmse(pred_alpha, gt_alpha, trimap)
-    assert isinstance(mattingmse_results, dict)
-    np.testing.assert_almost_equal(mattingmse_results['MattingMSE'], 1.0)
+    matting_mse = MattingMSE()
+    metric_results = matting_mse(pred_alpha, gt_alpha, trimap)
+    assert isinstance(metric_results, dict)
+    np.testing.assert_almost_equal(metric_results['matting_mse'], 1.0)

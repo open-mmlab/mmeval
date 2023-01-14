@@ -32,14 +32,14 @@ class MattingMSE(BaseMetric):
         >>> from mmeval import MattingMSE
         >>> import numpy as np
         >>>
-        >>> mattingmse = MattingMSE()
+        >>> matting_mse = MattingMSE()
         >>> pred_alpha = np.zeros((32, 32), dtype=np.uint8)
         >>> gt_alpha = np.ones((32, 32), dtype=np.uint8) * 255
         >>> trimap = np.zeros((32, 32), dtype=np.uint8)
         >>> trimap[:16, :16] = 128
         >>> trimap[16:, 16:] = 255
-        >>> mattingmse(pred_alpha, gt_alpha, trimap)  # doctest: +ELLIPSIS
-        {'MattingMSE': ...}
+        >>> matting_mse(pred_alpha, gt_alpha, trimap)  # doctest: +ELLIPSIS
+        {'matting_mse': ...}
     """
 
     def __init__(self, **kwargs) -> None:
@@ -49,9 +49,12 @@ class MattingMSE(BaseMetric):
         """Add MattingMSE score of batch to ``self._results``
 
         Args:
-            pred_alphas (Sequence[np.ndarray]): Pred_alpha data of predictions.
-            ori_alphas (Sequence[np.ndarray]): Ori_alpha data of data_batch.
-            ori_trimaps (Sequence[np.ndarray]): Ori_trimap data of data_batch.
+            pred_alphas (Sequence[np.ndarray]): Predict the probability
+                that pixels belong to the foreground.
+            gt_alphas (Sequence[np.ndarray]): Probability that the actual
+                pixel belongs to the foreground.
+            trimaps (Sequence[np.ndarray]): Broadly speaking, the trimap
+                consists of foreground and unknown region.
         """
 
         for pred_alpha, gt_alpha, trimap in zip(pred_alphas, gt_alphas,
@@ -81,4 +84,4 @@ class MattingMSE(BaseMetric):
             and the values are corresponding results.
         """
 
-        return {'MattingMSE': float(np.array(results).mean())}
+        return {'matting_mse': float(np.array(results).mean())}
