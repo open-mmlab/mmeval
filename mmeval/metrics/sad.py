@@ -30,7 +30,7 @@ class SAD(BaseMetric):
         >>> prediction = np.zeros((32, 32), dtype=np.uint8)
         >>> groundtruth = np.ones((32, 32), dtype=np.uint8) * 255
         >>> sad(prediction, groundtruth)  # doctest: +ELLIPSIS
-        {'SAD': ...}
+        {'sad': ...}
     """
 
     def __init__(self, norm_const: int = 1000, **kwargs) -> None:
@@ -67,4 +67,4 @@ class SAD(BaseMetric):
             and the values are corresponding results.
         """
 
-        return {'SAD': float(np.array(results).mean())}
+        return {'sad': float(np.array(results).mean())}

@@ -9,6 +9,6 @@ def test_sad():
     groundtruth = np.ones((32, 32), dtype=np.uint8) * 255
 
     sad = SAD()
-    sad_results = sad(prediction, groundtruth)
-    assert isinstance(sad_results, dict)
-    np.testing.assert_almost_equal(sad_results['SAD'], 0.032)
+    metric_results = sad(prediction, groundtruth)
+    assert isinstance(metric_results, dict)
+    np.testing.assert_almost_equal(metric_results['sad'], 0.032)
