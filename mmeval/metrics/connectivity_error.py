@@ -45,7 +45,7 @@ class ConnectivityError(BaseMetric):
         >>> trimap[:16, :16] = 128
         >>> trimap[16:, 16:] = 255
         >>> connectivity_error(pred_alpha, gt_alpha, trimap)
-        {'ConnectivityError': ...}
+        {'connectivity_error': ...}
     """
 
     def __init__(self,
@@ -124,10 +124,11 @@ class ConnectivityError(BaseMetric):
         Args:
             results (List): A list that consisting the ConnectivityError score.
                 This list has already been synced across all ranks.
+
         Returns:
             Dict[str, float]: The computed ConnectivityError metric.
             The keys are the names of the metrics,
             and the values are corresponding results.
         """
 
-        return {'ConnectivityError': float(np.array(results).mean())}
+        return {'connectivity_error': float(np.array(results).mean())}
