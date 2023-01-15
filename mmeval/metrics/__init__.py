@@ -16,6 +16,7 @@ from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .proposal_recall import ProposalRecall
 from .psnr import PSNR
+from .sad import SAD
 from .single_label import SingleLabelMetric
 from .snr import SNR
 from .ssim import SSIM
@@ -26,5 +27,5 @@ __all__ = [
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'GradientError'
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SAD', 'GradientError
 ]
