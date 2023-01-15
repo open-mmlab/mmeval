@@ -42,4 +42,6 @@ Metrics
    MAE
    MSE
    BLEU
+   SAD
+   GradientError
    MattingMSE
