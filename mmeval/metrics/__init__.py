@@ -6,6 +6,7 @@ from .bleu import BLEU
 from .coco_detection import COCODetectionMetric
 from .end_point_error import EndPointError
 from .f_metric import F1Metric
+from .gradient_error import GradientError
 from .hmean_iou import HmeanIoU
 from .mae import MAE
 from .mean_iou import MeanIoU
@@ -26,5 +27,5 @@ __all__ = [
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SAD'
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SAD', 'GradientError'
 ]
