@@ -4,6 +4,7 @@ from .accuracy import Accuracy
 from .ava_map import AVAMeanAP
 from .bleu import BLEU
 from .coco_detection import COCODetectionMetric
+from .connectivity_error import ConnectivityError
 from .end_point_error import EndPointError
 from .f_metric import F1Metric
 from .gradient_error import GradientError
@@ -29,5 +30,5 @@ __all__ = [
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SAD', 'GradientError',
-    'MattingMSE'
+    'MattingMSE', 'ConnectivityError'
 ]

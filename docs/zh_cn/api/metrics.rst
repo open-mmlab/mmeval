@@ -45,3 +45,4 @@ Metrics
    SAD
    GradientError
    MattingMSE
+   ConnectivityError
