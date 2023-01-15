@@ -141,7 +141,7 @@ class GradientError(BaseMetric):
 
         if cv2 is None:
             raise ImportError(f'For availability of {self.__class__.__name__},'
-                              ' please install cv2 first.')
+                              ' please install opencv-python first.')
 
     def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray], trimaps: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add GradientError score of batch to ``self._results``
