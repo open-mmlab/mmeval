@@ -27,5 +27,5 @@ __all__ = [
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SAD', 'GradientError
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SAD', 'GradientError'
 ]
