@@ -44,3 +44,4 @@ Metrics
    BLEU
    SAD
    GradientError
+   MattingMSE
