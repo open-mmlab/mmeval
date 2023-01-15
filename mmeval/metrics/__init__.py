@@ -7,8 +7,10 @@ from .coco_detection import COCODetectionMetric
 from .connectivity_error import ConnectivityError
 from .end_point_error import EndPointError
 from .f_metric import F1Metric
+from .gradient_error import GradientError
 from .hmean_iou import HmeanIoU
 from .mae import MAE
+from .matting_mse import MattingMSE
 from .mean_iou import MeanIoU
 from .mse import MSE
 from .multi_label import AveragePrecision, MultiLabelMetric
@@ -16,6 +18,7 @@ from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .proposal_recall import ProposalRecall
 from .psnr import PSNR
+from .sad import SAD
 from .single_label import SingleLabelMetric
 from .snr import SNR
 from .ssim import SSIM
@@ -26,5 +29,6 @@ __all__ = [
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'ConnectivityError'
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SAD', 'GradientError',
+    'MattingMSE', 'ConnectivityError'
 ]
