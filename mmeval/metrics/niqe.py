@@ -20,7 +20,7 @@ class NIQE(BaseMetric):
     Args:
         crop_border (int): Cropped pixels in each edges of an image. These
             pixels are not involved in the PSNR calculation. Default to 0.
-        input_order (str): Whether the input order is 'HW', 'HWC' or 'CHW'.
+        input_order (str): Whether the input order is 'HWC' or 'CHW'.
             Default to 'CHW'.
         convert_to (str): Convert the images to other color models. Options are
             'y' and 'gray'. Default to 'gray'.
@@ -47,9 +47,9 @@ class NIQE(BaseMetric):
         super().__init__(**kwargs)
 
         assert input_order.upper() in [
-            'CHW', 'HWC', 'HW'
+            'CHW', 'HWC'
         ], (f'Wrong input_order {input_order}. Supported input_orders are '
-            '"HW", "HWC" and "CHW"')
+            '"HWC" and "CHW"')
         assert convert_to in [
             'y', 'gray', 'Y'
         ], ('Only support gray image, '
