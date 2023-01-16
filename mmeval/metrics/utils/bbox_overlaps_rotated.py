@@ -38,9 +38,9 @@ def le90_to_oc(bboxes: np.ndarray):
     assert bboxes.ndim == 2 and bboxes.shape[-1] == 5, \
         'The boxes shape should be (N, 5)'
 
-    # a mask to indicate if input angles belong to [-pi/2,0)
+    # a mask to indicate if input angles belong to [-pi/2, 0)
     mask = bboxes[:, 4] <= 0.0
-    # convert the boxes whose angle is in range of [-pi/2,0)
+    # convert the boxes whose angle is in range of [-pi/2, 0)
     ret_bboxes = bboxes.copy()
     ret_bboxes[:, 4] += np.pi / 2 * np.ones(bboxes.shape[0]) * mask
     # swap w and h
