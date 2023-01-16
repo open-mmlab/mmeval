@@ -27,7 +27,7 @@ def le90_to_oc(bboxes: np.ndarray):
 
     Args:
         bboxes (np.ndarray): The shape of bboxes should be (N, 5),
-        the format is 'xywha'.
+            the format is 'xywha'.
 
     Returns:
         np.ndarray: An numpy.ndarray with the same shape of input.
