@@ -7,11 +7,13 @@ def qbox_to_rbox(boxes: np.ndarray) -> np.ndarray:
     """Convert quadrilateral boxes to rotated boxes.
 
     Args:
-        boxes (np.ndarray): Quadrilateral box tensor with shape of (..., 8).
+        boxes (np.ndarray): Quadrilateral box tensor with shape of (N, 8).
 
     Returns:
-        np.ndarray: Rotated box array with shape of (..., 5).
+        np.ndarray: Rotated box array with shape of (N, 5).
     """
+    assert boxes.ndim == 2 and boxes.shape[-1] == 8, \
+        'The boxes shape should be (N, 8)'
     original_shape = boxes.shape[:-1]
     points = boxes.reshape(-1, 4, 2).astype(np.int64)
     rboxes = []
@@ -27,24 +29,31 @@ def le90_to_oc(bboxes: np.ndarray):
 
     Args:
         bboxes (np.ndarray): The shape of bboxes should be (N, 5),
-            the format is 'xywha'.
+            the format is 'xywha'. And the angle of the bboxes
+            should be in range of [-pi/2, pi/2).
 
     Returns:
         np.ndarray: An numpy.ndarray with the same shape of input.
     """
-    assert bboxes.shape[1] == 5, 'The boxes shape should be (N, 5)'
+    assert bboxes.ndim == 2 and bboxes.shape[-1] == 5, \
+        'The boxes shape should be (N, 5)'
 
-    # a mask to indicate if input angles belong to (0,pi/2]
+    # a mask to indicate if input angles belong to [-pi/2,0)
     mask = bboxes[:, 4] <= 0.0
-    # convert angle
+    # convert the boxes whose angle is in range of [-pi/2,0)
     ret_bboxes = bboxes.copy()
     ret_bboxes[:, 4] += np.pi / 2 * np.ones(bboxes.shape[0]) * mask
-    # convert w and h
+    # swap w and h
     temp = ret_bboxes[mask]
     temp[:, [2, 3]] = temp[:, [3, 2]]
     ret_bboxes[mask] = temp
-    # rad to angle
-    ret_bboxes[:, 4] = ret_bboxes[:, 4] * 180.0 / np.pi
+
+    # a special case of angle = -pi/2
+    mask = (np.round(bboxes[:, 4], 8) == -np.round(np.pi / 2, 8))
+    ret_bboxes[:, 4] += np.pi / 2 * np.ones(bboxes.shape[0]) * mask
+    temp = ret_bboxes[mask]
+    temp[:, [2, 3]] = temp[:, [3, 2]]
+    ret_bboxes[mask] = temp
     return ret_bboxes
 
 
@@ -82,6 +91,11 @@ def calculate_overlaps_rotated(bboxes1: np.ndarray,
     Returns:
         np.ndarray: IoUs with shape (n, k).
     """
+    assert bboxes1.ndim == 2 and bboxes1.shape[-1] == 5, \
+        'The shape of bboxes1 should be (N, 5)'
+    assert bboxes2.ndim == 2 and bboxes2.shape[-1] == 5, \
+        'The shape of bboxes2 should be (K, 5)'
+
     bboxes1 = bboxes1.astype(np.float32)
     bboxes2 = bboxes2.astype(np.float32)
     rows = bboxes1.shape[0]
@@ -97,9 +111,11 @@ def calculate_overlaps_rotated(bboxes1: np.ndarray,
         bboxes1 = bboxes1 * flip_mat
         bboxes2 = bboxes2 * flip_mat
 
-    # convert angle version
+    # convert the bboxes with le90 angle version to OpenCV angle version
     bboxes1 = le90_to_oc(bboxes1)
     bboxes2 = le90_to_oc(bboxes2)
+    bboxes1[:, 4] = bboxes1[:, 4] * 180.0 / np.pi
+    bboxes2[:, 4] = bboxes2[:, 4] * 180.0 / np.pi
 
     area1 = bboxes1[:, 2] * bboxes1[:, 3]
     area2 = bboxes2[:, 2] * bboxes2[:, 3]
