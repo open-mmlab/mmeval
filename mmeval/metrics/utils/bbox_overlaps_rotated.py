@@ -69,6 +69,10 @@ def calculate_overlaps_rotated(bboxes1: np.ndarray,
                                clockwise: bool = True) -> np.ndarray:
     """Calculate the overlap between each rotated bbox of bboxes1 and bboxes2.
 
+       Modified from: https://github.com/yangxue0827/RotationDetection/blob/
+       45c708a34348e38040786ba85b288bc147786452/alpharotate/libs/
+       utils/iou_rotate.py#L39
+
     Args:
         bboxes1 (np.ndarray): The bboxes with shape (n, 5) in 'xywha' format.
         bboxes2 (np.ndarray): The bboxes with shape (k, 5) in 'xywha' format.
