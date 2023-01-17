@@ -7,7 +7,7 @@ import pytest
 from distutils.version import LooseVersion
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.metrics import SingleLabelMetric
+from mmeval.metrics import SingleLabelPrecsionRecallF1score
 from mmeval.utils import try_import
 
 torch = try_import('torch')
@@ -17,20 +17,20 @@ flow = try_import('oneflow')
 def test_metric_init_assertion():
     with pytest.raises(AssertionError,
                        match='Invalid `average` argument'):
-        SingleLabelMetric(average='mean')
+        SingleLabelPrecsionRecallF1score(average='mean')
     with pytest.raises(AssertionError,
                        match='The metric map is not supported'):
-        SingleLabelMetric(items=('map',))
+        SingleLabelPrecsionRecallF1score(items=('map',))
 
 
 def test_metric_assertion():
-    single_label_metric = SingleLabelMetric()
+    single_label_metric = SingleLabelPrecsionRecallF1score()
     with pytest.raises(AssertionError,
                        match='Please specify `num_classes`'):
         single_label_metric(
             np.asarray([1, 2, 3]), np.asarray([3, 2, 1]))
 
-    single_label_metric = SingleLabelMetric(num_classes=2)
+    single_label_metric = SingleLabelPrecsionRecallF1score(num_classes=2)
     with pytest.raises(AssertionError,
                        match='Number of classes does not match'):
         single_label_metric(
@@ -39,12 +39,12 @@ def test_metric_assertion():
 
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
 def test_metric_torch_assertion():
-    single_label_metric = SingleLabelMetric()
+    single_label_metric = SingleLabelPrecsionRecallF1score()
     with pytest.raises(AssertionError, match='Please specify `num_classes`'):
         single_label_metric(
             torch.Tensor([1, 2, 3]), torch.Tensor([3, 2, 1]))
 
-    single_label_metric = SingleLabelMetric(num_classes=2)
+    single_label_metric = SingleLabelPrecsionRecallF1score(num_classes=2)
     with pytest.raises(AssertionError,
                        match='Number of classes does not match'):
         single_label_metric(
@@ -55,12 +55,12 @@ def test_metric_torch_assertion():
                     LooseVersion(flow.__version__) < '0.8.1',
                     reason='OneFlow >= 0.8.1 is required!')
 def test_metric_oneflow_assertion():
-    single_label_metric = SingleLabelMetric()
+    single_label_metric = SingleLabelPrecsionRecallF1score()
     with pytest.raises(AssertionError, match='Please specify `num_classes`'):
         single_label_metric(
             flow.Tensor([1, 2, 3]), flow.Tensor([3, 2, 1]))
 
-    single_label_metric = SingleLabelMetric(num_classes=2)
+    single_label_metric = SingleLabelPrecsionRecallF1score(num_classes=2)
     with pytest.raises(AssertionError,
                        match='Number of classes does not match'):
         single_label_metric(
@@ -82,14 +82,15 @@ def test_metric_oneflow_assertion():
 )
 def test_metric_interface(metric_kwargs):
     # test predictions with labels
-    single_label_metric = SingleLabelMetric(**metric_kwargs)
+    single_label_metric = SingleLabelPrecsionRecallF1score(**metric_kwargs)
     assert isinstance(single_label_metric, BaseMetric)
     assert isinstance(single_label_metric.thrs, tuple)
     results = single_label_metric(
         np.asarray([[0.1, 0.9], [0.5, 0.5]]), np.asarray([0, 1]))
 
     # test predictions with pred_scores
-    single_label_metric = SingleLabelMetric(**metric_kwargs, num_classes=4)
+    single_label_metric = SingleLabelPrecsionRecallF1score(
+        **metric_kwargs, num_classes=4)
     assert isinstance(single_label_metric, BaseMetric)
     assert isinstance(single_label_metric.thrs, tuple)
     results = single_label_metric(
@@ -100,13 +101,13 @@ def test_metric_interface(metric_kwargs):
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
 def test_metric_input_torch():
     # test predictions with labels
-    single_label_metric = SingleLabelMetric()
+    single_label_metric = SingleLabelPrecsionRecallF1score()
     results = single_label_metric(
         torch.Tensor([[0.1, 0.9], [0.5, 0.5]]), torch.Tensor([0, 1]))
     assert isinstance(results, dict)
 
     # test predictions with pred_scores
-    single_label_metric = SingleLabelMetric(num_classes=4)
+    single_label_metric = SingleLabelPrecsionRecallF1score(num_classes=4)
     results = single_label_metric(
         torch.Tensor([1, 2, 3]), torch.Tensor([3, 2, 1]))
     assert isinstance(results, dict)
@@ -117,13 +118,13 @@ def test_metric_input_torch():
                     reason='OneFlow >= 0.8.1 is required!')
 def test_metric_input_oneflow():
     # test predictions with labels
-    single_label_metric = SingleLabelMetric()
+    single_label_metric = SingleLabelPrecsionRecallF1score()
     results = single_label_metric(
         flow.Tensor([[0.1, 0.9], [0.5, 0.5]]), flow.Tensor([0, 1]))
     assert isinstance(results, dict)
 
     # test predictions with pred_scores
-    single_label_metric = SingleLabelMetric(num_classes=4)
+    single_label_metric = SingleLabelPrecsionRecallF1score(num_classes=4)
     results = single_label_metric(
         flow.Tensor([1, 2, 3]), flow.Tensor([3, 2, 1]))
     assert isinstance(results, dict)
@@ -132,13 +133,13 @@ def test_metric_input_oneflow():
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
 def test_metric_input_builtin():
     # test predictions with labels
-    single_label_metric = SingleLabelMetric()
+    single_label_metric = SingleLabelPrecsionRecallF1score()
     results = single_label_metric(
         [[0.1, 0.9], [0.5, 0.5]], [0, 1])
     assert isinstance(results, dict)
 
     # test predictions with pred_scores
-    single_label_metric = SingleLabelMetric(num_classes=4)
+    single_label_metric = SingleLabelPrecsionRecallF1score(num_classes=4)
     results = single_label_metric(
         [1, 2, 3], [3, 2, 1])
     assert isinstance(results, dict)
@@ -173,7 +174,7 @@ def test_metric_input_builtin():
     ]
 )
 def test_metric_accurate(metric_kwargs, predictions, labels, results):
-    single_label_metric = SingleLabelMetric(**metric_kwargs)
+    single_label_metric = SingleLabelPrecsionRecallF1score(**metric_kwargs)
     assert single_label_metric(
         np.asarray(predictions), np.asarray(labels)) == results
 
@@ -190,7 +191,7 @@ def test_metric_accurate(metric_kwargs, predictions, labels, results):
 )
 def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
     """Metamorphic testing for NumPy and PyTorch implementation."""
-    single_label_metric = SingleLabelMetric(**metric_kwargs)
+    single_label_metric = SingleLabelPrecsionRecallF1score(**metric_kwargs)
 
     predictions = np.random.rand(length, classes_num)
     labels = np.random.randint(0, classes_num, length)
@@ -223,7 +224,7 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
 )
 def test_metamorphic_numpy_oneflow(metric_kwargs, classes_num, length):
     """Metamorphic testing for NumPy and OneFlow implementation."""
-    single_label_metric = SingleLabelMetric(**metric_kwargs)
+    single_label_metric = SingleLabelPrecsionRecallF1score(**metric_kwargs)
 
     predictions = np.random.rand(length, classes_num)
     labels = np.random.randint(0, classes_num, length)
