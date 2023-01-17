@@ -19,7 +19,7 @@ class NIQE(BaseMetric):
 
     Args:
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the PSNR calculation. Default to 0.
+            pixels are not involved in the NIQE calculation. Default to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             Default to 'CHW'.
         convert_to (str): Convert the images to other color models. Options are
