@@ -81,21 +81,22 @@ class NIQE(BaseMetric):
             channel_order = self.channel_order
 
         for prediction in predictions:
-            prediction = reorder_and_crop(
-                prediction,
-                crop_border=self.crop_border,
-                input_order=self.input_order,
-                convert_to=self.convert_to,
-                channel_order=channel_order)
 
-            prediction = np.squeeze(prediction)
+            if len(prediction.shape) <= 3:
+                result = self.compute_niqe(prediction, channel_order,
+                                           mu_pris_param, cov_pris_param,
+                                           gaussian_window)
+            else:
+                result_sum = 0
+                for i in range(prediction.shape[0]):
+                    result_sum += self.compute_niqe(prediction[i],
+                                                    channel_order,
+                                                    mu_pris_param,
+                                                    cov_pris_param,
+                                                    gaussian_window)
+                result = result_sum / prediction.shape[0]
 
-            # round to follow official implementation
-            prediction = prediction.round()
-
-            self._results.append(
-                self.compute_niqe(prediction, mu_pris_param, cov_pris_param,
-                                  gaussian_window))
+            self._results.append(result)
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the NIQE metric.
@@ -115,6 +116,7 @@ class NIQE(BaseMetric):
 
     def compute_niqe(self,
                      prediction: np.ndarray,
+                     channel_order: str,
                      mu_pris_param: np.ndarray,
                      cov_pris_param: np.ndarray,
                      gaussian_window: np.ndarray,
@@ -132,9 +134,10 @@ class NIQE(BaseMetric):
         construction of multivariate Gaussian model.
 
         Args:
-            img (np.ndarray): Input image whose quality needs to be computed.
+            prediction (np.ndarray): Input image whose quality to be computed.
                 The image must be a gray or Y (of YCbCr) image with shape
                 (h, w). Range [0, 255] with float type.
+            channel_order (str): The channel order of image.
             mu_pris_param (np.ndarray): Mean of a pre-defined multivariate
                 Gaussian model calculated on the pristine dataset.
             cov_pris_param (np.ndarray): Covariance of a pre-defined
@@ -149,6 +152,18 @@ class NIQE(BaseMetric):
         Returns:
             np.float64: NIQE result.
         """
+
+        prediction = reorder_and_crop(
+            prediction,
+            crop_border=self.crop_border,
+            input_order=self.input_order,
+            convert_to=self.convert_to,
+            channel_order=channel_order)
+
+        prediction = np.squeeze(prediction)
+
+        # round to follow official implementation
+        prediction = prediction.round()
 
         # crop image
         h, w = prediction.shape
