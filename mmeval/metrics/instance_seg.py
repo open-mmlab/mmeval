@@ -17,6 +17,7 @@ class InstanceSeg(BaseMetric):
             an alternative to dataset_meta.
         valid_class_ids (List[int], optional): Provide dataset valid class ids
             information as an alternative to dataset_meta.
+        **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Example:
         >>> import numpy as np
