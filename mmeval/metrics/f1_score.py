@@ -15,7 +15,7 @@ else:
     flow = try_import('oneflow')
 
 
-class F1Metric(BaseMetric):
+class F1Score(BaseMetric):
     """Compute F1 scores.
 
     Args:
@@ -47,8 +47,8 @@ class F1Metric(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import F1Metric
-        >>> f1 = F1Metric(num_classes=5, mode=['macro', 'micro'])
+        >>> from mmeval import F1Score
+        >>> f1 = F1Score(num_classes=5, mode=['macro', 'micro'])
 
     Use NumPy implementation:
 

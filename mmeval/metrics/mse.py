@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Sequence
 from mmeval.core import BaseMetric
 
 
-class MSE(BaseMetric):
+class MeanSquaredError(BaseMetric):
     """Mean Squared Error metric for image.
 
     Formula: mean((a-b)^2).
@@ -15,7 +15,7 @@ class MSE(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import MSE
+        >>> from mmeval import MeanSquaredError as MSE
         >>> import numpy as np
         >>>
         >>> mse = MSE()
@@ -24,7 +24,7 @@ class MSE(BaseMetric):
         >>> mse(preds, gts)  # doctest: +ELLIPSIS
         {'mse': ...}
 
-    Calculate MSE between 2 images with mask:
+    Calculate MeanSquaredError between 2 images with mask:
 
         >>> img1 = np.ones((32, 32, 3))
         >>> img2 = np.ones((32, 32, 3)) * 2
@@ -38,7 +38,7 @@ class MSE(BaseMetric):
         super().__init__(**kwargs)
 
     def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], masks: Optional[Sequence[np.ndarray]] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
-        """Add MSE score of batch to ``self._results``
+        """Add MeanSquaredError score of batch to ``self._results``
 
         Args:
             predictions (Sequence[np.ndarray]): Predictions of the model.
@@ -58,17 +58,18 @@ class MSE(BaseMetric):
                     self.compute_mse(prediction, groundtruth, masks[i]))
 
     def compute_metric(self, results: List[np.float32]) -> Dict[str, float]:
-        """Compute the MSE metric.
+        """Compute the MeanSquaredError metric.
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
 
         Args:
-            results (List[np.float32]): A list that consisting the MSE score.
-                This list has already been synced across all ranks.
+            results (List[np.float32]): A list that consisting the
+                MeanSquaredError score. This list has already been
+                synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed MSE metric.
+            Dict[str, float]: The computed MeanSquaredError metric.
         """
 
         return {'mse': float(np.array(results).mean())}
@@ -77,7 +78,7 @@ class MSE(BaseMetric):
     def compute_mse(prediction: np.ndarray,
                     groundtruth: np.ndarray,
                     mask: Optional[np.ndarray] = None) -> np.float32:
-        """Calculate MSE (Mean Squared Error).
+        """Calculate MeanSquaredError (Mean Squared Error).
 
         Args:
             prediction (np.ndarray): Images with range [0, 255].
@@ -85,7 +86,7 @@ class MSE(BaseMetric):
             mask (np.ndarray, optional): Mask of evaluation.
 
         Returns:
-            np.float32: MSE result.
+            np.float32: MeanSquaredError result.
         """
 
         prediction = prediction / 255.

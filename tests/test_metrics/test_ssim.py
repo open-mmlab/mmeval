@@ -5,7 +5,7 @@
 import numpy as np
 import pytest
 
-from mmeval.metrics import SSIM
+from mmeval import StructuralSimilarity as SSIM
 
 
 def test_ssim_init():

@@ -6,7 +6,7 @@ This evaluation script is modified from [tensorpack](https://github.com/tensorpa
 
 with the following changes:
 
-- Using `MMEval.COCODetectionMetric`.
+- Using `MMEval.COCODetection`.
 - Support multi-gpus evaluation by MPI4Py.
 
 ## Usage

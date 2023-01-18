@@ -18,7 +18,7 @@ from tensorpack.predict import MultiTowerOfflinePredictor, PredictConfig
 from tensorpack.tfutils import SmartInit, get_tf_version_tuple
 from tensorpack.utils import logger
 
-from mmeval.metrics import COCODetectionMetric  # type: ignore
+from mmeval.metrics import COCODetection  # type: ignore
 
 
 def xywh2xyxy(box):
@@ -42,7 +42,7 @@ def do_mmeval_evaluate(pred_config, dataset):
     coco_dataset = DatasetRegistry.get(dataset)
     coco_api = coco_dataset.coco
 
-    coco_metric = COCODetectionMetric(
+    coco_metric = COCODetection(
         ann_file=coco_dataset.annotation_file,
         metric=['bbox', 'segm'] if cfg.MODE_MASK else ['bbox'],
         proposal_nums=[1, 10, 100],

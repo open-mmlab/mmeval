@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 
-from mmeval.metrics import MAE
+from mmeval.metrics import MeanAbsoluteError
 
 
 def test_mae():
@@ -10,12 +10,12 @@ def test_mae():
     mask = np.ones((32, 32, 3)) * 2
     mask[:16] *= 0
 
-    mae = MAE()
+    mae = MeanAbsoluteError()
     mae_results = mae(preds, gts)
     assert isinstance(mae_results, dict)
     np.testing.assert_almost_equal(mae_results['mae'], 0.003921568627)
 
-    mae = MAE()
+    mae = MeanAbsoluteError()
     mae_results = mae(preds, gts, [mask])
     assert isinstance(mae_results, dict)
     np.testing.assert_almost_equal(mae_results['mae'], 0.003921568627)

@@ -5,7 +5,7 @@ from typing import Dict, List, Sequence
 from mmeval.core import BaseMetric
 
 
-class SAD(BaseMetric):
+class SumAbsoluteDifferences(BaseMetric):
     """Sum of Absolute Differences metric for image.
 
     This metric computes per-pixel absolute difference and sum across all
@@ -23,7 +23,7 @@ class SAD(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import SAD
+        >>> from mmeval import SumAbsoluteDifferences as SAD
         >>> import numpy as np
         >>>
         >>> sad = SAD()
@@ -38,7 +38,7 @@ class SAD(BaseMetric):
         self.norm_const = norm_const
 
     def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
-        """Add SAD score of batch to ``self._results``
+        """Add SumAbsoluteDifferences score of batch to ``self._results``
 
         Args:
             predictions (Sequence[np.ndarray]): Sequence of predicted image.
@@ -55,14 +55,15 @@ class SAD(BaseMetric):
             self._results.append(sad_sum)
 
     def compute_metric(self, results: List) -> Dict[str, float]:
-        """Compute the SAD metric.
+        """Compute the SumAbsoluteDifferences metric.
 
         Args:
-            results (List): A list that consisting the SAD score.
-                This list has already been synced across all ranks.
+            results (List): A list that consisting the
+                SumAbsoluteDifferences score. This list has already been
+                synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed SAD metric.
+            Dict[str, float]: The computed SumAbsoluteDifferences metric.
             The keys are the names of the metrics,
             and the values are corresponding results.
         """

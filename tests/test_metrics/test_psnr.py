@@ -2,18 +2,19 @@
 import numpy as np
 import pytest
 
-from mmeval.metrics import PSNR
+from mmeval.metrics import PeakSignalNoiseRatio
 
 
 def test_psnr_init():
     with pytest.raises(AssertionError):
-        PSNR(crop_border=0, input_order='HH')
+        PeakSignalNoiseRatio(crop_border=0, input_order='HH')
 
     with pytest.raises(AssertionError):
-        PSNR(crop_border=0, convert_to='ABC')
+        PeakSignalNoiseRatio(crop_border=0, convert_to='ABC')
 
     with pytest.raises(AssertionError):
-        PSNR(crop_border=0, convert_to='y', channel_order='qwe')
+        PeakSignalNoiseRatio(
+            crop_border=0, convert_to='y', channel_order='qwe')
 
 
 @pytest.mark.parametrize(
@@ -54,7 +55,7 @@ def test_psnr_init():
                ({}, [np.ones((32, 32))], [np.ones((32, 32))], float('inf')),
                ({}, [np.zeros((32, 32))], [np.ones((32, 32)) * 255], 0)])
 def test_psnr(metric_kwargs, img1, img2, results):
-    psnr = PSNR(**metric_kwargs)
+    psnr = PeakSignalNoiseRatio(**metric_kwargs)
     psnr_results = psnr(img1, img2)
     assert isinstance(psnr_results, dict)
     np.testing.assert_almost_equal(psnr_results['psnr'], results)

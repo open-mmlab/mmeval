@@ -19,7 +19,7 @@ except ImportError:
     HAS_COCOAPI = False
 
 
-class COCODetectionMetric(BaseMetric):
+class COCODetection(BaseMetric):
     """COCO object detection task evaluation metric.
 
     Evaluate AR, AP, and mAP for detection tasks including proposal/box
@@ -58,7 +58,7 @@ class COCODetectionMetric(BaseMetric):
 
     Examples:
         >>> import numpy as np
-        >>> from mmeval import COCODetectionMetric
+        >>> from mmeval import COCODetection
         >>> try:
         >>>     from mmeval.metrics.utils.coco_wrapper import mask_util
         >>> except ImportError as e:
@@ -69,7 +69,7 @@ class COCODetectionMetric(BaseMetric):
         ...     'CLASSES': tuple([str(i) for i in range(num_classes)])
         ... }
         >>>
-        >>> coco_det_metric = COCODetectionMetric(
+        >>> coco_det_metric = COCODetection(
         ...     dataset_meta=fake_dataset_metas,
         ...     metric=['bbox', 'segm']
         ... )
@@ -442,11 +442,11 @@ class COCODetectionMetric(BaseMetric):
 
         Args:
             predictions (Sequence[dict]): Refer to
-                :class:`COCODetectionMetric.add`.
+                :class:`COCODetection.add`.
         """
         assert self._coco_api is not None, 'The `ann_file` should be ' \
-            'passesd when use the `COCODetectionMetric.add_predictions` ' \
-            'method, otherwisw use the `COCODetectionMetric.add` instead!'
+            'passesd when use the `COCODetection.add_predictions` ' \
+            'method, otherwisw use the `COCODetection.add` instead!'
         self.add(predictions, groundtruths=[{}] * len(predictions))
 
     def __call__(self, *args, **kwargs) -> Dict:

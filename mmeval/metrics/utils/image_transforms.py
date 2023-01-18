@@ -169,7 +169,8 @@ def reorder_and_crop(img: np.ndarray,
     Args:
         img (np.ndarray): Images with range [0, 255].
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the PSNR calculation. Defaults to 0.
+            pixels are not involved in the PeakSignalNoiseRatio calculation.
+            Defaults to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             Defaults to 'HWC'.
         convert_to (str): Whether to convert the images to other color models.
