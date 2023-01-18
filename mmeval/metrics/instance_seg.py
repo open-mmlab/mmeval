@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-import warnings
 from copy import deepcopy
 from typing import Dict, List, Optional, Sequence
 
@@ -10,6 +9,9 @@ from mmeval.metrics._vendor.scannet import scannet_eval
 
 class InstanceSeg(BaseMetric):
     """3D instance segmentation evaluation metric.
+
+    This metric is for ScanNet 3D instance segmentation tasks. For more info
+    about ScanNet, please read [here](https://github.com/ScanNet/ScanNet).
 
     Args:
         dataset_meta (dict, optional): Provide dataset meta information.
@@ -21,19 +23,15 @@ class InstanceSeg(BaseMetric):
     Example:
         >>> import numpy as np
         >>> from mmeval import InstanceSegMetric
-        >>> seg_valid_class_ids = (3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 24,
-        >>>                 28, 33, 34, 36, 39)
-        >>> class_labels = ('cabinet', 'bed', 'chair', 'sofa', 'table', 'door',
-        ...         'window', 'bookshelf', 'picture', 'counter', 'desk',
-        ...         'curtain', 'refrigerator', 'showercurtrain', 'toilet',
-        ...         'sink', 'bathtub', 'garbagebin')
+        >>> seg_valid_class_ids = (3, 4, 5)
+        >>> class_labels = ('cabinet', 'bed', 'chair')
         >>> dataset_meta = dict(
         ...     seg_valid_class_ids=seg_valid_class_ids, classes=class_labels)
         >>>
         >>> def _demo_mm_model_output(self):
         ...     n_points_list = [3300, 3000]
-        ...     gt_labels_list = [[0, 0, 0, 0, 0, 0, 14, 14, 2, 1],
-        ...                       [13, 13, 2, 1, 3, 3, 0, 0, 0]]
+        ...     gt_labels_list = [[0, 0, 0, 0, 0, 0, 0, 0, 2, 1],
+        ...                       [2, 2, 2, 1, 0, 0, 0, 0, 0]]
         ...
         ...     predictions = []
         ...     groundtruths = []
@@ -78,9 +76,9 @@ class InstanceSeg(BaseMetric):
         >>> res = instance_seg_metric(predictions, groundtruths)
         >>> res
         {
-        'all_ap': 1.0,
-        'all_ap_50%': 1.0,
-        'all_ap_25%': 1.0,
+        'all_ap': 0.8333333333333334,
+        'all_ap_50%': 0.8333333333333334,
+        'all_ap_25%': 0.8333333333333334,
         'classes': {
             'cabinet': {
                 'ap': 1.0,
@@ -88,18 +86,17 @@ class InstanceSeg(BaseMetric):
                 'ap25%': 1.0
             },
             'bed': {
-                'ap': 1.0,
-                'ap50%': 1.0,
-                'ap25%': 1.0
+                'ap': 0.5,
+                'ap50%': 0.5,
+                'ap25%': 0.5
             },
             'chair': {
                 'ap': 1.0,
                 'ap50%': 1.0,
                 'ap25%': 1.0
-            },
-            ...
+            }
         }
-    }
+        }
     """
 
     def __init__(self,
@@ -107,21 +104,56 @@ class InstanceSeg(BaseMetric):
                  valid_class_ids: Optional[List[int]] = None,
                  **kwargs):
         super().__init__(**kwargs)
-        assert (self.dataset_meta
-                is not None) or (classes is not None
-                                 and valid_class_ids is not None)
-        if self.dataset_meta is not None:
-            if classes is not None or valid_class_ids is not None:
-                warnings.warn('`classes` and `valid_class_ids` are ignored.')
-            self.classes = self.dataset_meta['classes']
-            self.valid_class_ids = self.dataset_meta['seg_valid_class_ids']
+        self._valid_class_ids = valid_class_ids
+        self._classes = classes
+
+    @property
+    def classes(self):
+        """Returns classes.
+
+        The classes should be set during initialization, otherwise it will
+        be obtained from the 'classes' field in ``self.dataset_meta``.
+
+        Raises:
+            RuntimeError: If the classes is not set.
+
+        Returns:
+            List[str]: The classes.
+        """
+        if self._classes is not None:
+            return self._classes
+
+        if self.dataset_meta and 'classes' in self.dataset_meta:
+            self._classes = self.dataset_meta['classes']
         else:
-            if not isinstance(classes, list):
-                raise TypeError('`classes` should be List[str]')
-            if not isinstance(valid_class_ids, list):
-                raise TypeError('`valid_class_ids` should be List[int]')
-            self.classes = classes
-            self.valid_class_ids = valid_class_ids
+            raise RuntimeError('The `classes` is required, and not found in '
+                               f'dataset_meta: {self.dataset_meta}')
+        return self._classes
+
+    @property
+    def valid_class_ids(self):
+        """Returns valid class ids.
+
+        The valid class ids should be set during initialization, otherwise
+        it will be obtained from the 'seg_valid_class_ids' field in
+        ``self.dataset_meta``.
+
+        Raises:
+            RuntimeError: If valid class ids is not set.
+
+        Returns:
+            List[str]: The valid class ids.
+        """
+        if self._classes is not None:
+            return self._valid_class_ids
+
+        if self.dataset_meta and 'seg_valid_class_ids' in self.dataset_meta:
+            self._valid_class_ids = self.dataset_meta['seg_valid_class_ids']
+        else:
+            raise RuntimeError(
+                'The `seg_valid_class_ids` is required, and not found in '
+                f'dataset_meta: {self.dataset_meta}')
+        return self._valid_class_ids
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Process one batch of data samples and predictions.
@@ -171,16 +203,27 @@ class InstanceSeg(BaseMetric):
             pred_instance_labels.append(result_pred['instance_labels'])
             pred_instance_scores.append(result_pred['instance_scores'])
 
-        ret_dict = self.instance_seg_eval(
-            gt_semantic_masks,
-            gt_instance_masks,
-            pred_instance_masks,
-            pred_instance_labels,
-            pred_instance_scores,
+        assert len(self.valid_class_ids) == len(self.classes)
+        id_to_label = {
+            self.valid_class_ids[i]: self.classes[i]
+            for i in range(len(self.valid_class_ids))
+        }
+        preds = self.aggregate_predictions(
+            masks=pred_instance_masks,
+            labels=pred_instance_labels,
+            scores=pred_instance_scores,
+            valid_class_ids=self.valid_class_ids)
+        gts = self.rename_gt(gt_semantic_masks, gt_instance_masks,
+                             self.valid_class_ids)
+        metrics = scannet_eval(
+            preds=preds,
+            gts=gts,
+            options=None,
             valid_class_ids=self.valid_class_ids,
-            class_labels=self.classes)
+            class_labels=self.classes,
+            id_to_label=id_to_label)
 
-        return ret_dict
+        return metrics
 
     def aggregate_predictions(self, masks, labels, scores, valid_class_ids):
         """Maps predictions to ScanNet evaluator format.
@@ -223,64 +266,15 @@ class InstanceSeg(BaseMetric):
         for semantic_mask, instance_mask in zip(gt_semantic_masks,
                                                 gt_instance_masks):
             unique = np.unique(instance_mask)
-            assert len(unique) < 1000
+            assert len(
+                unique
+            ) < 1000, 'The nums of label in gt should not be greater than 1000'
             for i in unique:
                 semantic_instance = semantic_mask[instance_mask == i]
                 semantic_unique = np.unique(semantic_instance)
                 assert len(semantic_unique) == 1
                 if semantic_unique[0] < len(valid_class_ids):
-                    instance_mask[instance_mask==i] = 1000 * valid_class_ids[semantic_unique[0]] + i  #noqa: E501
+                    instance_mask[instance_mask == i] = 1000 * valid_class_ids[
+                        semantic_unique[0]] + i  # noqa: E501
             renamed_instance_masks.append(instance_mask)
         return renamed_instance_masks
-
-    def instance_seg_eval(self,
-                          gt_semantic_masks,
-                          gt_instance_masks,
-                          pred_instance_masks,
-                          pred_instance_labels,
-                          pred_instance_scores,
-                          valid_class_ids,
-                          class_labels,
-                          options=None):
-        """Instance Segmentation Evaluation.
-
-        Evaluate the result of the instance segmentation.
-
-        Args:
-            gt_semantic_masks (list[np.ndarray]): Ground truth semantic masks.
-            gt_instance_masks (list[np.ndarray]): Ground truth instance masks.
-            pred_instance_masks (list[np.ndarray]): Predicted instance masks.
-            pred_instance_labels (list[np.ndarray]): Predicted instance labels.
-            pred_instance_scores (list[np.ndarray]): Predicted instance scores.
-            valid_class_ids (tuple[int]): Ids of valid categories.
-            class_labels (tuple[str]): Names of valid categories.
-            options (dict, optional): Additional options. Keys may contain:
-                `overlaps`, `min_region_sizes`, `distance_threshes`,
-                `distance_confs`. Default: None.
-            logger (logging.Logger | str, optional): The way to print the
-                mAP summary. See `mmdet.utils.print_log()` for details.
-                Default: None.
-
-        Returns:
-            dict[str, float]: Dict of results.
-        """
-        assert len(valid_class_ids) == len(class_labels)
-        id_to_label = {
-            valid_class_ids[i]: class_labels[i]
-            for i in range(len(valid_class_ids))
-        }
-        preds = self.aggregate_predictions(
-            masks=pred_instance_masks,
-            labels=pred_instance_labels,
-            scores=pred_instance_scores,
-            valid_class_ids=valid_class_ids)
-        gts = self.rename_gt(gt_semantic_masks, gt_instance_masks,
-                             valid_class_ids)
-        metrics = scannet_eval(
-            preds=preds,
-            gts=gts,
-            options=options,
-            valid_class_ids=valid_class_ids,
-            class_labels=class_labels,
-            id_to_label=id_to_label)
-        return metrics

@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-import pytest
 import torch
 
 from mmeval.metrics import InstanceSeg
@@ -40,19 +39,6 @@ def _demo_mm_model_output():
         predictions.append(results_dict)
         groundtruths.append(ann_info_data)
     return predictions, groundtruths
-
-
-def test_metric_invalid_usage():
-    with pytest.raises(AssertionError):
-        InstanceSeg()
-
-    with pytest.raises(AssertionError):
-        InstanceSeg(
-            valid_class_ids=(3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 14, 16, 24, 28,
-                             33, 34, 36, 39))
-
-    with pytest.raises(TypeError):
-        InstanceSeg(classes='a', valid_class_ids='b')
 
 
 def test_evaluate():
