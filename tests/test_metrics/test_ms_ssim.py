@@ -37,7 +37,7 @@ def test_ms_ssim(init_kwargs, inputs, results):
     ms_ssim = MS_SSIM(**init_kwargs)
     ms_ssim_results = ms_ssim(inputs)
     np.testing.assert_allclose(
-        ms_ssim_results['ms_ssim'], results)
+        ms_ssim_results['ms-ssim'], results)
 
 
 def test_raise_error():
