@@ -229,9 +229,7 @@ class InstanceSeg(BaseMetric):
                 semantic_unique = np.unique(semantic_instance)
                 assert len(semantic_unique) == 1
                 if semantic_unique[0] < len(valid_class_ids):
-                    instance_mask[
-                        instance_mask ==
-                        i] = 1000 * valid_class_ids[semantic_unique[0]] + i
+                    instance_mask[instance_mask==i] = 1000 * valid_class_ids[semantic_unique[0]] + i  #noqa: E501
             renamed_instance_masks.append(instance_mask)
         return renamed_instance_masks
 
