@@ -134,16 +134,16 @@ class InstanceSeg(BaseMetric):
             predictions (Sequence[Dict]): A sequence of dict. Each dict
                 representing a detection result, with the following keys:
 
-                - pts_instance_mask(np.ndarray): Predicted instance masks.
-                - instance_labels(np.ndarray): Predicted instance labels.
-                - instance_scores(np.ndarray): Predicted instance scores.
+                - pts_instance_mask (np.ndarray): Predicted instance masks.
+                - instance_labels (np.ndarray): Predicted instance labels.
+                - instance_scores (np.ndarray): Predicted instance scores.
 
             groundtruths (Sequence[Dict]): A sequence of dict. Each dict
                 represents a groundtruths for an image, with the following
                 keys:
 
-                - pts_instance_mask(np.ndarray): Ground truth instance masks.
-                - pts_semantic_mask(np.ndarray): Ground truth semantic masks.
+                - pts_instance_mask (np.ndarray): Ground truth instance masks.
+                - pts_semantic_mask (np.ndarray): Ground truth semantic masks.
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             self._results.append((deepcopy(prediction), deepcopy(groundtruth)))
