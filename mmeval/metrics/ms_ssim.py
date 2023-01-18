@@ -88,6 +88,7 @@ class MultiScaleStructureSimilarity(BaseMetric):
 
         Args:
             predictions (Sequence[np.ndarray]): Predictions of the model.
+                Input range should be [0, 255].
         """
 
         num_samples = len(predictions)
@@ -99,11 +100,11 @@ class MultiScaleStructureSimilarity(BaseMetric):
         half2 = [
             reorder_image(pred, self.input_order) for pred in predictions[1::2]
         ]
-        # half1, half2 = predictions[0::2], predictions[1::2]
+
         half1 = np.stack(half1, axis=0).astype(np.uint8)
         half2 = np.stack(half2, axis=0).astype(np.uint8)
 
-        self._results.append(self.compute_ms_ssim(half1, half2))
+        self._results += self.compute_ms_ssim(half1, half2)
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the MS-SSIM metric.
@@ -118,10 +119,9 @@ class MultiScaleStructureSimilarity(BaseMetric):
         Returns:
             Dict[str, float]: The computed PSNR metric.
         """
+        return {'ms-ssim': float(np.array(results).mean())}
 
-        return {'ms_ssim': float(np.array(results).mean())}
-
-    def compute_ms_ssim(self, img1: np.array, img2: np.array) -> np.ndarray:
+    def compute_ms_ssim(self, img1: np.array, img2: np.array) -> List[float]:
         """Calculate MS-SSIM (multi-scale structural similarity).
 
         Args:
@@ -163,7 +163,7 @@ class MultiScaleStructureSimilarity(BaseMetric):
         results = np.prod(
             mcs[:-1, :]**self.weights[:-1, np.newaxis], axis=0) * (
                 mssim[-1, :]**self.weights[-1])
-        return np.mean(results)
+        return results.tolist()
 
     @staticmethod
     def _f_special_gauss(size: int, sigma: float) -> np.ndarray:
