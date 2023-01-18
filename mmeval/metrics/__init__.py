@@ -35,6 +35,7 @@ from .rouge import ROUGE
 from .sad import SumAbsoluteDifferences
 from .snr import SignalNoiseRatio
 from .ssim import StructuralSimilarity
+from .swd import SlicedWassersteinDistance
 from .voc_map import VOCMeanAP
 from .word_accuracy import WordAccuracy
 
@@ -49,7 +50,8 @@ __all__ = [
     'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
     'WordAccuracy', 'PrecisionRecallF1score',
     'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score',
-    'CharRecallPrecision', 'MultiScaleStructureSimilarity'
+    'CharRecallPrecision', 'MultiScaleStructureSimilarity',
+    'SlicedWassersteinDistance'
 ]
 
 _deprecated_msg = (

@@ -29,6 +29,7 @@ repos:
     rev: v2.2.1
     hooks:
       - id: codespell
+        args: ["-L", "lod"]
   - repo: https://github.com/executablebooks/mdformat
     rev: 0.7.9
     hooks:
