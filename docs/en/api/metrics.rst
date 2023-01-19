@@ -42,4 +42,8 @@ Metrics
    MAE
    MSE
    BLEU
+   SAD
+   GradientError
+   MattingMSE
+   ConnectivityError
    DOTAMeanAP
