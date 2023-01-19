@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 from collections import OrderedDict
-from typing import List, Sequence, Union
+from typing import List, Sequence, Union, Dict
 
 from mmeval.core.base_metric import BaseMetric
 
@@ -192,20 +192,67 @@ def average_recall_at_avg_proposals(ground_truth,
     return recall, avg_recall, proposals_per_video, auc
 
 
-class ANetMeanAR(BaseMetric):
-    """ActivityNet evaluation metric."""
+class ActivityNetAR(BaseMetric):
+    """ActivityNet evaluation metric.
+    ActivityNet-1.3 dataset: http://activity-net.org/download.html.
+
+    This metric computes AR under different Average Number of proposals (AR =
+    1, 5, 10, 100) as AR@1, AR@5, AR@10 and AR@100, and calculate the Area 
+    under the AR vs. AN curve (AUC) as metrics.
+
+    temporal_iou_thresholds (np.array or List): the list of temporal iOU
+        thresholds. Defaults to np.linspace(0.5, 0.95, 10).
+    max_avg_proposals (int): the maximun of Average Number of proposals.
+        Defaults to 100.
+     **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+
+    Examples:
+        >>> from mmeval import ActivityNetAR
+        >>> anet_metric = ActivityNetAR()
+        >>> predictions = [
+        >>>                {
+        >>>                 'video_name': 'v_--1DO2V4K74',
+        >>>                 'annotations': [
+        >>>                                 {
+        >>>                                  'segment': [30.02, 180], 
+        >>>                                  'label': 1
+        >>>                                  }
+        >>>                                 ],
+        >>>                 'proposal_list': [
+        >>>                     {'segment': [53, 68], 'score': 0.21},
+        >>>                     {'segment': [38, 110], 'score': 0.54},
+        >>>                     {'segment': [65, 128], 'score': 0.95},
+        >>>                     {'segment': [69, 93], 'score': 0.98},
+        >>>                     {'segment': [99, 147], 'score': 0.84},
+        >>>                     {'segment': [28, 96], 'score': 0.84},
+        >>>                     {'segment': [18, 92], 'score': 0.22},
+        >>>                     {'segment': [40, 66], 'score': 0.36},
+        >>>                     {'segment': [14, 29], 'score': 0.75},
+        >>>                     {'segment': [67, 105], 'score': 0.25},
+        >>>                     {'segment': [2, 7], 'score': 0.94},
+        >>>                     {'segment': [25, 112], 'score': 0.49},
+        >>>                     {'segment': [7, 83], 'score': 0.9},
+        >>>                     {'segment': [75, 159], 'score': 0.42},
+        >>>                     {'segment': [99, 176], 'score': 0.62},
+        >>>                     {'segment': [89, 186], 'score': 0.56},
+        >>>                     {'segment': [50, 200], 'score': 0.5}
+        >>>                     ]
+        >>>                 }
+        >>>                ]
+        >>> anet_metric(predictions)
+        OrderedDict([('auc', 54.2), ('AR@1', 0.0), ('AR@5', 0.0), ('AR@10', 0.2), ('AR@100', 0.6)])
+    """
 
     def __init__(self,
                  temporal_iou_thresholds: Union[np.array, List] = np.linspace(
                      0.5, 0.95, 10),
                  max_avg_proposals: int = 100,
-                 verbose: bool = True,
                  **kwargs) -> None:
         super().__init__(**kwargs)
         self.temporal_iou_thresholds = np.array(temporal_iou_thresholds)
         self.max_avg_proposals = max_avg_proposals
-        self.ground_truth = {}
-        self.verbose = verbose
+        self.ground_truth: Dict[str, np.array] = {}
 
     def add(self, predictions: Sequence[dict]) -> None:  # type: ignore
         """Add detection results to the results list.

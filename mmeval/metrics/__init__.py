@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 from .accuracy import Accuracy
+from .anet_ar import ActivityNetAR
 from .ava_map import AVAMeanAP
 from .bleu import BLEU
 from .coco_detection import COCODetectionMetric
@@ -30,5 +31,5 @@ __all__ = [
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SAD', 'GradientError',
-    'MattingMSE', 'ConnectivityError'
+    'MattingMSE', 'ConnectivityError', 'ActivityNetAR'
 ]
