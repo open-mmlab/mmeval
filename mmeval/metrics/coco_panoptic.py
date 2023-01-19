@@ -491,6 +491,7 @@ class COCOPanopticMetric(BaseMetric):
         metric_results = []
         # split gt and prediction list
         preds, gts = zip(*results)
+        _coco_api = None
 
         if self.outfile_prefix is None:
             tmp_dir = tempfile.TemporaryDirectory()
@@ -502,17 +503,20 @@ class COCOPanopticMetric(BaseMetric):
             with get_local_path(
                     filepath=self.ann_file,
                     backend_args=self.backend_args) as local_path:
-                self._coco_api = COCOPanoptic(local_path)
-            self.categories = self._coco_api.cats
-        else:
-            self._coco_api = None
+                _coco_api = COCOPanoptic(local_path)
+            self.categories = _coco_api.cats
 
         if self.categories is None:
             cats = []
-            for id, name in enumerate(self.dataset_meta['classes']):
-                isthing = 1 if name in self.dataset_meta['thing_classes'] else 0
+            classes_list = self.dataset_meta['classes']
+            for id, name in enumerate(classes_list):
+                thing_classes_list = self.dataset_meta['thing_classes']
+                isthing = 1 if name in thing_classes_list else 0
                 cats.append({'id': id, 'name': name, 'isthing': isthing})
             self.categories = {el['id']: el for el in cats}
+
+        assert isinstance(self.gt_folder, str)
+        assert isinstance(self.pred_folder, str)
 
         if outfile_prefix is not None:
             # do evaluation after collect all the results
@@ -523,35 +527,35 @@ class COCOPanopticMetric(BaseMetric):
                 gts_json = self.convert_to_coco_json(ann_list=gts, folder=self.gt_folder, outfile_prefix=outfile_prefix+'.gts')
                 # convert predictions to coco format and dump to json file
                 pred_json = self.convert_to_coco_json(ann_list=preds, folder=self.pred_folder, outfile_prefix=outfile_prefix+'.pred')
-                self._coco_api = COCOPanoptic(gts_json)
+                _coco_api = COCOPanoptic(gts_json)
             else:
                 if not isinstance(preds[0], str):  
                     pred_json = self.convert_to_coco_json(ann_list=preds, folder=self.pred_folder ,outfile_prefix=outfile_prefix+'.pred')
                 else:
                     pred_json = preds[0]
 
-            self.img_ids = self._coco_api.get_img_ids()
-            self.categories = self._coco_api.cats
+            self.img_ids = _coco_api.get_img_ids()
+            self.categories = _coco_api.cats
 
-            imgs = self._coco_api.imgs
-            gt_json = self._coco_api.img_ann_map   
+            imgs = _coco_api.imgs
+            gt_json = _coco_api.img_ann_map   
             gt_json = [{
                 'image_id': k,
                 'segments_info': v,
                 'file_name': imgs[k]['segm_file']
             } for k, v in gt_json.items()]
-            pred_json = load(pred_json)
-            pred_json = dict(
-                (el['image_id'], el) for el in pred_json['annotations'])
+            pred_json_dict = load(pred_json)
+            pred_json_dict = dict(
+                (el['image_id'], el) for el in pred_json_dict['annotations'])
 
             # match the gt_anns and pred_anns in the same image
             matched_annotations_list = []
             for gt_ann in gt_json:
                 img_id = gt_ann['image_id']
-                if img_id not in pred_json.keys():
+                if img_id not in pred_json_dict.keys():
                     raise Exception('no prediction for the image'
                                     ' with id: {}'.format(img_id))
-                matched_annotations_list.append((gt_ann, pred_json[img_id]))
+                matched_annotations_list.append((gt_ann, pred_json_dict[img_id]))
             if self.nproc > 1 and (len(self.img_ids) / self.nproc <= 200 ):   # prevent stack overflow
                 pq_stat = self.pq_compute_multi_core(matched_annotations_list,
                     gt_folder=self.gt_folder,
@@ -583,9 +587,10 @@ class COCOPanopticMetric(BaseMetric):
 
         classwise_results = None
         if self.classwise:
+            classes_list = self.dataset_meta['classes']
             classwise_results = {
                 k: v
-                for k, v in zip(self.dataset_meta['classes'],
+                for k, v in zip(classes_list,
                                 pq_results['classwise'].values())
             }
         results = self.parse_pq_results(pq_results)
