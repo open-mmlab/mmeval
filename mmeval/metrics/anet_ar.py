@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 from collections import OrderedDict
-from typing import List, Sequence, Union, Dict
+from typing import Dict, List, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
 
@@ -193,16 +193,16 @@ def average_recall_at_avg_proposals(ground_truth,
 
 
 class ActivityNetAR(BaseMetric):
-    """ActivityNet evaluation metric.
-    ActivityNet-1.3 dataset: http://activity-net.org/download.html.
+    """ActivityNet evaluation metric. ActivityNet-1.3 dataset: http://activity-
+    net.org/download.html.
 
     This metric computes AR under different Average Number of proposals (AR =
-    1, 5, 10, 100) as AR@1, AR@5, AR@10 and AR@100, and calculate the Area 
+    1, 5, 10, 100) as AR@1, AR@5, AR@10 and AR@100, and calculate the Area
     under the AR vs. AN curve (AUC) as metrics.
 
     temporal_iou_thresholds (np.array or List): the list of temporal iOU
         thresholds. Defaults to np.linspace(0.5, 0.95, 10).
-    max_avg_proposals (int): the maximun of Average Number of proposals.
+    max_avg_proposals (int): the maximum of Average Number of proposals.
         Defaults to 100.
      **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
@@ -211,14 +211,9 @@ class ActivityNetAR(BaseMetric):
         >>> from mmeval import ActivityNetAR
         >>> anet_metric = ActivityNetAR()
         >>> predictions = [
-        >>>                {
-        >>>                 'video_name': 'v_--1DO2V4K74',
+        >>>                {'video_name': 'v_--1DO2V4K74',
         >>>                 'annotations': [
-        >>>                                 {
-        >>>                                  'segment': [30.02, 180], 
-        >>>                                  'label': 1
-        >>>                                  }
-        >>>                                 ],
+        >>>                     {'segment': [30.02, 180], 'label': 1}],
         >>>                 'proposal_list': [
         >>>                     {'segment': [53, 68], 'score': 0.21},
         >>>                     {'segment': [38, 110], 'score': 0.54},
@@ -236,12 +231,11 @@ class ActivityNetAR(BaseMetric):
         >>>                     {'segment': [75, 159], 'score': 0.42},
         >>>                     {'segment': [99, 176], 'score': 0.62},
         >>>                     {'segment': [89, 186], 'score': 0.56},
-        >>>                     {'segment': [50, 200], 'score': 0.5}
-        >>>                     ]
-        >>>                 }
-        >>>                ]
+        >>>                     {'segment': [50, 200], 'score': 0.5}]
+        >>>                 }]
         >>> anet_metric(predictions)
-        OrderedDict([('auc', 54.2), ('AR@1', 0.0), ('AR@5', 0.0), ('AR@10', 0.2), ('AR@100', 0.6)])
+        OrderedDict([('auc', 54.2), ('AR@1', 0.0), ('AR@5', 0.0),
+                     ('AR@10', 0.2), ('AR@100', 0.6)])
     """
 
     def __init__(self,
