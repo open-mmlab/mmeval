@@ -5,11 +5,9 @@ import tempfile
 from collections import Iterable
 from io import BytesIO
 from json import dump
-from typing import Dict, List, Optional, Sequence, Union, Tuple
+from typing import Dict, Optional, Sequence
 import multiprocessing
 from PIL import Image
-from terminaltables import AsciiTable
-from tqdm.contrib import tzip
 
 from mmeval.core.base_metric import BaseMetric
 from mmeval.fileio import get_local_path, load, get
@@ -21,7 +19,7 @@ from panopticapi.utils import id2rgb, rgb2id
 
 class COCOPanopticMetric(BaseMetric):
     """COCO panoptic segmentation evaluation metric.
-    
+
     Evaluate PQ, SQ RQ for panoptic segmentation tasks. Please refer to
     https://cocodataset.org/#panoptic-eval for more details.
 
@@ -71,9 +69,11 @@ class COCOPanopticMetric(BaseMetric):
         self.nproc = min(nproc, multiprocessing.cpu_count())
         self.categories = categories  
 
-    def convert_to_coco_json(self, ann_list: Sequence[dict], folder: str,
+    def convert_to_coco_json(self, 
+                        ann_list: Sequence[dict], folder: str,
                         outfile_prefix: str) -> str:
-        """Convert the annotation in list format to coco panoptic segmentation format json file.
+        """Convert the annotation in list format to coco panoptic segmentation 
+        format json file.
 
         Args:
             ann_list (Sequence[dict]): The annotation list.
@@ -100,7 +100,8 @@ class COCOPanopticMetric(BaseMetric):
 
         for img_ann in ann_list:
 
-            assert 'segments_info' in img_ann.keys() , 'You should at least put in segments_info and file_name in the annotation!'
+            assert 'segments_info' in img_ann.keys(), \
+            'You should at least put in segments_info and file_name in the annotation!'
             if 'file_name' not in img_ann.keys():
                 assert 'seg_map_path' in img_ann.keys() 
                 img_ann['file_name'] = osp.split(img_ann['seg_map_path'])[-1]
@@ -124,14 +125,15 @@ class COCOPanopticMetric(BaseMetric):
                     'width': pan_png.shape[1],
                     'height': pan_png.shape[0],
                     'file_name': img_ann['file_name']
-                }
+                    }
             image_infos.append(image_info) 
 
             # Build 'annotations' in json file
             pan_png = rgb2id(pan_png)
             segments_info = img_ann['segments_info']
             # check the segments_info
-            if not set(['id', 'category_id', 'isthing', 'iscrowd', 'area']).issubset(segments_info[0].keys()):
+            if not set(['id', 'category_id', 'isthing', 'iscrowd', 'area'])\
+            .issubset(segments_info[0].keys()):
                 segments_info = []
                 for each_segment_info in img_ann['segments_info']:
                     id = each_segment_info['id']
@@ -189,7 +191,6 @@ class COCOPanopticMetric(BaseMetric):
             predictions (Sequence[dict]): A sequence of dict. Each dict
                 representing a panoptic segmentation result for an image, with the
                 following keys:
-
                 - image_id (Optional, int): Image id.
                 - segments_info (list): A list of COCO panoptic annotations.
                 - file_name (str): Image name. 
@@ -217,16 +218,18 @@ class COCOPanopticMetric(BaseMetric):
         """Check the type of categories and convert into dict.
 
         Args:
-            categories (dict|list): The categories of the panoptic segmentation.
+            categories (dict|list): The categories of the 
+            panoptic segmentation.
 
         Returns:
             dict: return a dict with shaped like {cat_id: 'cat'}
         """
         if isinstance(categories, dict):
-            assert "categories" in categories, "The key 'categories' must in the dict"
+            assert "categories" in categories, \
+                "The key 'categories' must in the dict"
             return categories
         elif isinstance(categories, list):
-            if isinstance(categories[0], str): 
+            if isinstance(categories[0], str):
                 new_cat_list = []
                 for name in categories:
                     cat_info = {
@@ -287,7 +290,8 @@ class COCOPanopticMetric(BaseMetric):
         return result
 
 
-    def pq_compute_single_core(self, proc_id,
+    def pq_compute_single_core(self, 
+                           proc_id,
                            annotation_set,
                            gt_folder,
                            pred_folder,
@@ -385,8 +389,8 @@ class COCOPanopticMetric(BaseMetric):
                         'category_id']:
                     continue
 
-                union = pred_segms[pred_label]['area'] + gt_segms[gt_label][
-                    'area'] - intersection - gt_pred_map.get((VOID, pred_label), 0)
+                union = pred_segms[pred_label]['area'] + gt_segms[gt_label]
+                ['area'] - intersection - gt_pred_map.get((VOID, pred_label), 0)
                 iou = intersection / union
                 if iou > 0.5:
                     pq_stat[gt_segms[gt_label]['category_id']].tp += 1
@@ -411,10 +415,11 @@ class COCOPanopticMetric(BaseMetric):
                     continue
                 # intersection of the segment with VOID
                 intersection = gt_pred_map.get((VOID, pred_label), 0)
-                # plus intersection with corresponding CROWD region if it exists
+                # plus intersection with corresponding CROWD region 
+                # if it exists
                 if pred_info['category_id'] in crowd_labels_dict:
-                    intersection += gt_pred_map.get(
-                        (crowd_labels_dict[pred_info['category_id']], pred_label),
+                    intersection += gt_pred_map.get((
+                    crowd_labels_dict[pred_info['category_id']], pred_label),
                         0)
                 # predicted segment is ignored if more than half of
                 # the segment correspond to VOID and CROWD regions
@@ -427,7 +432,8 @@ class COCOPanopticMetric(BaseMetric):
                 proc_id, len(annotation_set)))
         return pq_stat
 
-    def pq_compute_multi_core(self, matched_annotations_list,
+    def pq_compute_multi_core(self, 
+                            matched_annotations_list,
                             gt_folder,
                             pred_folder,
                             categories,
@@ -476,16 +482,16 @@ class COCOPanopticMetric(BaseMetric):
 
         Args:
             results (List[tuple]): A list of tuple. Each tuple is the
-                prediction and ground truth of an image. This list has already
-                been synced across all ranks.
+                prediction and ground truth of an image. This list has
+                already been synced across all ranks.
 
         Returns:
             Dict[str, dict]: The computed metrics with the following keys:
 
                 - pq_results(dict): The Panoptic Quality results.
-                - classwise_results(dict, optional): The classwise Panoptic Quality.
-                    results. The keys are class names and the values are metrics.
-                    Defaults to None.
+                - classwise_results(dict, optional): The classwise Panoptic 
+                    Quality.results. The keys are class names and the values 
+                    are metrics. Defaults to None.
                 - parse_results(dict): The parsed Panoptic Quality results.
         """
         metric_results = []
@@ -501,15 +507,15 @@ class COCOPanopticMetric(BaseMetric):
 
         if self.ann_file is not None:
             with get_local_path(
-                    filepath=self.ann_file,
+                    filepath=self.ann_file, 
                     backend_args=self.backend_args) as local_path:
                 _coco_api = COCOPanoptic(local_path)
             self.categories = _coco_api.cats
 
         if self.categories is None:
             cats = []
-            assert(isinstance(self.dataset_meta['classes'],Iterable))
-            assert(isinstance(self.dataset_meta['thing_classes'],Iterable))
+            assert isinstance(self.dataset_meta['classes'], Iterable)
+            assert isinstance(self.dataset_meta['thing_classes'], Iterable)
             for id, name in enumerate(self.dataset_meta['classes']):
                 thing_classes_list = self.dataset_meta['thing_classes']
                 isthing = 1 if name in thing_classes_list else 0
@@ -525,9 +531,11 @@ class COCOPanopticMetric(BaseMetric):
                 # split gt and prediction list
                 self.categories = self.check_categories(self.categories)
                 # convert groundtruths to coco format and dump to json file
-                gts_json = self.convert_to_coco_json(ann_list=gts, folder=self.gt_folder, outfile_prefix=outfile_prefix+'.gts')
+                gts_json = self.convert_to_coco_json(ann_list=gts, 
+                folder=self.gt_folder, outfile_prefix=outfile_prefix+'.gts')
                 # convert predictions to coco format and dump to json file
-                pred_json = self.convert_to_coco_json(ann_list=preds, folder=self.pred_folder, outfile_prefix=outfile_prefix+'.pred')
+                pred_json = self.convert_to_coco_json(ann_list=preds, 
+                folder=self.pred_folder, outfile_prefix=outfile_prefix+'.pred')
                 _coco_api = COCOPanoptic(gts_json)
             else:
                 if not isinstance(preds[0], str):  
@@ -559,7 +567,8 @@ class COCOPanopticMetric(BaseMetric):
                                     ' with id: {}'.format(img_id))
                 matched_annotations_list.append((gt_ann, pred_json_dict[img_id]))
             if self.nproc > 1 and (len(self.img_ids) / self.nproc <= 200 ):   # prevent stack overflow
-                pq_stat = self.pq_compute_multi_core(matched_annotations_list,
+                pq_stat = self.pq_compute_multi_core(
+                    matched_annotations_list,
                     gt_folder=self.gt_folder,
                     pred_folder=self.pred_folder,
                     categories=self.categories,
@@ -589,7 +598,7 @@ class COCOPanopticMetric(BaseMetric):
 
         classwise_results = None
         if self.classwise:   # type: ignore
-            assert(isinstance(self.dataset_meta['classes'],Iterable))
+            assert isinstance(self.dataset_meta['classes'], Iterable)
             classwise_results = {
                 k: v
                 for k, v in zip(self.dataset_meta['classes'],
