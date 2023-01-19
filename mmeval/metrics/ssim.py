@@ -64,6 +64,10 @@ class SSIM(BaseMetric):
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
+        if cv2 is None:
+            raise ImportError(f'For availability of {self.__class__.__name__},'
+                              ' please install opencv-python first.')
+
         assert input_order.upper() in [
             'CHW', 'HWC'
         ], (f'Wrong input_order {input_order}. Supported input_orders are '
