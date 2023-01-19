@@ -3,6 +3,7 @@ import numpy as np
 import os.path as osp
 import tempfile
 import itertools
+from io import BytesIO
 from json import dump
 from typing import Dict, List, Optional, Sequence, Union, Tuple
 import multiprocessing
@@ -13,18 +14,9 @@ from tqdm.contrib import tzip
 from mmeval.core.base_metric import BaseMetric
 from mmeval.fileio import get_local_path, load, get
 from mmeval.metrics.utils.coco_wrapper import COCOPanoptic
-
-try:
-    import panopticapi
-    from panopticapi.evaluation import VOID, PQStat, OFFSET
-    from panopticapi.utils import id2rgb, rgb2id
-except ImportError:
-    panopticapi = None
-    id2rgb = None
-    rgb2id = None
-    VOID = None
-    PQStat = None
-    OFFSET = 256 * 256 * 256
+from mmeval.metrics._vendor.panopticapi import panopticapi as panopticapi
+from panopticapi.evaluation import VOID, PQStat, OFFSET
+from panopticapi.utils import id2rgb, rgb2id
 
 
 class COCOPanopticMetric(BaseMetric):
@@ -57,7 +49,7 @@ class COCOPanopticMetric(BaseMetric):
                  gt_folder: str = None,
                  pred_folder: str = None,
                  classwise: bool = False,
-                 nproc: int = 4,
+                 nproc: int = 32,
                  outfile_prefix: Optional[str] = None,
                  backend_args: Optional[dict] = None,
                  categories: list = None,
@@ -73,35 +65,20 @@ class COCOPanopticMetric(BaseMetric):
         # outfile_prefix should be a prefix of a path which points to a shared
         # storage when train or test with multi nodes.
         self.outfile_prefix = outfile_prefix
-        if outfile_prefix is None:
-            self.tmp_dir = tempfile.TemporaryDirectory()
-            self.outfile_prefix = self.tmp_dir.name 
-
-        if gt_folder is None or not osp.isdir(gt_folder):
-            raise Exception("Folder {} with ground truth segmentations doesn't exist".format(gt_folder))
-        if pred_folder is None or not osp.isdir(pred_folder):
-            raise Exception("Folder {} with predicted segmentations doesn't exist".format(pred_folder))
         self.ann_file = ann_file
         self.backend_args = backend_args
         self.gt_folder = gt_folder
         self.pred_folder = pred_folder
         self.nproc = min(nproc, multiprocessing.cpu_count())
         self.categories = categories  
-        
-        if self.categories is None:
-            # use default coco categories
-            self.categories = [
-            dict(id=id, name=name) for id, name in enumerate(
-                self.dataset_meta['classes'])  # type:ignore
-        ]
 
-    def convert_to_coco_json(self, ann_list: Sequence[list], img_list: str,
+    def convert_to_coco_json(self, ann_list: Sequence[list], folder: str,
                         outfile_prefix: str) -> str:
         """Convert the annotation in list format to coco panoptic segmentation format json file.
 
         Args:
             ann_list (Sequence[list]): The annotation list.
-            img_list (Sequence[list]): The image array list.
+            folder (str): Path to the panoptic image folder.
             outfile_prefix (str): The filename prefix of the json file. If the
                 prefix is "somepath/xxx", the json file will be named
                 "somepath/xxx.gt.json".
@@ -116,16 +93,22 @@ class COCOPanopticMetric(BaseMetric):
         annotations = []
         segments_info = []
         img_count = 0
-        idx = 0
         print("Processing annotations to coco json format...")
-            
+
         if 'image_id' in ann_list[0]:
             ann_list = list(ann_list)
-            ann_list.sort(key=lambda x:int(x['image_id']))
 
-        for img_ann, pan_png in tzip(ann_list, img_list):
+        for img_ann in ann_list:
 
-            assert 'segments_info' in img_ann.keys() and 'file_name' in img_ann.keys(), 'You should at least put in segments_info and file_name in the annotation!'
+            assert 'segments_info' in img_ann.keys() , 'You should at least put in segments_info and file_name in the annotation!'
+            if 'file_name' not in img_ann.keys():
+                assert 'seg_map_path' in img_ann.keys() 
+                img_ann['file_name'] = osp.split(img_ann['seg_map_path'])[-1]
+            name = img_ann['file_name']
+            img_path = get(osp.join(folder, name))
+            with BytesIO(img_path) as buff:
+                image = Image.open(buff)
+                pan_png = np.array(image, dtype=np.uint32)
             # Build 'images' in json file
             if 'image_id' not in img_ann.keys():
                 img_count += 1
@@ -155,7 +138,13 @@ class COCOPanopticMetric(BaseMetric):
                     label = each_segment_info['category_id']
                     mask = pan_png == id  
                     isthing = self.categories[label]['isthing']
-                    iscrowd = each_segment_info['iscrowd']
+                    if 'iscrowd' in each_segment_info.keys():
+                        iscrowd = each_segment_info['iscrowd']
+                    elif isthing:
+                        iscrowd = 1 if not isthing else 0
+                    else:
+                        iscrowd = 0
+
                     new_segment_info = {
                         'id': id,
                         'category_id': label,
@@ -193,30 +182,6 @@ class COCOPanopticMetric(BaseMetric):
             dump(coco_json, f, ensure_ascii=False, default=self.default_dump)
         return converted_json_path
 
-    def gen_img_array_list(self, img_folder, annotations):
-        """Use PIL to process the image into an array and return a list contained all images.
-
-        Args:
-            img_folder (str): Path to the images.
-            annotations (list): The 'annotations' in the coco json file.
-
-        Returns:
-            list: A list contains all arrays of the images.
-        """
-        #In the ascending order of image_id
-        if 'image_id' in annotations[0]:
-            annotations = list(annotations)
-            annotations.sort(key=lambda x:int(x['image_id']))
-        img_list = []
-        for img_ann in annotations:
-            name = img_ann['file_name']
-            img_path = osp.join(img_folder, name)
-            image = Image.open(img_path)
-            image_pil = np.array(image, dtype=np.uint32)
-            img_list.append(image_pil)
-
-        return img_list
-
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  
         """Add the intermediate results to `self._results`.
 
@@ -238,14 +203,15 @@ class COCOPanopticMetric(BaseMetric):
                 - segments_info (list): A list of COCO panoptic annotations.
                 - file_name (str): Image name. 
         """
-        if self._coco_api is not None:
-            groundtruths = self._coco_api.dataset['annotations']
-        for prediction, groundtruth in zip(predictions, groundtruths):
-            assert isinstance(prediction, dict), 'The prediciton should be ' \
-                f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
-            assert isinstance(groundtruth, dict), 'The label should be ' \
-                f'a sequence of dict, but got a sequence of {type(groundtruth)}.'   # noqa: E501
-            self._results.append((prediction, groundtruth)) 
+        if isinstance(predictions, str):
+            self._results.append((predictions, groundtruths))
+        else:
+            for prediction, groundtruth in zip(predictions, groundtruths):
+                assert isinstance(prediction, dict), 'The prediciton should be ' \
+                    f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
+                assert isinstance(groundtruth, dict), 'The label should be ' \
+                    f'a sequence of dict, but got a sequence of {type(groundtruth)}.'   # noqa: E501
+                self._results.append((prediction, groundtruth)) 
 
     def check_categories(self, categories):
         """Check the type of categories and convert into dict.
@@ -280,7 +246,6 @@ class COCOPanopticMetric(BaseMetric):
 
         # cache states
         cache_results = self._results
-        cache_coco_api = self._coco_api
 
         self._results = []
         self.add(*args, **kwargs)
@@ -288,7 +253,6 @@ class COCOPanopticMetric(BaseMetric):
 
         # recover states from cache
         self._results = cache_results
-        self._coco_api = cache_coco_api
 
         return metric_result
 
@@ -322,44 +286,11 @@ class COCOPanopticMetric(BaseMetric):
         result['RQ_st'] = 100 * pq_results['Stuff']['rq']
         return result
 
-    def print_panoptic_table(self, pq_results, classwise_results=None):
-        """Print the panoptic evaluation results table.
 
-        Args:
-            pq_results(dict): The Panoptic Quality results.
-            classwise_results(dict | None): The classwise Panoptic Quality results.
-                The keys are class names and the values are metrics.
-        """
-        headers = ['', 'PQ', 'SQ', 'RQ', 'categories']
-        data = [headers]
-        for name in ['All', 'Things', 'Stuff']:
-            numbers = [
-                f'{(pq_results[name][k] * 100):0.3f}' for k in ['pq', 'sq', 'rq']
-            ]
-            row = [name] + numbers + [pq_results[name]['n']]
-            data.append(row)
-        table = AsciiTable(data)
-        print('Panoptic Evaluation Results:\n' + table.table)
-
-        if classwise_results is not None:
-            class_metrics = [(name, ) + tuple(f'{(metrics[k] * 100):0.3f}'
-                                            for k in ['pq', 'sq', 'rq'])
-                            for name, metrics in classwise_results.items()]
-            num_columns = min(8, len(class_metrics) * 4)
-            results_flatten = list(itertools.chain(*class_metrics))
-            headers = ['category', 'PQ', 'SQ', 'RQ'] * (num_columns // 4)
-            results_2d = itertools.zip_longest(
-                *[results_flatten[i::num_columns] for i in range(num_columns)])
-            data = [headers]
-            data += [result for result in results_2d]
-            table = AsciiTable(data)
-            print(msg='Classwise Panoptic Evaluation Results:\n' + table.table)
-
-#TODO: 写一下这里的return结果
     def pq_compute_single_core(self, proc_id,
                            annotation_set,
-                           gt_dict,
-                           pred_dict,
+                           gt_folder,
+                           pred_folder,
                            categories,
                            print_log=False):
         """
@@ -370,13 +301,13 @@ class COCOPanopticMetric(BaseMetric):
         Args:
             proc_id (int): The id of the mini process.
             annotation_set (list): The list of matched annotations tuple.
-            gt_dict (str): The path of the ground truth images.
-            pred_dict (str): The path of the prediction images.
-            categories (str): The categories of the dataset.
+            gt_folder (str): The path of the ground truth images.
+            pred_folder (str): The path of the prediction images.
+            categories (dict): The categories of the dataset.
             print_log (bool): Whether to print the log. Defaults to False.
 
         Return:
-
+            dict: Panoptic Quality results parsed.
         """     
         pq_stat = PQStat()
         idx = 0
@@ -387,10 +318,18 @@ class COCOPanopticMetric(BaseMetric):
             idx += 1
             # The gt images can be on the local disk or `ceph`, so we use
             # file_client here.
-            pan_gt = gt_dict[gt_ann['image_id']]
+            img_bytes = get(
+                osp.join(gt_folder, gt_ann['file_name']))
+            with BytesIO(img_bytes) as buff:
+                image = Image.open(buff)
+                pan_gt = np.array(image, dtype=np.uint32)
             pan_gt = rgb2id(pan_gt)
 
-            pan_pred = pred_dict[pred_ann['image_id']]
+            img_bytes = get(
+                osp.join(pred_folder, pred_ann['file_name']))
+            with BytesIO(img_bytes) as buff:
+                image = Image.open(buff)
+                pan_pred = np.array(image, dtype=np.uint32)
             pan_pred = rgb2id(pan_pred)
 
             gt_segms = {el['id']: el for el in gt_ann['segments_info']}
@@ -488,10 +427,9 @@ class COCOPanopticMetric(BaseMetric):
                 proc_id, len(annotation_set)))
         return pq_stat
 
-#TODO: 写一下这里的return 结果
     def pq_compute_multi_core(self, matched_annotations_list,
-                            gt_dict,
-                            pred_dict,
+                            gt_folder,
+                            pred_folder,
                             categories,
                             nproc):
         """Evaluate the metrics of Panoptic Segmentation with multithreading.
@@ -505,12 +443,13 @@ class COCOPanopticMetric(BaseMetric):
                 ground truth image array.
             pred_dict (dict): The dictionary that matches the 'image_id' with 
                 predicted image array.
-            categories (str): The categories of the dataset.
+            categories (dict): The categories of the dataset.
             nproc (int): Number of processes for panoptic quality computing.
-                Defaults to 4. When `nproc` exceeds the number of cpu cores,
+                Defaults to 32. When `nproc` exceeds the number of cpu cores,
                 the number of cpu cores is used.
 
         Return:
+            dict: Panoptic Quality results parsed.
         """
         annotations_split = np.array_split(matched_annotations_list, nproc)
         print('Number of cores: {}, images per core: {}'.format(
@@ -519,8 +458,8 @@ class COCOPanopticMetric(BaseMetric):
         processes = []
         for proc_id, annotation_set in enumerate(annotations_split):
             p = workers.apply_async(self.pq_compute_single_core,
-                                    (proc_id, annotation_set, gt_dict,
-                                    pred_dict, categories))
+                                    (proc_id, annotation_set, gt_folder,
+                                    pred_folder, categories))
             processes.append(p)
 
         # Close the process pool, otherwise it will lead to memory
@@ -534,19 +473,22 @@ class COCOPanopticMetric(BaseMetric):
 
         return pq_stat
 
-    def compute_metric(self, results: list, show = True) -> Dict[str, float]:
+    def compute_metric(self, results: list) -> Dict[str, dict]:
         """Compute the metrics from processed results.
 
         Args:
             results (List[tuple]): A list of tuple. Each tuple is the
                 prediction and ground truth of an image. This list has already
                 been synced across all ranks.
-            show (bool, optional): Indicates whether the results are 
-                displayed in the console.
 
         Returns:
-            Dict[str, float]: The computed metrics. The keys are the names of
-                the metrics, and the values are corresponding results.
+            Dict[str, dict]: The computed metrics with the following keys:
+
+                - pq_results(dict): The Panoptic Quality results.
+                - classwise_results(dict, optional): The classwise Panoptic Quality.
+                    results. The keys are class names and the values are metrics.
+                    Defaults to None.
+                - parse_results(dict): The parsed Panoptic Quality results.
         """
         metric_results = []
         # split gt and prediction list
@@ -557,6 +499,7 @@ class COCOPanopticMetric(BaseMetric):
             outfile_prefix = osp.join(tmp_dir.name, 'results')
         else:
             outfile_prefix = self.outfile_prefix
+            tmp_dir = outfile_prefix
 
         if self.ann_file is not None:
             with get_local_path(
@@ -567,35 +510,30 @@ class COCOPanopticMetric(BaseMetric):
         else:
             self._coco_api = None
 
-        if self.tmp_dir is not None:
+        if self.categories is None:
+            self.categories = []
+            for id, name in enumerate(self.dataset_meta['classes']):
+                isthing = 1 if name in self.dataset_meta['thing_classes'] else 0
+                self.categories.append({'id': id, 'name': name, 'isthing': isthing})
+
+        if outfile_prefix is not None:
             # do evaluation after collect all the results
             if self._coco_api is None:  # 
                 # split gt and prediction list
                 self.categories = self.check_categories(self.categories)
-                gt_img_list = self.gen_img_array_list(img_folder=self.gt_folder, annotations=gts)
-                pred_img_list = self.gen_img_array_list(img_folder=self.pred_folder, annotations=preds)
                 # convert groundtruths to coco format and dump to json file
-                gts_json = self.convert_to_coco_json(ann_list=gts, img_list= gt_img_list, outfile_prefix=osp.join(outfile_prefix, 'gts'))
+                gts_json = self.convert_to_coco_json(ann_list=gts, folder=self.gt_folder, outfile_prefix=outfile_prefix+'.gts')
                 # convert predictions to coco format and dump to json file
-                pred_json = self.convert_to_coco_json(ann_list=preds, img_list=pred_img_list, outfile_prefix=osp.join(outfile_prefix, 'pred'))
+                pred_json = self.convert_to_coco_json(ann_list=preds, folder=self.pred_folder, outfile_prefix=outfile_prefix+'.pred')
                 self._coco_api = COCOPanoptic(gts_json)
             else:
-                gt_img_list = self.gen_img_array_list(self.gt_folder, annotations=gts)
-                pred_img_list = self.gen_img_array_list(self.pred_folder, annotations=preds)
-                if not isinstance(preds, str):  
-                    pred_json = self.convert_to_coco_json(ann_list=preds, img_list=pred_img_list ,outfile_prefix=osp.join(outfile_prefix, 'pred'))
+                if not isinstance(preds[0], str):  
+                    pred_json = self.convert_to_coco_json(ann_list=preds, folder=self.pred_folder ,outfile_prefix=outfile_prefix+'.pred')
                 else:
-                    pred_json = preds
+                    pred_json = preds[0]
 
             self.img_ids = self._coco_api.get_img_ids()
             self.categories = self._coco_api.cats
-
-            assert len(self.img_ids) == len(gt_img_list)
-            assert len(gt_img_list) == len(pred_img_list)
-
-            self.img_ids.sort()
-            self.gt_imgs_id_arrlist = {_id: _arr for _id, _arr in zip(self.img_ids, gt_img_list)}
-            self.pred_imgs_id_arrlist = {_id: _arr for _id, _arr in zip(self.img_ids, pred_img_list)}
 
             imgs = self._coco_api.imgs
             gt_json = self._coco_api.img_ann_map   
@@ -618,16 +556,16 @@ class COCOPanopticMetric(BaseMetric):
                 matched_annotations_list.append((gt_ann, pred_json[img_id]))
             if self.nproc > 1 and (len(self.img_ids) / self.nproc <= 200 ):   # prevent stack overflow
                 pq_stat = self.pq_compute_multi_core(matched_annotations_list,
-                    gt_dict=self.gt_imgs_id_arrlist,
-                    pred_dict=self.pred_imgs_id_arrlist,
+                    gt_folder=self.gt_folder,
+                    pred_folder=self.pred_folder,
                     categories=self.categories,
                     nproc=self.nproc)
             else:
                 pq_stats = self.pq_compute_single_core(
                     proc_id=0,
                     annotation_set=matched_annotations_list,   
-                    gt_dict=self.gt_imgs_id_arrlist,
-                    pred_dict=self.pred_imgs_id_arrlist,
+                    gt_folder=self.gt_folder,
+                    pred_folder=self.pred_folder,
                     categories=self.categories)
 
                 metric_results.append(pq_stats)
@@ -652,9 +590,11 @@ class COCOPanopticMetric(BaseMetric):
                 for k, v in zip(self.dataset_meta['classes'],
                                 pq_results['classwise'].values())
             }
-
-        if show:
-            self.print_panoptic_table(pq_results, classwise_results)
         results = self.parse_pq_results(pq_results)
 
-        return results
+        results_dict = {}
+        results_dict['pq_results'] = pq_results
+        results_dict['classwise_results'] = classwise_results
+        results_dict['parse_results'] = results
+
+        return results_dict
