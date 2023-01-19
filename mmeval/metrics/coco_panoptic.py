@@ -42,7 +42,7 @@ class COCOPanopticMetric(BaseMetric):
             the number of cpu cores is used.
         backend_args (dict, optional): Arguments to instantiate the
             preifx of uri corresponding backend. Defaults to None.
-        categories (list, optional): The list of catetories of panoramic segmentation.
+        categories (dict, optional): The catetories of panoramic segmentation.
     """
     def __init__(self,
                  ann_file: Optional[str] = None,
@@ -52,7 +52,7 @@ class COCOPanopticMetric(BaseMetric):
                  nproc: int = 32,
                  outfile_prefix: Optional[str] = None,
                  backend_args: Optional[dict] = None,
-                 categories: list = None,
+                 categories: Optional[dict] = None,
                  **kwargs) -> None:
         if panopticapi is None or PQStat is None:
             raise RuntimeError(
@@ -61,7 +61,6 @@ class COCOPanopticMetric(BaseMetric):
                 'panopticapi.git.')
         super().__init__(**kwargs)
         self.classwise = classwise
-        self.tmp_dir = None
         # outfile_prefix should be a prefix of a path which points to a shared
         # storage when train or test with multi nodes.
         self.outfile_prefix = outfile_prefix
@@ -72,12 +71,12 @@ class COCOPanopticMetric(BaseMetric):
         self.nproc = min(nproc, multiprocessing.cpu_count())
         self.categories = categories  
 
-    def convert_to_coco_json(self, ann_list: Sequence[list], folder: str,
+    def convert_to_coco_json(self, ann_list: Sequence[dict], folder: str,
                         outfile_prefix: str) -> str:
         """Convert the annotation in list format to coco panoptic segmentation format json file.
 
         Args:
-            ann_list (Sequence[list]): The annotation list.
+            ann_list (Sequence[dict]): The annotation list.
             folder (str): Path to the panoptic image folder.
             outfile_prefix (str): The filename prefix of the json file. If the
                 prefix is "somepath/xxx", the json file will be named
@@ -87,6 +86,7 @@ class COCOPanopticMetric(BaseMetric):
             str: The filename of the json file.
         """
         assert len(ann_list) > 0, 'gt_dicts is empty.'
+        assert self.categories is not None
         converted_json_path = f'{outfile_prefix}.json'
 
         image_infos = []
@@ -182,7 +182,7 @@ class COCOPanopticMetric(BaseMetric):
             dump(coco_json, f, ensure_ascii=False, default=self.default_dump)
         return converted_json_path
 
-    def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  
+    def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to `self._results`.
 
         Args:
@@ -439,10 +439,8 @@ class COCOPanopticMetric(BaseMetric):
             matched_annotations_list (list): The matched annotation list. Each
                 element is a tuple of annotations of the same image with the
                 format (gt_anns, pred_anns).
-            gt_dict (dict): The dictionary that matches the 'image_id' with 
-                ground truth image array.
-            pred_dict (dict): The dictionary that matches the 'image_id' with 
-                predicted image array.
+            gt_folder (str): The path of the ground truth images.
+            pred_folder (str): The path of the prediction images.
             categories (dict): The categories of the dataset.
             nproc (int): Number of processes for panoptic quality computing.
                 Defaults to 32. When `nproc` exceeds the number of cpu cores,
@@ -499,7 +497,6 @@ class COCOPanopticMetric(BaseMetric):
             outfile_prefix = osp.join(tmp_dir.name, 'results')
         else:
             outfile_prefix = self.outfile_prefix
-            tmp_dir = outfile_prefix
 
         if self.ann_file is not None:
             with get_local_path(
@@ -511,14 +508,15 @@ class COCOPanopticMetric(BaseMetric):
             self._coco_api = None
 
         if self.categories is None:
-            self.categories = []
+            cats = []
             for id, name in enumerate(self.dataset_meta['classes']):
                 isthing = 1 if name in self.dataset_meta['thing_classes'] else 0
-                self.categories.append({'id': id, 'name': name, 'isthing': isthing})
+                cats.append({'id': id, 'name': name, 'isthing': isthing})
+            self.categories = {el['id']: el for el in cats}
 
         if outfile_prefix is not None:
             # do evaluation after collect all the results
-            if self._coco_api is None:  # 
+            if self.ann_file is None:  
                 # split gt and prediction list
                 self.categories = self.check_categories(self.categories)
                 # convert groundtruths to coco format and dump to json file
