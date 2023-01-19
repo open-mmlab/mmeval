@@ -124,8 +124,7 @@ def average_recall_at_avg_proposals(ground_truth,
         this_video_ground_truth = ground_truth_video_id[:, :2].astype(
             np.float32)
         if this_video_proposals.shape[0] == 0:
-            n = this_video_ground_truth.shape[0]
-            score_list.append(np.zeros((n, 1)))
+            score_list.append(np.zeros((this_video_ground_truth.shape[0], 1)))
             continue
 
         if this_video_proposals.ndim != 2:
