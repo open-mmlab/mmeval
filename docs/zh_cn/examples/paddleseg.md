@@ -26,6 +26,6 @@ python ppseg_mmeval.py --config <config_path> --model_path <model_path> --launch
 
 我们在 [fastfcn_resnet50_os8_ade20k_480x480_120k](https://github.com/PaddlePaddle/PaddleSeg/tree/release/2.6/configs/fastfcn) 配置上测试了该评测脚本，与 PaddleSeg 中的 `val.py` 得到的评测结果一致。
 
-|                                                                               Config                                                                                |                                                         Weights                                                          |  mIoU  |  aAcc  | Kappa  | mDice  |
-| :-----------------------------------------------------------------------------------------------------------------------------------------------------------------: | :----------------------------------------------------------------------------------------------------------------------: | :----: | :----: | :----: | :----: |
+|                                         Config                                          |                                          Weights                                          |  mIoU  |  aAcc  | Kappa  | mDice  |
+| :-------------------------------------------------------------------------------------: | :---------------------------------------------------------------------------------------: | :----: | :----: | :----: | :----: |
 | [fastfcn_resnet50_os8_ade20k_480x480_120k](https://github.com/PaddlePaddle/PaddleSeg/blob/release/2.6/configs/fastfcn/fastfcn_resnet50_os8_ade20k_480x480_120k.yml) | [model.pdparams](https://bj.bcebos.com/paddleseg/dygraph/ade20k/fastfcn_resnet50_os8_ade20k_480x480_120k/model.pdparams) | 0.4373 | 0.8074 | 0.7928 | 0.5772 |
