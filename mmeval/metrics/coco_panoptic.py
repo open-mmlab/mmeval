@@ -2,7 +2,7 @@ import datetime
 import numpy as np
 import os.path as osp
 import tempfile
-import itertools
+from collections import Iterable
 from io import BytesIO
 from json import dump
 from typing import Dict, List, Optional, Sequence, Union, Tuple
@@ -508,8 +508,9 @@ class COCOPanopticMetric(BaseMetric):
 
         if self.categories is None:
             cats = []
-            classes_list = self.dataset_meta['classes']
-            for id, name in enumerate(classes_list):
+            assert(isinstance(self.dataset_meta['classes'],Iterable))
+            assert(isinstance(self.dataset_meta['thing_classes'],Iterable))
+            for id, name in enumerate(self.dataset_meta['classes']):
                 thing_classes_list = self.dataset_meta['thing_classes']
                 isthing = 1 if name in thing_classes_list else 0
                 cats.append({'id': id, 'name': name, 'isthing': isthing})
@@ -534,6 +535,7 @@ class COCOPanopticMetric(BaseMetric):
                 else:
                     pred_json = preds[0]
 
+            assert _coco_api is not None
             self.img_ids = _coco_api.get_img_ids()
             self.categories = _coco_api.cats
 
@@ -586,11 +588,11 @@ class COCOPanopticMetric(BaseMetric):
                 pq_results['classwise'] = classwise_results
 
         classwise_results = None
-        if self.classwise:
-            classes_list = self.dataset_meta['classes']
+        if self.classwise:   # type: ignore
+            assert(isinstance(self.dataset_meta['classes'],Iterable))
             classwise_results = {
                 k: v
-                for k, v in zip(classes_list,
+                for k, v in zip(self.dataset_meta['classes'],
                                 pq_results['classwise'].values())
             }
         results = self.parse_pq_results(pq_results)
