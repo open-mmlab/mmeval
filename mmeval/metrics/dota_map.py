@@ -3,9 +3,9 @@ import logging
 import numpy as np
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
-from .voc_map import VOCMeanAP
 from .utils.bbox_overlaps_rotated import (calculate_bboxes_area_rotated,
                                           qbox_to_rbox)
+from .voc_map import VOCMeanAP
 
 logger = logging.getLogger(__name__)
 
