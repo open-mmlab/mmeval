@@ -62,7 +62,7 @@ def calculate_bboxes_area_rotated(bboxes: np.ndarray) -> np.ndarray:
 
     Args:
         bboxes (np.ndarray): The bboxes with shape (n, 5) or (5, )
-        in 'xywha' format.
+            in 'xywha' format.
 
     Returns:
         np.ndarray: The area of bboxes.
