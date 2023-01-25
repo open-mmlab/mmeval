@@ -298,6 +298,6 @@ class DOTAMeanAP(VOCMeanAP):
 
         Returns:
             numpy.ndarray: A mask of ``bboxes`` identify which bbox are
-                filtered.
+            filtered.
         """
         return filter_by_bboxes_area_rotated(bboxes, min_area, max_area)
