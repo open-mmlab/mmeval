@@ -104,7 +104,7 @@ def calculate_overlaps_rotated(bboxes1: np.ndarray,
     """
     if cv2 is None:
         raise ImportError('To use `calculate_overlaps_rotated` function, '
-                          'please install opecnv-python first.')
+                          'please install opencv-python first.')
 
     assert bboxes1.ndim == 2 and bboxes1.shape[-1] == 5, \
         'The shape of bboxes1 should be (N, 5)'
