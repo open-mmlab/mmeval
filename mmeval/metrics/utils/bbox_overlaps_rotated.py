@@ -21,7 +21,7 @@ def qbox_to_rbox(boxes: np.ndarray) -> np.ndarray:
     """
     if cv2 is None:
         raise ImportError('To use `qbox_to_rbox` function, '
-                          'please install opecnv-python first.')
+                          'please install opencv-python first.')
 
     assert boxes.ndim == 2 and boxes.shape[-1] == 8, \
         'The boxes shape should be (N, 8)'
