@@ -28,9 +28,9 @@ def filter_by_bboxes_area_rotated(bboxes: np.ndarray,
 
     Args:
         bboxes (numpy.ndarray): The bboxes with shape (n, 5) in 'xywha' format.
-        min_area (Optional[float]): The minimum area. If None, does not filter
+        min_area (float, optional): The minimum area. If None, do not filter
             the minimum area.
-        max_area (Optional[float]): The maximum area. If None, does not filter
+        max_area (float, optional): The maximum area. If None, do not filter
             the maximum area.
 
     Returns:
