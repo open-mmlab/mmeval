@@ -276,7 +276,7 @@ class DOTAMeanAP(VOCMeanAP):
                             # This gt bbox has been matched and counted as fp.
                             fp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
                     else:
-                        area_mask = filter_by_bboxes_area_rotated(
+                        area_mask = self._filter_by_bboxes_area(
                             pred_bboxes[pred_bbox_idx, :5], min_area, max_area)
                         if area_mask:
                             fp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
