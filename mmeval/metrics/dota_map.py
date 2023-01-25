@@ -255,7 +255,7 @@ class DOTAMeanAP(VOCMeanAP):
                 # The flags that gt bboxes have been matched.
                 gt_covered_flags = np.zeros(all_gt_bboxes.shape[0], dtype=bool)
                 # The flags that gt bboxes out of area range.
-                gt_area_mask = self._filter_by_bboxes_area(
+                gt_area_mask = filter_by_bboxes_area_rotated(
                     all_gt_bboxes, min_area, max_area)
                 ignore_gt_area_flags = ~gt_area_mask
 
@@ -276,7 +276,7 @@ class DOTAMeanAP(VOCMeanAP):
                             # This gt bbox has been matched and counted as fp.
                             fp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
                     else:
-                        area_mask = self._filter_by_bboxes_area(
+                        area_mask = filter_by_bboxes_area_rotated(
                             pred_bboxes[pred_bbox_idx, :5], min_area, max_area)
                         if area_mask:
                             fp[iou_thr_idx, area_idx, pred_bbox_idx] = 1
