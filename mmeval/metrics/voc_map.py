@@ -576,7 +576,7 @@ class VOCMeanAP(BaseMetric):
 
         Returns:
             numpy.ndarray: A mask of ``bboxes`` identify which bbox
-                are filtered.
+            are filtered.
         """
         return filter_by_bboxes_area(bboxes, min_area, max_area,
                                      self.use_legacy_coordinate)
