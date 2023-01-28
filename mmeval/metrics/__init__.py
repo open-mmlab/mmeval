@@ -5,6 +5,7 @@ from .ava_map import AVAMeanAP
 from .bleu import BLEU
 from .coco_detection import COCODetectionMetric
 from .connectivity_error import ConnectivityError
+from .dota_map import DOTAMeanAP
 from .end_point_error import EndPointError
 from .f_metric import F1Metric
 from .gradient_error import GradientError
@@ -29,6 +30,6 @@ __all__ = [
     'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
     'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SAD', 'GradientError',
-    'MattingMSE', 'ConnectivityError'
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP', 'SAD',
+    'GradientError', 'MattingMSE', 'ConnectivityError'
 ]

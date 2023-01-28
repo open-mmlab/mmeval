@@ -46,3 +46,4 @@ Metrics
    GradientError
    MattingMSE
    ConnectivityError
+   DOTAMeanAP
