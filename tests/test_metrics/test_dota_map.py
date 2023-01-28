@@ -67,5 +67,44 @@ def test_metric_interface(metric_kwargs):
     assert 'mAP' in metric_results
 
 
+@pytest.mark.parametrize(
+    argnames=('predictions', 'groundtruths', 'num_classes', 'target_mAP'),
+    argvalues=[(
+        [{
+            'bboxes':
+            np.array([
+                [23, 31, 10.0, 20.0, 0.0],  # noqa: E201
+                [100, 120, 10.0, 20.0, 0.1],  # noqa: E201
+                [150, 160, 10.0, 20.0, 0.2],  # noqa: E201
+                [250, 260, 10.0, 20.0, 0.3],  # noqa: E201
+            ]),
+            'scores':
+            np.array([1.0, 0.98, 0.96, 0.95]),
+            'labels':
+            np.array([0] * 4)
+        }],
+        [{
+            'bboxes':
+            np.array([
+                [23, 31, 10.0, 20.0, 0.0],  # noqa: E201
+                [100, 120, 10.0, 20.0, 0.1],  # noqa: E201
+                [150, 160, 10.0, 20.0, 0.2],  # noqa: E201
+                [250, 260, 10.0, 20.0, 0.3],  # noqa: E201
+            ]),
+            'labels':
+            np.array([0] * 4),
+            'bboxes_ignore':
+            np.empty((0, 5)),
+            'labels_ignore':
+            np.empty((0, )),
+        }],
+        2,
+        1.0)])
+def test_metric_accurate(predictions, groundtruths, num_classes, target_mAP):
+    dota_map = DOTAMeanAP(num_classes=num_classes)
+    metric_results = dota_map(predictions, groundtruths)
+    np.testing.assert_almost_equal(metric_results['mAP'], target_mAP)
+
+
 if __name__ == '__main__':
     pytest.main([__file__, '-vv', '--capture=no'])
