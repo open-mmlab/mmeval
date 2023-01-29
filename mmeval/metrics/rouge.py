@@ -320,7 +320,7 @@ class ROUGE(BaseMetric):
             elif self.lowercase:
                 text = re.sub(r'[^a-z0-9]+', ' ', text.lower())
             else:
-                text = re.sub(r'[^a-z^A-Z0-9]+', ' ', text)
+                text = re.sub(r'[^a-zA-Z0-9]+', ' ', text)
         tokens = self.tokenizer_fn(text)  # type: ignore
         if self.stemmer:
             tokens = [
