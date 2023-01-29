@@ -75,6 +75,5 @@ def test_rouge_lowercase():
     metric = ROUGE(lowercase=False)
     results = metric(predictions, references)
 
-    np.testing.assert_almost_equal(results['rouge1_fmeasure'], 0.5555555555555556)
-    np.testing.assert_almost_equal(results['rougeL_fmeasure'], 0.4444444444444444)
-
+    np.testing.assert_almost_equal(results['rouge1_fmeasure'], 0.5555555)
+    np.testing.assert_almost_equal(results['rougeL_fmeasure'], 0.4444444)

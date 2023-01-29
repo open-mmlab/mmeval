@@ -127,7 +127,8 @@ class ROUGE(BaseMetric):
             predictions. ``best`` takes the best fmeasure score obtained
             between prediction and multiple corresponding references.
             Defaults to ``best``.
-        lowercase (bool): If it is True, characters will be uniformly lowercase.
+        lowercase (bool): If it is True, all characters will be lowercase.
+            Defaults to True.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
