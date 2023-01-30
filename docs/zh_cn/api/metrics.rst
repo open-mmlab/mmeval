@@ -47,3 +47,4 @@ Metrics
    MattingMSE
    ConnectivityError
    DOTAMeanAP
+   ROUGE
