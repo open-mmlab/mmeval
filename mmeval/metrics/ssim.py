@@ -177,3 +177,8 @@ class StructuralSimilarity(BaseMetric):
                                            (sigma1_sq + sigma2_sq + C2))
 
         return ssim_map.mean()
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+SSIM = StructuralSimilarity

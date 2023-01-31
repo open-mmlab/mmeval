@@ -630,3 +630,8 @@ class COCODetection(BaseMetric):
         if tmp_dir is not None:
             tmp_dir.cleanup()
         return eval_results
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+COCODetectionMetric = COCODetection

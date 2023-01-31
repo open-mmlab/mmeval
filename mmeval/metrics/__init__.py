@@ -1,5 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
+import warnings
+
 from .accuracy import Accuracy
 from .ava_map import AVAMeanAP
 from .bleu import BLEU
@@ -33,3 +35,42 @@ __all__ = [
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SumAbsoluteDifferences',
     'GradientError', 'MattingMeanSquaredError', 'ConnectivityError'
 ]
+
+_deprecated_msg = (
+    '`{n1}` is a deprecated metric alias for `{n2}`. '
+    'To silence this warning, use `{n2}` by itself. '
+    'The deprecated metric alias would be removed in mmeval 1.0.0!')
+
+__deprecated_metric_names__ = {
+    'COCODetectionMetric': 'COCODetection',
+    'F1Metric': 'F1Score',
+    'MAE': 'MeanAbsoluteError',
+    'MSE': 'MeanSquaredError',
+    'PSNR': 'PeakSignalNoiseRatio',
+    'SNR': 'SignalNoiseRatio',
+    'SSIM': 'StructuralSimilarity',
+    'SAD': 'SumAbsoluteDifferences',
+    'MattingMSE': 'MattingMeanSquaredError'
+}
+
+
+def __getattr__(attr: str):
+    """Customization of module attribute access.
+
+    Thanks to pep-0562, we can customize moudel's attribute access
+    via ``__getattr__`` to implement deprecation warnings.
+
+    With this function, we can implement the following features:
+
+    >>> from mmeval.metrics import COCODetectionMetric
+    <stdin>:1: DeprecationWarning: `COCODetectionMetric` is a deprecated
+    metric alias for `COCODetection`. To silence this warning, use
+    `COCODetection` by itself. The deprecated metric alias would be
+    removed in mmeval 1.0.0!
+    """
+    if attr in __deprecated_metric_names__:
+        message = _deprecated_msg.format(
+            n1=attr, n2=__deprecated_metric_names__[attr])
+        warnings.warn(message, DeprecationWarning, stacklevel=2)
+        return globals()[__deprecated_metric_names__[attr]]
+    raise AttributeError(f'module {__name__!r} has no attribute {attr!r}')

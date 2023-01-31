@@ -239,3 +239,8 @@ class F1Score(BaseMetric):
         recall = tp / (tp + fn).clip(min=1e-8)
         f1 = 2 * precision * recall / (precision + recall).clip(min=1e-8)
         return float(f1.mean())
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+F1Metric = F1Score

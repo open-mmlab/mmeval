@@ -137,3 +137,8 @@ class SignalNoiseRatio(BaseMetric):
         result = 10. * np.log10(signal / noise)
 
         return result
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+SNR = SignalNoiseRatio
