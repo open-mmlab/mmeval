@@ -21,10 +21,10 @@ def __getattr__(attr: str):
 
     With this function, we can implement the following features:
 
-    >>> from mmeval import COCODetectionMetric
-    <stdin>:1: DeprecationWarning: `COCODetectionMetric` is a deprecated
-    metric alias for `COCODetection`. To silence this warning, use `COCODetection`
-    by itself. The deprecated metric alias would be removed in mmeval 1.0.0!
+        >>> from mmeval import COCODetectionMetric
+        <stdin>:1: DeprecationWarning: `COCODetectionMetric` is a deprecated
+        metric alias for `COCODetection`. To silence this warning, use `COCODetection`
+        by itself. The deprecated metric alias would be removed in mmeval 1.0.0!
     """
     if attr in __deprecated_metric_names__:
         message = _deprecated_msg.format(
