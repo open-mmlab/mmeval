@@ -46,3 +46,5 @@ Metrics
    GradientError
    MattingMeanSquaredError
    ConnectivityError
+   DOTAMeanAP
+   ROUGE

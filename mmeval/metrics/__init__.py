@@ -7,6 +7,7 @@ from .ava_map import AVAMeanAP
 from .bleu import BLEU
 from .coco_detection import COCODetection
 from .connectivity_error import ConnectivityError
+from .dota_map import DOTAMeanAP
 from .end_point_error import EndPointError
 from .f1_score import F1Score
 from .gradient_error import GradientError
@@ -20,6 +21,7 @@ from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .proposal_recall import ProposalRecall
 from .psnr import PeakSignalNoiseRatio
+from .rouge import ROUGE
 from .sad import SumAbsoluteDifferences
 from .single_label import SingleLabelMetric
 from .snr import SignalNoiseRatio
@@ -32,8 +34,9 @@ __all__ = [
     'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PeakSignalNoiseRatio', 'MeanAbsoluteError', 'MeanSquaredError',
     'StructuralSimilarity', 'SignalNoiseRatio', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'SumAbsoluteDifferences',
-    'GradientError', 'MattingMeanSquaredError', 'ConnectivityError'
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
+    'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
+    'ConnectivityError', 'ROUGE'
 ]
 
 _deprecated_msg = (
