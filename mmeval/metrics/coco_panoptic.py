@@ -532,14 +532,18 @@ class COCOPanopticMetric(BaseMetric):
                 self.categories = self.check_categories(self.categories)
                 # convert groundtruths to coco format and dump to json file
                 gts_json = self.convert_to_coco_json(ann_list=gts, 
-                folder=self.gt_folder, outfile_prefix=outfile_prefix+'.gts')
+                folder=self.gt_folder, 
+                outfile_prefix=outfile_prefix+'.gts')
                 # convert predictions to coco format and dump to json file
                 pred_json = self.convert_to_coco_json(ann_list=preds, 
-                folder=self.pred_folder, outfile_prefix=outfile_prefix+'.pred')
+                folder=self.pred_folder, 
+                outfile_prefix=outfile_prefix+'.pred')
                 _coco_api = COCOPanoptic(gts_json)
             else:
                 if not isinstance(preds[0], str):  
-                    pred_json = self.convert_to_coco_json(ann_list=preds, folder=self.pred_folder ,outfile_prefix=outfile_prefix+'.pred')
+                    pred_json = self.convert_to_coco_json(ann_list=preds, 
+                        folder=self.pred_folder, 
+                        outfile_prefix=outfile_prefix+'.pred')
                 else:
                     pred_json = preds[0]
 
@@ -548,7 +552,7 @@ class COCOPanopticMetric(BaseMetric):
             self.categories = _coco_api.cats
 
             imgs = _coco_api.imgs
-            gt_json = _coco_api.img_ann_map   
+            gt_json = _coco_api.img_ann_map
             gt_json = [{
                 'image_id': k,
                 'segments_info': v,
@@ -565,8 +569,9 @@ class COCOPanopticMetric(BaseMetric):
                 if img_id not in pred_json_dict.keys():
                     raise Exception('no prediction for the image'
                                     ' with id: {}'.format(img_id))
-                matched_annotations_list.append((gt_ann, pred_json_dict[img_id]))
-            if self.nproc > 1 and (len(self.img_ids) / self.nproc <= 200 ):   # prevent stack overflow
+                matched_annotations_list.append((gt_ann, 
+                pred_json_dict[img_id]))
+            if self.nproc > 1 and (len(self.img_ids) / self.nproc <= 200):
                 pq_stat = self.pq_compute_multi_core(
                     matched_annotations_list,
                     gt_folder=self.gt_folder,
