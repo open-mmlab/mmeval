@@ -5,7 +5,7 @@ from typing import Dict, List, Sequence
 from mmeval.core import BaseMetric
 
 
-class MattingMSE(BaseMetric):
+class MattingMeanSquaredError(BaseMetric):
     """Mean Squared Error metric for image matting.
 
     This metric computes the per-pixel squared error average across all
@@ -29,7 +29,7 @@ class MattingMSE(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import MattingMSE
+        >>> from mmeval import MattingMeanSquaredError as MattingMSE
         >>> import numpy as np
         >>>
         >>> matting_mse = MattingMSE()
@@ -46,7 +46,7 @@ class MattingMSE(BaseMetric):
         super().__init__(**kwargs)
 
     def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray], trimaps: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
-        """Add MattingMSE score of batch to ``self._results``
+        """Add MattingMeanSquaredError score of batch to ``self._results``
 
         Args:
             pred_alphas (Sequence[np.ndarray]): Predict the probability
@@ -72,16 +72,22 @@ class MattingMSE(BaseMetric):
             self._results.append(mse_result)
 
     def compute_metric(self, results: List) -> Dict[str, float]:
-        """Compute the MattingMSE metric.
+        """Compute the MattingMeanSquaredError metric.
 
         Args:
-            results (List): A list that consisting the MattingMSE score.
-                This list has already been synced across all ranks.
+            results (List): A list that consisting the
+                MattingMeanSquaredError score. This list has already
+                been synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed MattingMSE metric.
+            Dict[str, float]: The computed MattingMeanSquaredError metric.
             The keys are the names of the metrics,
             and the values are corresponding results.
         """
 
         return {'matting_mse': float(np.array(results).mean())}
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+MattingMSE = MattingMeanSquaredError

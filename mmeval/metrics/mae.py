@@ -5,7 +5,7 @@ from typing import Dict, List, Optional, Sequence
 from mmeval.core import BaseMetric
 
 
-class MAE(BaseMetric):
+class MeanAbsoluteError(BaseMetric):
     """Mean Absolute Error metric for image.
 
     Formula: mean(abs(a-b)).
@@ -15,7 +15,7 @@ class MAE(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import MAE
+        >>> from mmeval import MeanAbsoluteError as MAE
         >>> import numpy as np
         >>>
         >>> mae = MAE()
@@ -24,7 +24,7 @@ class MAE(BaseMetric):
         >>> mae(preds, gts)  # doctest: +ELLIPSIS
         {'mae': ...}
 
-    Calculate MAE between 2 images with mask:
+    Calculate MeanAbsoluteError between 2 images with mask:
 
         >>> img1 = np.ones((32, 32, 3))
         >>> img2 = np.ones((32, 32, 3)) * 2
@@ -38,7 +38,7 @@ class MAE(BaseMetric):
         super().__init__(**kwargs)
 
     def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], masks: Optional[Sequence[np.ndarray]] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
-        """Add MAE score of batch to ``self._results``
+        """Add MeanAbsoluteError score of batch to ``self._results``
 
         Args:
             predictions (Sequence[np.ndarray]): Predictions of the model.
@@ -59,17 +59,18 @@ class MAE(BaseMetric):
                     self.compute_mae(prediction, groundtruth, masks[i]))
 
     def compute_metric(self, results: List[np.float32]) -> Dict[str, float]:
-        """Compute the MAE metric.
+        """Compute the MeanAbsoluteError metric.
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
 
         Args:
-            results (List[np.float32]): A list that consisting the MAE score.
-                This list has already been synced across all ranks.
+            results (List[np.float32]): A list that consisting the
+                MeanAbsoluteError score. This list has already been
+                synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed MAE metric.
+            Dict[str, float]: The computed MeanAbsoluteError metric.
         """
 
         return {'mae': float(np.array(results).mean())}
@@ -78,7 +79,7 @@ class MAE(BaseMetric):
     def compute_mae(prediction: np.ndarray,
                     groundtruth: np.ndarray,
                     mask: Optional[np.ndarray] = None) -> np.float32:
-        """Calculate MAE (Mean Absolute Error).
+        """Calculate MeanAbsoluteError (Mean Absolute Error).
 
         Args:
             prediction (np.ndarray): Images with range [0, 255].
@@ -86,7 +87,7 @@ class MAE(BaseMetric):
             mask (np.ndarray, optional): Mask of evaluation.
 
         Returns:
-            np.float32: MAE result.
+            np.float32: MeanAbsoluteError result.
         """
 
         prediction = prediction / 255.
@@ -103,3 +104,8 @@ class MAE(BaseMetric):
             result = diff.mean()
 
         return result
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+MAE = MeanAbsoluteError

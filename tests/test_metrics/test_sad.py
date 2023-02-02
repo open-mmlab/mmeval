@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 
-from mmeval.metrics import SAD
+from mmeval import SumAbsoluteDifferences as SAD
 
 
 def test_sad():

@@ -2,7 +2,7 @@
 
 [TensorPack](https://github.com/tensorpack/tensorpack) 是一个基于 TensorFlow 的深度学习训练库，具有高效与灵活的特点。
 
-在 [TensorPack](https://github.com/tensorpack/tensorpack) 代码仓库中，提供了许多经典模型与任务的[示例](https://github.com/tensorpack/tensorpack/tree/master/examples)，本小节展示如何在 [TensorPack-FasterRCNN](https://github.com/tensorpack/tensorpack/tree/master/examples/FasterRCNN) 中使用 [mmeval.COCODetectionMetric](mmeval.metrics.COCODetectionMetric) 进行评测，相关代码可以在 [mmeval/examples/tensorpack](https://github.com/open-mmlab/mmeval/tree/main/examples/tensorpack) 中找到。
+在 [TensorPack](https://github.com/tensorpack/tensorpack) 代码仓库中，提供了许多经典模型与任务的[示例](https://github.com/tensorpack/tensorpack/tree/master/examples)，本小节展示如何在 [TensorPack-FasterRCNN](https://github.com/tensorpack/tensorpack/tree/master/examples/FasterRCNN) 中使用 [mmeval.COCODetection](mmeval.metrics.COCODetection) 进行评测，相关代码可以在 [mmeval/examples/tensorpack](https://github.com/open-mmlab/mmeval/tree/main/examples/tensorpack) 中找到。
 
 首先需要安装 TensorFlow 与 TensorPack，然后按照 TensorPack-FasterRCNN 示例中的准备步骤，安装依赖和准备 COCO 数据集，以及下载需要评测的预训练模型权重。
 
@@ -12,7 +12,7 @@ TensorPack-FasterRCNN 自带了评测功能，可以通过以下命令执行评�
 ./predict.py --evaluate output.json --load /path/to Trained-Model-Checkpoint --config SAME-AS-TRAINING
 ```
 
-MMEval 为 TensorPack-FasterRCNN 提供了适配 [mmeval.COCODetectionMetric](mmeval.metrics.COCODetectionMetric) 的[评测脚本](https://github.com/open-mmlab/mmeval/tree/main/examples/tensorpack/tensorpack_mmeval.py)，需要将该脚本放至 TensorPack-FasterRCNN 示例目录下，然后通过以下命令执行评测：
+MMEval 为 TensorPack-FasterRCNN 提供了适配 [mmeval.COCODetection](mmeval.metrics.COCODetection) 的[评测脚本](https://github.com/open-mmlab/mmeval/tree/main/examples/tensorpack/tensorpack_mmeval.py)，需要将该脚本放至 TensorPack-FasterRCNN 示例目录下，然后通过以下命令执行评测：
 
 ```bash
 # 单卡评测

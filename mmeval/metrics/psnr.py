@@ -6,14 +6,15 @@ from mmeval.core import BaseMetric
 from .utils import reorder_and_crop
 
 
-class PSNR(BaseMetric):
+class PeakSignalNoiseRatio(BaseMetric):
     """Peak Signal-to-Noise Ratio.
 
     Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
 
     Args:
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the PSNR calculation. Defaults to 0.
+            pixels are not involved in the PeakSignalNoiseRatio calculation.
+            Defaults to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             Defaults to 'CHW'.
         convert_to (str): Whether to convert the images to other color models.
@@ -25,7 +26,7 @@ class PSNR(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import PSNR
+        >>> from mmeval import PeakSignalNoiseRatio as PSNR
         >>> import numpy as np
         >>>
         >>> psnr = PSNR(input_order='CHW', convert_to='Y', channel_order='rgb')
@@ -34,7 +35,7 @@ class PSNR(BaseMetric):
         >>> psnr(preds, gts)  # doctest: +ELLIPSIS
         {'psnr': ...}
 
-    Calculate PSNR between 2 single channel images:
+    Calculate PeakSignalNoiseRatio between 2 single channel images:
 
         >>> img1 = np.ones((32, 32))
         >>> img2 = np.ones((32, 32))
@@ -69,7 +70,7 @@ class PSNR(BaseMetric):
         self.channel_order = channel_order
 
     def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
-        """Add PSNR score of batch to ``self._results``
+        """Add PeakSignalNoiseRatio score of batch to ``self._results``
 
         Args:
             predictions (Sequence[np.ndarray]): Predictions of the model.
@@ -102,17 +103,18 @@ class PSNR(BaseMetric):
             self._results.append(self.compute_psnr(prediction, groundtruth))
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
-        """Compute the PSNR metric.
+        """Compute the PeakSignalNoiseRatio metric.
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
 
         Args:
-            results (List[np.float64]): A list that consisting the PSNR score.
-                This list has already been synced across all ranks.
+            results (List[np.float64]): A list that consisting the
+                PeakSignalNoiseRatio score. This list has already been
+                synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed PSNR metric.
+            Dict[str, float]: The computed PeakSignalNoiseRatio metric.
         """
 
         return {'psnr': float(np.array(results).mean())}
@@ -120,7 +122,7 @@ class PSNR(BaseMetric):
     @staticmethod
     def compute_psnr(prediction: np.ndarray,
                      groundtruth: np.ndarray) -> np.float64:
-        """Calculate PSNR (Peak Signal-to-Noise Ratio).
+        """Calculate PeakSignalNoiseRatio (Peak Signal-to-Noise Ratio).
 
         Ref: https://en.wikipedia.org/wiki/Peak_signal-to-noise_ratio
 
@@ -129,7 +131,7 @@ class PSNR(BaseMetric):
             groundtruth (np.ndarray): Images with range [0, 255].
 
         Returns:
-            np.float64: PSNR result.
+            np.float64: PeakSignalNoiseRatio result.
         """
 
         mse_value = ((groundtruth - prediction)**2).mean()
@@ -139,3 +141,8 @@ class PSNR(BaseMetric):
             result = 20. * np.log10(255. / np.sqrt(mse_value))
 
         return result
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+PSNR = PeakSignalNoiseRatio
