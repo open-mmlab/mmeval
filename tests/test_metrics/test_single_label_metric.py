@@ -145,7 +145,7 @@ def test_metric_input_builtin():
 
 
 @pytest.mark.parametrize(
-    argnames=['metric_kwargs', 'preditions', 'labels', 'results'],
+    argnames=['metric_kwargs', 'predictions', 'labels', 'results'],
     argvalues=[
         ({'num_classes': 4}, [0, 2, 1, 3], [0, 1, 2, 3], {'precision': 50.0, 'recall': 50.0, 'f1-score': 50.0}), # noqa
         (
@@ -172,10 +172,10 @@ def test_metric_input_builtin():
         )
     ]
 )
-def test_metric_accurate(metric_kwargs, preditions, labels, results):
+def test_metric_accurate(metric_kwargs, predictions, labels, results):
     single_label_metric = SingleLabelMetric(**metric_kwargs)
     assert single_label_metric(
-        np.asarray(preditions), np.asarray(labels)) == results
+        np.asarray(predictions), np.asarray(labels)) == results
 
 
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
