@@ -51,6 +51,34 @@ def test_pck_accuracy_interface(metric_kwargs):
                 'bbox_size': np.array([[10, 10]])
             },
             {'PCK@0.2': 0.75}
+        ),
+        (
+            {'thr': 0.3, 'norm_item': 'head'},
+            {
+                'coords': np.array([[
+                    [2, 4], [6, 8], [6, 9], [7, 8]]])
+            },
+            {
+                'coords': np.array([[
+                    [2, 4], [6, 8], [6, 7], [7, 8]]]),
+                'mask': np.array([[True, True, True, True]]),
+                'head_size': np.array([[10, 10]])
+            },
+            {'PCKh@0.3': 1.0}
+        ),
+        (
+            {'thr': 0.1, 'norm_item': 'torso'},
+            {
+                'coords': np.array([[
+                    [2, 4], [6, 8], [6, 9], [7, 8]]])
+            },
+            {
+                'coords': np.array([[
+                    [2, 4], [6, 8], [6, 7], [7, 8]]]),
+                'mask': np.array([[True, True, True, True]]),
+                'torso_size': np.array([[10, 10]])
+            },
+            {'tPCK@0.1': 0.75}
         )
     ]
 )
@@ -123,6 +151,55 @@ def test_jhmdb_pck_accuracy_interface(metric_kwargs):
                 'Ank PCK': 1.0,
                 'Mean PCK': 0.86666666
             }
+        ),
+        (
+            {'thr': 0.2, 'norm_item': 'head'},
+            {
+                'coords': np.array([[
+                    [2, 4], [6, 8], [6, 9], [7, 8], [3, 4],
+                    [7, 8], [8, 9], [8, 8], [1, 9], [2, 8],
+                    [4, 8], [6, 9], [6, 2], [1, 2], [2, 3]]])
+            },
+            {
+                'coords': np.array([[
+                    [1, 4], [6, 8], [6, 9], [7, 8], [3, 4],
+                    [1, 8], [8, 9], [8, 8], [1, 9], [2, 8],
+                    [1, 7], [6, 9], [6, 2], [1, 2], [2, 3]]]),
+                'mask': np.array([[
+                    True, True, True, True, True, True, True, True, True, True,
+                    True, True, True, True, True]]),
+                'head_size': np.array([[10, 10]])
+            },
+            {'PCKh@0.2': 0.866666666}
+        ),
+        (
+            {'thr': 0.2, 'norm_item': 'torso'},
+            {
+                'coords': np.array([[
+                    [2, 4], [6, 8], [6, 9], [7, 8], [3, 4],
+                    [7, 8], [8, 9], [8, 8], [1, 9], [2, 8],
+                    [4, 8], [6, 9], [6, 2], [1, 2], [2, 3]]])
+            },
+            {
+                'coords': np.array([[
+                    [1, 4], [6, 8], [6, 9], [7, 8], [3, 4],
+                    [1, 8], [8, 9], [8, 8], [1, 9], [2, 8],
+                    [1, 7], [6, 9], [6, 2], [1, 2], [2, 3]]]),
+                'mask': np.array([[
+                    True, True, True, True, True, True, True, True, True, True,
+                    True, True, True, True, True]]),
+                'torso_size': np.array([[10, 10]])
+            },
+            {
+                'Head tPCK': 1.0,
+                'Sho tPCK': 1.0,
+                'Elb tPCK': 1.0,
+                'Wri tPCK': 1.0,
+                'Hip tPCK': 0.5,
+                'Knee tPCK': 0.5,
+                'Ank tPCK': 1.0,
+                'Mean tPCK': 0.86666666
+            }
         )
     ]
 )
@@ -131,6 +208,7 @@ def test_jhmdb_pck_accuracy_accurate(metric_kwargs, prediction, groundtruth,
                                      results):
     jhmdb_pck_accuracy = JhmdbPCKAccuracy(**metric_kwargs)
     metric_results = jhmdb_pck_accuracy([prediction], [groundtruth])
+    assert len(metric_results) == len(results)
     for key in metric_results:
         np.testing.assert_allclose(metric_results[key], results[key])
 
@@ -169,6 +247,28 @@ def test_mpii_pck_accuracy_interface(metric_kwargs):
     argnames=['metric_kwargs', 'prediction', 'groundtruth', 'results'],
     argvalues=[
         (
+            {'thr': 0.2, 'norm_item': 'bbox'},
+            {
+                'coords': np.array([[
+                    [2, 4], [6, 8], [6, 9], [7, 8], [3, 4],
+                    [7, 8], [8, 9], [8, 8], [1, 9], [2, 8],
+                    [4, 8], [6, 9], [6, 2], [1, 2], [2, 3],
+                    [9, 9]]])
+            },
+            {
+                'coords': np.array([[
+                    [1, 4], [6, 8], [6, 9], [7, 8], [3, 4],
+                    [1, 8], [8, 9], [8, 8], [1, 9], [2, 8],
+                    [1, 7], [6, 9], [6, 2], [1, 2], [2, 3],
+                    [9, 9]]]),
+                'mask': np.array([[
+                    True, True, True, True, True, True, True, True, True, True,
+                    True, True, True, True, True, True]]),
+                'bbox_size': np.array([[10, 10]])
+            },
+            {'PCK@0.2': 0.875}
+        ),
+        (
             {'thr': 0.2, 'norm_item': 'head'},
             {
                 'coords': np.array([[
@@ -199,6 +299,28 @@ def test_mpii_pck_accuracy_interface(metric_kwargs):
                 'PCKh': 78.57142857142856,
                 'PCKh@0.1': 0.0
             }
+        ),
+        (
+            {'thr': 0.2, 'norm_item': 'torso'},
+            {
+                'coords': np.array([[
+                    [2, 4], [6, 8], [6, 9], [7, 8], [3, 4],
+                    [7, 8], [8, 9], [8, 8], [1, 9], [2, 8],
+                    [4, 8], [6, 9], [6, 2], [1, 2], [2, 3],
+                    [9, 9]]])
+            },
+            {
+                'coords': np.array([[
+                    [1, 4], [6, 8], [6, 9], [7, 8], [3, 4],
+                    [1, 8], [8, 9], [8, 8], [1, 9], [2, 8],
+                    [1, 7], [6, 9], [6, 2], [1, 2], [2, 3],
+                    [9, 9]]]),
+                'mask': np.array([[
+                    True, True, True, True, True, True, True, True, True, True,
+                    True, True, True, True, True, True]]),
+                'torso_size': np.array([[10, 10]])
+            },
+            {'tPCK@0.2': 0.875}
         )
     ]
 )
@@ -207,6 +329,7 @@ def test_mpii_pck_accuracy_accurate(metric_kwargs, prediction, groundtruth,
                                     results):
     mpii_pck_accuracy = MpiiPCKAccuracy(**metric_kwargs)
     metric_results = mpii_pck_accuracy([prediction], [groundtruth])
+    assert len(metric_results) == len(results)
     for key in metric_results:
         np.testing.assert_allclose(metric_results[key], results[key])
 
