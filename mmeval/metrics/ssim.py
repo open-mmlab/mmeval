@@ -113,9 +113,14 @@ class SSIM(BaseMetric):
                 convert_to=self.convert_to,
                 channel_order=channel_order)
 
+            if len(pred.shape) == 3:
+                pred = np.expand_dims(pred, axis=0)
+                gt = np.expand_dims(gt, axis=0)
             _ssim_score = []
-            for i in range(pred.shape[2]):
-                _ssim_score.append(self.compute_ssim(pred[..., i], gt[..., i]))
+            for i in range(pred.shape[3]):
+                for j in range(pred.shape[0]):
+                    _ssim_score.append(
+                        self.compute_ssim(pred[j][..., i], gt[j][..., i]))
             self._results.append(np.array(_ssim_score).mean())
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:

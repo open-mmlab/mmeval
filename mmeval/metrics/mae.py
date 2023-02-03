@@ -53,10 +53,19 @@ class MAE(BaseMetric):
                 f'Image shapes are different: \
                     {groundtruth.shape}, {prediction.shape}.')
             if masks is None:
-                self._results.append(self.compute_mae(prediction, groundtruth))
+                result = self.compute_mae(prediction, groundtruth)
             else:
-                self._results.append(
-                    self.compute_mae(prediction, groundtruth, masks[i]))
+                if len(prediction.shape) <= 3:
+                    result = self.compute_mae(prediction, groundtruth,
+                                              masks[i])
+                else:
+                    result_sum = 0
+                    for j in range(prediction.shape[0]):
+                        result_sum += self.compute_mae(prediction[j],
+                                                       groundtruth[j],
+                                                       masks[i][j])
+                    result = result_sum / prediction.shape[0]
+            self._results.append(result)
 
     def compute_metric(self, results: List[np.float32]) -> Dict[str, float]:
         """Compute the MAE metric.
