@@ -92,15 +92,22 @@ class PeakSignalNoiseRatio(BaseMetric):
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
+                channel_order=channel_order)
             prediction = reorder_and_crop(
                 prediction,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
+                channel_order=channel_order)
 
-            self._results.append(self.compute_psnr(prediction, groundtruth))
+            if len(prediction.shape) == 3:
+                prediction = np.expand_dims(prediction, axis=0)
+                groundtruth = np.expand_dims(groundtruth, axis=0)
+            _psnr_score = []
+            for i in range(prediction.shape[0]):
+                _psnr_score.append(
+                    self.compute_psnr(prediction[i], groundtruth[i]))
+            self._results.append(np.array(_psnr_score).mean())
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the PeakSignalNoiseRatio metric.
