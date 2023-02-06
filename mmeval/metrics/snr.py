@@ -101,11 +101,11 @@ class SNR(BaseMetric):
             if len(prediction.shape) == 3:
                 prediction = np.expand_dims(prediction, axis=0)
                 groundtruth = np.expand_dims(groundtruth, axis=0)
-            _psnr_score = []
+            _snr_score = []
             for i in range(prediction.shape[0]):
-                _psnr_score.append(
+                _snr_score.append(
                     self.compute_snr(prediction[i], groundtruth[i]))
-            self._results.append(np.array(_psnr_score).mean())
+            self._results.append(np.array(_snr_score).mean())
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the SNR metric.
