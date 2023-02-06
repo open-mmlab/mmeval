@@ -153,8 +153,8 @@ class Perplexity(BaseMetric):
         Args:
             prediction (oneflow.Tensor | Sequence): Prediction from the model.
                 Same as ``self.add``.
-            target (oneflow.Tensor | Sequence): The ground truth labels. Same as
-                ``self.add``.
+            target (oneflow.Tensor | Sequence): The ground truth labels.
+                Same as ``self.add``.
 
         Returns:
             Tuple (float, int): include the value of the total and count.
