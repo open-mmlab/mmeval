@@ -19,6 +19,7 @@ from .mse import MeanSquaredError
 from .multi_label import AveragePrecision, MultiLabelMetric
 from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
+from .perplexity import Perplexity
 from .proposal_recall import ProposalRecall
 from .psnr import PeakSignalNoiseRatio
 from .rouge import ROUGE
@@ -36,7 +37,7 @@ __all__ = [
     'StructuralSimilarity', 'SignalNoiseRatio', 'MultiLabelMetric',
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
-    'ConnectivityError', 'ROUGE'
+    'ConnectivityError', 'ROUGE', 'Perplexity'
 ]
 
 _deprecated_msg = (
