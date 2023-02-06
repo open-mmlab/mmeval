@@ -11,22 +11,24 @@ flow = try_import('oneflow')
 
 
 @pytest.mark.skipif(torch is None, reason='Pytorch is not available!')
-@pytest.mark.parametrize('dataset', [
-    {
+def test_input_shape():
+    metric = Perplexity()
+    dataset = {
         'pred': torch.rand(2, 8, generator=torch.manual_seed(22)),
         'target': torch.randint(5, (2, 8), generator=torch.manual_seed(22))
-    },
-    {
+    }
+    with pytest.raises(ValueError):
+        metric.add(dataset['pred'], dataset['target'])
+    dataset = {
         'pred': torch.rand(2, 8, 5, generator=torch.manual_seed(22)),
         'target': torch.randint(5, (2, 8, 4), generator=torch.manual_seed(22))
-    },
-    {
+    }
+    with pytest.raises(ValueError):
+        metric.add(dataset['pred'], dataset['target'])
+    dataset = {
         'pred': torch.rand(2, 10, 5, generator=torch.manual_seed(22)),
         'target': torch.randint(5, (2, 8), generator=torch.manual_seed(22))
-    },
-])
-def test_input_shape(dataset):
-    metric = Perplexity()
+    }
     with pytest.raises(ValueError):
         metric.add(dataset['pred'], dataset['target'])
 
