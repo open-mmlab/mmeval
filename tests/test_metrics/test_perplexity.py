@@ -34,145 +34,209 @@ def test_input_shape():
 
 
 @pytest.mark.skipif(torch is None, reason='Pytorch is not available!')
-def test_perplexity_torch():
-    np.random.seed(0)
-    preds = np.random.rand(4, 2, 8, 5)
-    targets = np.random.randint(low=0, high=5, size=(4, 2, 8))
+@pytest.mark.parametrize(
+    argnames=['preds', 'targets', 'metric_kwargs', 'metric_results'],
+    argvalues=[
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -100]],
+            {
+                'ignore_labels': -100
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -101]],
+            {
+                'ignore_labels': [-100, -101]
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+    ])
+def test_perplexity_torch(preds, targets, metric_kwargs, metric_results):
     preds = torch.tensor(preds)
     targets = torch.tensor(targets)
-    metric = Perplexity()
-    for i in range(4):
-        pred = preds[i]
-        target = targets[i]
-        metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 5.235586)
+    metric = Perplexity(**metric_kwargs)
+    results = metric(preds, targets)
 
-    np.random.seed(0)
-    pred = np.random.rand(1, 4, 4)
-    target = np.random.randint(low=0, high=4, size=(1, 4))
-    pred = torch.tensor(pred)
-    target = torch.tensor(target)
-    metric = Perplexity(ignore_labels=-101)
-    target[:, 2] = -101
-    target[:, 3] = -101
-    metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 4.544293)
+    assert len(metric_results) == len(results)
+    for k, v in metric_results.items():
+        np.testing.assert_almost_equal(v, results[k])
 
 
 @pytest.mark.skipif(flow is None, reason='Oneflow is not available!')
-def test_perplexity_oneflow():
-    np.random.seed(0)
-    preds = np.random.rand(4, 2, 8, 5)
-    targets = np.random.randint(low=0, high=5, size=(4, 2, 8))
+@pytest.mark.parametrize(
+    argnames=['preds', 'targets', 'metric_kwargs', 'metric_results'],
+    argvalues=[
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -100]],
+            {
+                'ignore_labels': -100
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -101]],
+            {
+                'ignore_labels': [-100, -101]
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+    ])
+def test_perplexity_oneflow(preds, targets, metric_kwargs, metric_results):
     preds = flow.as_tensor(preds)
     targets = flow.as_tensor(targets)
-    metric = Perplexity()
-    for i in range(4):
-        pred = preds[i]
-        target = targets[i]
-        metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 5.235586)
+    metric = Perplexity(**metric_kwargs)
+    results = metric(preds, targets)
 
-    np.random.seed(0)
-    pred = np.random.rand(1, 4, 4)
-    target = np.random.randint(low=0, high=4, size=(1, 4))
-    pred = flow.as_tensor(pred)
-    target = flow.as_tensor(target)
-    metric = Perplexity(ignore_labels=[-100])
-    target[:, 2] = -100
-    target[:, 3] = -100
-    metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 4.544293)
+    assert len(metric_results) == len(results)
+    for k, v in metric_results.items():
+        np.testing.assert_almost_equal(v, results[k])
 
 
 @pytest.mark.skipif(tf is None, reason='TensorFlow is not available!')
-def test_perplexity_tensorflow():
-    np.random.seed(0)
-    preds = np.random.rand(4, 2, 8, 5)
-    targets = np.random.randint(low=0, high=5, size=(4, 2, 8))
+@pytest.mark.parametrize(
+    argnames=['preds', 'targets', 'metric_kwargs', 'metric_results'],
+    argvalues=[
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -100]],
+            {
+                'ignore_labels': -100
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -101]],
+            {
+                'ignore_labels': [-100, -101]
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+    ])
+def test_perplexity_tensorflow(preds, targets, metric_kwargs, metric_results):
     preds = tf.convert_to_tensor(preds)
     targets = tf.convert_to_tensor(targets)
-    metric = Perplexity()
-    for i in range(4):
-        pred = preds[i]
-        target = targets[i]
-        metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 5.235586)
+    metric = Perplexity(**metric_kwargs)
+    results = metric(preds, targets)
 
-    np.random.seed(0)
-    pred = np.random.rand(1, 4, 4)
-    target = np.random.randint(low=0, high=4, size=(1, 4))
-    metric = Perplexity(ignore_labels=[-101, -100, -101])
-    target[:, 2] = -101
-    target[:, 3] = -100
-    pred = tf.convert_to_tensor(pred)
-    target = tf.convert_to_tensor(target)
-    metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 4.544293)
+    assert len(metric_results) == len(results)
+    for k, v in metric_results.items():
+        np.testing.assert_almost_equal(v, results[k], decimal=6)
 
 
 @pytest.mark.skipif(paddle is None, reason='Paddle is not available!')
-def test_perplexity_paddle():
-    np.random.seed(0)
-    preds = np.random.rand(4, 2, 8, 5)
-    targets = np.random.randint(low=0, high=5, size=(4, 2, 8))
+@pytest.mark.parametrize(
+    argnames=['preds', 'targets', 'metric_kwargs', 'metric_results'],
+    argvalues=[
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -100]],
+            {
+                'ignore_labels': -100
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -101]],
+            {
+                'ignore_labels': [-100, -101]
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+    ])
+def test_perplexity_paddle(preds, targets, metric_kwargs, metric_results):
     preds = paddle.to_tensor(preds)
     targets = paddle.to_tensor(targets)
-    metric = Perplexity()
-    for i in range(4):
-        pred = preds[i]
-        target = targets[i]
-        metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 5.235586)
+    metric = Perplexity(**metric_kwargs)
+    results = metric(preds, targets)
 
-    np.random.seed(0)
-    pred = np.random.rand(1, 4, 4)
-    target = np.random.randint(low=0, high=4, size=(1, 4))
-    pred = paddle.to_tensor(pred)
-    target = paddle.to_tensor(target)
-    metric = Perplexity(ignore_labels=[-101, -100])
-    target[:, 2] = -101
-    target[:, 3] = -100
-    metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 4.544293)
+    assert len(metric_results) == len(results)
+    for k, v in metric_results.items():
+        np.testing.assert_almost_equal(v, results[k])
 
 
-def test_perplexity_numpy():
-    np.random.seed(0)
-    preds = np.random.rand(4, 2, 8, 5)
-    targets = np.random.randint(low=0, high=5, size=(4, 2, 8))
-    metric = Perplexity()
-    for i in range(4):
-        pred = preds[i]
-        target = targets[i]
-        metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 5.235586)
+@pytest.mark.parametrize(
+    argnames=['preds', 'targets', 'metric_kwargs', 'metric_results'],
+    argvalues=[
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -100]],
+            {
+                'ignore_labels': -100
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+        (
+            [[[0.27032791, 0.1314828, 0.05537432, 0.30159863],
+              [0.26211815, 0.45614057, 0.68328134, 0.69562545],
+              [0.28351885, 0.37992696, 0.18115096, 0.78854551],
+              [0.05684808, 0.69699724, 0.7786954, 0.77740756]]],
+            [[3, 2, -100, -101]],
+            {
+                'ignore_labels': [-100, -101]
+            },
+            {
+                'perplexity': 3.529430098122886
+            },
+        ),
+    ])
+def test_perplexity_numpy(preds, targets, metric_kwargs, metric_results):
+    preds = np.array(preds)
+    targets = np.array(targets)
+    metric = Perplexity(**metric_kwargs)
+    results = metric(preds, targets)
 
-    np.random.seed(0)
-    pred = np.random.rand(1, 4, 4)
-    target = np.random.randint(low=0, high=4, size=(1, 4))
-    metric = Perplexity(ignore_labels=[-101, -100, -101])
-    target[:, 2] = -101
-    target[:, 3] = -100
-    metric.add(pred, target)
-    my_result = metric.compute()
-    result = my_result['perplexity']
-    np.testing.assert_almost_equal(result, 4.544293)
+    assert len(metric_results) == len(results)
+    for k, v in metric_results.items():
+        np.testing.assert_almost_equal(v, results[k])
