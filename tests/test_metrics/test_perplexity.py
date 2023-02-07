@@ -54,9 +54,9 @@ def test_perplexity_torch():
     target = np.random.randint(low=0, high=4, size=(1, 4))
     pred = torch.tensor(pred)
     target = torch.tensor(target)
-    metric = Perplexity(ignore_labels=[-101, -100, -101])
+    metric = Perplexity(ignore_labels=-101)
     target[:, 2] = -101
-    target[:, 3] = -100
+    target[:, 3] = -101
     metric.add(pred, target)
     my_result = metric.compute()
     result = my_result['perplexity']
@@ -84,8 +84,8 @@ def test_perplexity_oneflow():
     target = np.random.randint(low=0, high=4, size=(1, 4))
     pred = flow.as_tensor(pred)
     target = flow.as_tensor(target)
-    metric = Perplexity(ignore_labels=[-101, -100, -101])
-    target[:, 2] = -101
+    metric = Perplexity(ignore_labels=[-100])
+    target[:, 2] = -100
     target[:, 3] = -100
     metric.add(pred, target)
     my_result = metric.compute()
@@ -144,7 +144,7 @@ def test_perplexity_paddle():
     target = np.random.randint(low=0, high=4, size=(1, 4))
     pred = paddle.to_tensor(pred)
     target = paddle.to_tensor(target)
-    metric = Perplexity(ignore_labels=[-101, -100, -101])
+    metric = Perplexity(ignore_labels=[-101, -100])
     target[:, 2] = -101
     target[:, 3] = -100
     metric.add(pred, target)

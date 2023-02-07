@@ -70,7 +70,7 @@ class Perplexity(BaseMetric):
     loss of the model (or the negative log-likelihood of the sample).
 
     Args:
-        ignore_labels (Union[int, List[int], None]): Integer specifying a
+        ignore_labels (int or list[int], optional): Integer specifying a
             target class to ignore. If given, this class index does not
             contribute to the returned score. Defaults to None.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
@@ -78,10 +78,12 @@ class Perplexity(BaseMetric):
     Examples:
 
         >>> from mmeval import Perplexity
+        >>> import numpy as np
+        >>>
         >>> preds = np.random.rand(2, 4, 2)
         >>> targets = np.random.randint(low=0, high=2, size=(2, 4))
         >>> metric = Perplexity()
-        >>> result = metric(preds, targets)
+        >>> result = metric(preds, targets)  # doctest: +ELLIPSIS
         {'perplexity': 1.8374564792634362}
     """
 
@@ -95,7 +97,7 @@ class Perplexity(BaseMetric):
             if not is_list_of(ignore_labels, int):
                 raise ValueError(
                     'Argument `ignore_labels` expected to be '
-                    f'`None`, `int`,`List[int]` but got {ignore_labels}')
+                    f'`None`, `int`, or`List[int]`, but got {ignore_labels}')
             ignore_labels = list(set(ignore_labels))
         self.ignore_labels = ignore_labels
 
@@ -131,12 +133,11 @@ class Perplexity(BaseMetric):
         """
         probs = torch.nn.functional.softmax(prediction, dim=1)
         if self.ignore_labels is not None:
-            mask = torch.zeros_like(target, dtype=bool)
+            mask = torch.ones_like(target, dtype=bool)
             for ignore_label in self.ignore_labels:
-                mask_temp = target.eq(ignore_label)
-                mask = (mask == mask_temp)
-            target = torch.masked_fill(target, mask, 0)
-            probs = probs.index_select(dim=1, index=target).diagonal()[~mask]
+                mask &= target.ne(ignore_label)
+            target = torch.masked_fill(target, ~mask, 0)
+            probs = probs.index_select(dim=1, index=target).diagonal()[mask]
         else:
             probs = probs.index_select(dim=1, index=target).diagonal()
         total_probs = -probs.log().sum()
@@ -161,12 +162,11 @@ class Perplexity(BaseMetric):
         """
         probs = flow.nn.functional.softmax(prediction, dim=1)
         if self.ignore_labels is not None:
-            mask = flow.zeros_like(target)
+            mask = flow.ones_like(target)
             for ignore_label in self.ignore_labels:
-                mask_temp = target.eq(ignore_label)
-                mask = (mask == mask_temp)
-            target = flow.masked_fill(target, mask, 0)
-            probs = probs.index_select(dim=1, index=target).diagonal()[~mask]
+                mask &= target.ne(ignore_label)
+            target = flow.masked_fill(target, ~mask, 0)
+            probs = probs.index_select(dim=1, index=target).diagonal()[mask]
         else:
             probs = probs.index_select(dim=1, index=target).diagonal()
         total = -probs.log().sum()
@@ -192,14 +192,13 @@ class Perplexity(BaseMetric):
         """
         probs = tf.nn.softmax(prediction, axis=1)
         if self.ignore_labels is not None:
-            mask = tf.zeros_like(target, dtype=bool)
+            mask = tf.ones_like(target, dtype=bool)
             for ignore_label in self.ignore_labels:
-                mask_temp = tf.equal(target, ignore_label)
-                mask = (mask == mask_temp)
+                mask &= tf.not_equal(target, ignore_label)
+            target = tf.where(~mask, 0, target)
 
-            target = tf.where(mask, 0, target)
             probs = tf.gather(probs, target, axis=1)
-            probs = tf.linalg.tensor_diag_part(probs)[~mask]
+            probs = tf.linalg.tensor_diag_part(probs)[mask]
         else:
             probs = tf.gather(probs, target, axis=1)
             probs = tf.linalg.tensor_diag_part(probs)
@@ -227,13 +226,14 @@ class Perplexity(BaseMetric):
         """
         probs = paddle.nn.functional.softmax(prediction, axis=1)
         if self.ignore_labels is not None:
-            mask = paddle.zeros_like(target, dtype=bool)
+            mask = paddle.ones_like(target, dtype=bool)
             for ignore_label in self.ignore_labels:
-                mask_temp = target.equal(ignore_label)
-                mask = (mask == mask_temp)
+                compare_label = paddle.full(
+                    target.shape, ignore_label, dtype=target.dtype)
+                mask &= target.not_equal(compare_label)
             replace = paddle.zeros_like(target)
-            target = paddle.where(mask, replace, target)
-            probs = probs.index_select(axis=1, index=target).diagonal()[~mask]
+            target = paddle.where(~mask, replace, target)
+            probs = probs.index_select(axis=1, index=target).diagonal()[mask]
         else:
             probs = probs.index_select(axis=1, index=target).diagonal()
         total = -probs.log().sum(axis=0)
@@ -257,12 +257,11 @@ class Perplexity(BaseMetric):
         """
         probs = softmax(prediction)
         if self.ignore_labels is not None:
-            mask = np.zeros_like(target, dtype=bool)
+            mask = np.ones_like(target, dtype=bool)
             for ignore_label in self.ignore_labels:
-                mask_temp = np.equal(target, ignore_label)
-                mask = (mask == mask_temp)
-            target = np.ma.array(target, mask=mask, fill_value=0).filled()
-            probs = np.take(probs, target, axis=1).diagonal()[~mask]
+                mask &= np.not_equal(target, ignore_label)
+            target = np.ma.array(target, mask=~mask, fill_value=0).filled()
+            probs = np.take(probs, target, axis=1).diagonal()[mask]
         else:
             probs = np.take(probs, target, axis=1).diagonal()
         total = -np.sum(np.log(probs))
@@ -289,6 +288,6 @@ class Perplexity(BaseMetric):
         for result in results:
             total += result[0]
             count += result[1]
-        output = np.exp(total / count)
+        output = np.exp(total / count) if count != 0 else 0
         perplexity = {'perplexity': float(output)}
         return perplexity
