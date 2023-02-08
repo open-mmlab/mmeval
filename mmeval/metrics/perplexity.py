@@ -84,7 +84,7 @@ class Perplexity(BaseMetric):
         >>> targets = np.random.randint(low=0, high=2, size=(2, 4))
         >>> metric = Perplexity()
         >>> result = metric(preds, targets)  # doctest: +ELLIPSIS
-        {'perplexity': 1.8374564792634362}
+        {'perplexity': ...}
     """
 
     def __init__(self,
