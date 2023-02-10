@@ -12,6 +12,7 @@ from .end_point_error import EndPointError
 from .f1_score import F1Score
 from .gradient_error import GradientError
 from .hmean_iou import HmeanIoU
+from .keypoint_nme import KeypointNME
 from .mae import MeanAbsoluteError
 from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
@@ -36,7 +37,7 @@ __all__ = [
     'StructuralSimilarity', 'SignalNoiseRatio', 'MultiLabelMetric',
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
-    'ConnectivityError', 'ROUGE'
+    'ConnectivityError', 'ROUGE', 'KeypointNME'
 ]
 
 _deprecated_msg = (
