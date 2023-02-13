@@ -183,6 +183,14 @@ def reorder_and_crop(img: np.ndarray,
         np.array: The transformation results.
     """
 
+    if len(img.shape) == 4:
+        result = []
+        for i in range(img.shape[0]):
+            result.append(
+                reorder_and_crop(img[i], crop_border, input_order, convert_to,
+                                 channel_order))
+        return np.array(result).astype(np.float64)
+
     img = reorder_image(img, input_order=input_order)
     img = img.astype(np.float32)
 
