@@ -55,9 +55,11 @@ class MeanAbsoluteError(BaseMetric):
             if masks is None:
                 result = self.compute_mae(prediction, groundtruth)
             else:
+                # when prediction is a image
                 if len(prediction.shape) <= 3:
                     result = self.compute_mae(prediction, groundtruth,
                                               masks[i])
+                # when prediction is a video
                 else:
                     result_sum = 0
                     for j in range(prediction.shape[0]):

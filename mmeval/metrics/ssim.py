@@ -123,10 +123,10 @@ class StructuralSimilarity(BaseMetric):
                 pred = np.expand_dims(pred, axis=0)
                 gt = np.expand_dims(gt, axis=0)
             _ssim_score = []
-            for i in range(pred.shape[3]):
-                for j in range(pred.shape[0]):
+            for i in range(pred.shape[0]):
+                for j in range(pred.shape[3]):
                     _ssim_score.append(
-                        self.compute_ssim(pred[j][..., i], gt[j][..., i]))
+                        self.compute_ssim(pred[i][..., j], gt[i][..., j]))
             self._results.append(np.array(_ssim_score).mean())
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
