@@ -39,7 +39,9 @@ def test_snr_init():
         ({'input_order': 'HWC', 'convert_to': 'Y'}, [np.ones((32, 32, 3))],
          [np.ones((32, 32, 3)) * 2], 26.290039980499536),
         ({}, [np.ones((32, 32))], [np.ones((32, 32))], float('inf')),
-        ({}, [np.zeros((32, 32))], [np.ones((32, 32))], 0)
+        ({}, [np.zeros((32, 32))], [np.ones((32, 32))], 0),
+        ({}, [np.ones((5, 3, 32, 32))], [np.ones((5, 3, 32, 32)) * 2],
+         6.020599913279624)
     ]
 )
 def test_snr(metric_kwargs, img1, img2, results):

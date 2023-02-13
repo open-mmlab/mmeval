@@ -53,7 +53,9 @@ def test_psnr_init():
                }, [np.ones((32, 32, 3))], [np.ones(
                    (32, 32, 3)) * 2], 49.45272242415597),
                ({}, [np.ones((32, 32))], [np.ones((32, 32))], float('inf')),
-               ({}, [np.zeros((32, 32))], [np.ones((32, 32)) * 255], 0)])
+               ({}, [np.zeros((32, 32))], [np.ones((32, 32)) * 255], 0),
+               ({}, [np.ones((5, 3, 32, 32))], [np.ones(
+                   (5, 3, 32, 32)) * 2], 48.1308036086791)])
 def test_psnr(metric_kwargs, img1, img2, results):
     psnr = PeakSignalNoiseRatio(**metric_kwargs)
     psnr_results = psnr(img1, img2)
