@@ -45,6 +45,30 @@ class KeypointEndPointError(BaseMetric):
         - length of dataset: N
         - num_keypoints: K
         - number of keypoint dimensions: D (typically D = 2)
+
+    Examples:
+
+        >>> from mmeval import KeypointAUC
+        >>> import numpy as np
+        >>> output = np.array([[[10.,  4.],
+        ...     [10., 18.],
+        ...     [ 0.,  0.],
+        ...     [40., 40.],
+        ...     [20., 10.]]])
+        >>> target = np.array([[[10.,  0.],
+        ...     [10., 10.],
+        ...     [ 0., -1.],
+        ...     [30., 30.],
+        ...     [ 0., 10.]]])
+        >>> keypoints_visible = np.array([[True, True, False, True, True]])
+        >>> num_keypoints = 15
+        >>> prediction = {'coords': output}
+        >>> groundtruth = {'coords': target, 'mask': keypoints_visible}
+        >>> predictions = [prediction]
+        >>> groundtruths = [groundtruth]
+        >>> epe_metric = KeypointEndPointError()
+        >>> epe_metric(predictions, groundtruths)
+        OrderedDict([('EPE', 11.535533905029297)])
     """
 
     def add(self, predictions: List[Dict], groundtruths: List[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
@@ -53,8 +77,17 @@ class KeypointEndPointError(BaseMetric):
 
         Args:
             predictions (Sequence[dict]): Predictions from the model.
+                Each prediction dict has the following keys:
+
+                - coords (np.ndarray, [1, K, D]): predicted keypoints
+                  coordinates
 
             groundtruths (Sequence[dict]): The ground truth labels.
+                Each groundtruth dict has the following keys:
+
+                - coords (np.ndarray, [1, K, D]): ground truth keypoints
+                  coordinates
+                - mask (np.ndarray, [1, K]): ground truth keypoints_visible
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             self._results.append((prediction, groundtruth))

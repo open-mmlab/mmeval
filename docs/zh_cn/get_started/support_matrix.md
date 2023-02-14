@@ -39,3 +39,4 @@ MMEval 在 PyTorch 1.6+，TensorFlow 2.4+, Paddle 2.2+ 和 OneFlow 0.8+ 测试�
 | [PeakSignalNoiseRatio](../api/generated/mmeval.metrics.PeakSignalNoiseRatio.html#mmeval.metrics.PeakSignalNoiseRatio) |       ✔       |              |                   |               |                |
 |     [MeanAbsoluteError](../api/generated/mmeval.metrics.MeanAbsoluteError.html#mmeval.metrics.MeanAbsoluteError)      |       ✔       |              |                   |               |                |
 |       [MeanSquaredError](../api/generated/mmeval.metrics.MeanSquaredError.html#mmeval.metrics.MeanSquaredError)       |       ✔       |              |                   |               |                |
+|       [KeypointEndPointError](../api/generated/mmeval.metrics.KeypointEndPointError.html#mmeval.metrics.KeypointEndPointError)       |       ✔       |              |                   |               |                |
