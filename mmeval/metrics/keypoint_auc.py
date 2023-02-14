@@ -88,9 +88,11 @@ class KeypointAUC(BaseMetric):
         >>> num_keypoints = 15
         >>> prediction = {'coords': output}
         >>> groundtruth = {'coords': target, 'mask': keypoints_visible}
+        >>> predictions = [prediction]
+        >>> groundtruths = [groundtruth]
         >>> auc_metric = KeypointAUC(norm_factor=20, num_thrs=4)
-        >>> auc_metric(self.predictions, self.groundtruths)
-        OrderedDict([('AUC@4': 0.375)])
+        >>> auc_metric(predictions, groundtruths)
+        OrderedDict([('AUC@4', 0.375)])
     """
 
     def __init__(self,
