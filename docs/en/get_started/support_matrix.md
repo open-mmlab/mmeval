@@ -39,3 +39,4 @@ MMEval tested with PyTorch 1.6+, TensorFlow 2.4+, Paddle 2.2+ and OneFlow 0.8+.
 | [PeakSignalNoiseRatio](../api/generated/mmeval.metrics.PeakSignalNoiseRatio.html#mmeval.metrics.PeakSignalNoiseRatio) |       ✔       |              |                   |               |                |
 |     [MeanAbsoluteError](../api/generated/mmeval.metrics.MeanAbsoluteError.html#mmeval.metrics.MeanAbsoluteError)      |       ✔       |              |                   |               |                |
 |       [MeanSquaredError](../api/generated/mmeval.metrics.MeanSquaredError.html#mmeval.metrics.MeanSquaredError)       |       ✔       |              |                   |               |                |
+|             [KeypointAUC](../api/generated/mmeval.metrics.KeypointAUC.html#mmeval.metrics.KeypointAUC)             |       ✔       |              |                   |               |                |

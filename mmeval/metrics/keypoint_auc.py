@@ -16,9 +16,11 @@ def keypoint_auc_accuracy(pred: np.ndarray,
                           norm_factor: np.ndarray,
                           num_thrs: int = 20) -> float:
     """Calculate the Area under curve (AUC) of keypoint PCK accuracy.
+
     Note:
         - instance number: N
         - keypoint number: K
+
     Args:
         pred (np.ndarray[N, K, 2]): Predicted keypoint location.
         gt (np.ndarray[N, K, 2]): Groundtruth keypoint location.
@@ -27,6 +29,7 @@ def keypoint_auc_accuracy(pred: np.ndarray,
             accuracy calculation.
         norm_factor (float): Normalization factor.
         num_thrs (int): number of thresholds to calculate auc.
+
     Returns:
         float: Area under curve (AUC) of keypoint PCK accuracy.
     """
@@ -66,6 +69,28 @@ class KeypointAUC(BaseMetric):
             names to disambiguate homonymous metrics of different evaluators.
             If prefix is not provided in the argument, ``self.default_prefix``
             will be used instead. Default: ``None``.
+
+    Examples:
+
+        >>> from mmeval import KeypointAUC
+        >>> import numpy as np
+        >>> output = np.array([[[10.,  4.],
+        ...     [10., 18.],
+        ...     [ 0.,  0.],
+        ...     [40., 40.],
+        ...     [20., 10.]]])
+        >>> target = np.array([[[10.,  0.],
+        ...     [10., 10.],
+        ...     [ 0., -1.],
+        ...     [30., 30.],
+        ...     [ 0., 10.]]])
+        >>> keypoints_visible = np.array([[True, True, False, True, True]])
+        >>> num_keypoints = 15
+        >>> prediction = {'coords': output}
+        >>> groundtruth = {'coords': target, 'mask': keypoints_visible}
+        >>> auc_metric = KeypointAUC(norm_factor=20, num_thrs=4)
+        >>> auc_metric(self.predictions, self.groundtruths)
+        OrderedDict([('AUC@4': 0.375)])
     """
 
     def __init__(self,
@@ -82,8 +107,17 @@ class KeypointAUC(BaseMetric):
 
         Args:
             predictions (Sequence[dict]): Predictions from the model.
+                Each prediction dict has the following keys:
+
+                - coords (np.ndarray, [1, K, D]): predicted keypoints
+                  coordinates
 
             groundtruths (Sequence[dict]): The ground truth labels.
+                Each groundtruth dict has the following keys:
+
+                - coords (np.ndarray, [1, K, D]): ground truth keypoints
+                  coordinates
+                - mask (np.ndarray, [1, K]): ground truth keypoints_visible
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             self._results.append((prediction, groundtruth))
