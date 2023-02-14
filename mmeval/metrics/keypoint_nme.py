@@ -13,9 +13,11 @@ logger = logging.getLogger(__name__)
 def keypoint_nme_accuracy(pred: np.ndarray, gt: np.ndarray, mask: np.ndarray,
                           normalize_factor: np.ndarray) -> float:
     """Calculate the normalized mean error (NME).
+
     Note:
         - instance number: N
         - keypoint number: K
+
     Args:
         pred (np.ndarray[N, K, 2]): Predicted keypoint location.
         gt (np.ndarray[N, K, 2]): Groundtruth keypoint location.
@@ -23,6 +25,7 @@ def keypoint_nme_accuracy(pred: np.ndarray, gt: np.ndarray, mask: np.ndarray,
             joints, and True for visible. Invisible joints will be ignored for
             accuracy calculation.
         normalize_factor (np.ndarray[N, 2]): Normalization factor.
+
     Returns:
         float: normalized mean error
     """
@@ -53,14 +56,54 @@ class KeypointNME(BaseMetric):
         norm_item (str, optional): The item used as the normalization factor.
             For example, `'box_size'` in `'AFLWDataset'`. Only valid when
             ``norm_mode`` is ``use_norm_item``.
-            Default: ``None``.
+            Defaults to ``None``.
         keypoint_indices (Sequence[int], optional): The keypoint indices used
             to calculate the keypoint distance as the normalization factor.
             Only valid when ``norm_mode`` is ``keypoint_distance``.
             If set as None, will use the default ``keypoint_indices`` in
             `DEFAULT_KEYPOINT_INDICES` for specific datasets, else use the
-            given ``keypoint_indices`` of the dataset. Default: ``None``.
+            given ``keypoint_indices`` of the dataset. Defaults to ``None``.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+
+        >>> from mmeval import KeypointNME
+        >>> import numpy as np
+        >>> aflw_dataset_meta = {
+        ...     'dataset_name': 'aflw',
+        ...     'num_keypoints': 19,
+        ...     'sigmas': np.array([]),
+        ... }
+        >>> def _generate_data(self,
+        ...                    batch_size: int = 1,
+        ...                    num_keypoints: int = 5,
+        ...                    norm_item: str = 'box_size'):
+        ...     predictions = []
+        ...     groundtruths = []
+        ...     for i in range(batch_size):
+        ...         keypoints = np.zeros((1, num_keypoints, 2))
+        ...         keypoints[0, i] = [0.5 * i, 0.5 * i]
+        ...         keypoints_visible = np.ones(
+        ...             (1, num_keypoints)).astype(bool)
+        ...         keypoints_visible[0, (2 * i) % 8] = False
+        ...         prediction = {'coords': keypoints}
+        ...         groundtruth = {
+        ...             'coords': keypoints,
+        ...             'mask': keypoints_visible,
+        ...             norm_item: np.random.random((1, 1)) * 20 * i
+        ...         }
+        ...         predictions.append(prediction)
+        ...         groundtruths.append(groundtruth)
+        ...     return predictions, groundtruths
+        >>> norm_item = 'box_size'
+        >>> predictions, groundtruths = _generate_data(
+        ...     batch_size=4, num_keypoints=19, norm_item=norm_item)
+        >>> nme_metric = KeypointNME(
+        ...     norm_mode='use_norm_item',
+        ...     norm_item=norm_item,
+        ...     dataset_meta=aflw_dataset_meta)
+        >>> nme_metric(predictions, groundtruths)
+        OrderedDict([('NME', 0.0)])
     """
     DEFAULT_KEYPOINT_INDICES = {
         # horse10: corresponding to `nose` and `eye` keypoints
@@ -99,7 +142,24 @@ class KeypointNME(BaseMetric):
 
         Args:
             predictions (Sequence[dict]): A sequence of dict.
+                Each prediction dict has the following keys:
+
+                - coords (np.ndarray, [1, K, D]): predicted keypoints
+                  coordinates
+
             groundtruths (Sequence[dict]): The ground truth labels.
+                Each groundtruth dict has the following keys:
+
+                - coords (np.ndarray, [1, K, D]): ground truth keypoints
+                  coordinates
+                - mask (np.ndarray, [1, K]): ground truth keypoints_visible
+
+                There are some optional keys as well:
+                    - bboxes: it is necessary when ``self.norm_item`` is
+                        `'bbox_size'`
+                    - ``self.norm_item``: it is necessary when
+                        ``self.norm_item`` is neither ``None`` nor
+                        `'bbox_size'`
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             if self.norm_item:
@@ -107,6 +167,10 @@ class KeypointNME(BaseMetric):
                     assert 'bboxes' in groundtruth, 'The ground truth data ' \
                         'info do not have the item ``bboxes`` for expected ' \
                         'normalized_item ``"bbox_size"``.'
+                    bbox_size = np.max(groundtruth['bboxes'][0][2:] -
+                                       groundtruth['bboxes'][0][:2])
+                    groundtruth['bbox_size'] = np.array([bbox_size
+                                                         ]).reshape(-1, 1)
                 else:
                     assert self.norm_item in groundtruth, f'The ground ' \
                         f'truth data info do not have the expected ' \
@@ -180,8 +244,10 @@ class KeypointNME(BaseMetric):
         """Get the normalize factor. generally inter-ocular distance measured
         as the Euclidean distance between the outer corners of the eyes is
         used.
+
         Args:
             gt_coords (np.ndarray[N, K, 2]): Groundtruth keypoint coordinates.
+
         Returns:
             np.ndarray[N, 2]: normalized factor
         """
