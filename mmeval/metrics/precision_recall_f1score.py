@@ -29,23 +29,23 @@ BUILTIN_IMPL_HINTS = Tuple[Union[int, Sequence[Union[int, float]]],
                            Union[int, Sequence[int]]]
 
 
-class PrecsionRecallF1score:
-    """Wrapper to get different task of PrecsionRecallF1score calculation, by
+class PrecisionRecallF1score:
+    """Wrapper to get different task of PrecisionRecallF1score calculation, by
     setting the ``task`` argument to either ``'singlelabel'`` or
     ``multilabel``.
 
-    See the documentation of :mod:`SingleLabelPrecsionRecallF1score` and
-    :mod:`MultiLabelPrecsionRecallF1score` for the detailed usages and
+    See the documentation of :mod:`SingleLabelPrecisionRecallF1score` and
+    :mod:`MultiLabelPrecisionRecallF1score` for the detailed usages and
     examples.
 
     Examples:
         >>> import torch
         >>> preds  = torch.tensor([2, 0, 1, 1])
         >>> labels = torch.tensor([2, 1, 2, 0])
-        >>> metric = PrecsionRecallF1score(num_classes=3)
+        >>> metric = PrecisionRecallF1score(num_classes=3)
         >>> metric(preds, labels)
         {'precision': 33.3333, 'recall': 16.6667, 'f1-score': 22.2222}
-        >>> metric = PrecsionRecallF1score(
+        >>> metric = PrecisionRecallF1score(
                 task="multilabel", average='micro', num_classes=3)
         >>> metric(preds, labels)
         {'precision_micro': 25.0, 'recall_micro': 25.0, 'f1-score_micro': 25.0}
@@ -61,7 +61,7 @@ class PrecsionRecallF1score:
                 **kwargs):
 
         if task == 'singlelabel':
-            return SingleLabelPrecsionRecallF1score(
+            return SingleLabelPrecisionRecallF1score(
                 num_classes=num_classes,
                 thrs=thrs,
                 items=items,
@@ -72,7 +72,7 @@ class PrecsionRecallF1score:
                 "task `'multilabel'` only supports single threshold or None."
             assert isinstance(num_classes, int), \
                 '`num_classes` is necessary for multi-label metrics.'
-            return MultiLabelPrecsionRecallF1score(
+            return MultiLabelPrecisionRecallF1score(
                 num_classes=num_classes,
                 thr=thrs,
                 topk=topk,
@@ -169,7 +169,7 @@ def _precision_recall_f1_support(pred_positive: Union[np.ndarray,
     return precision, recall, f1_score, support
 
 
-class SingleLabelPrecsionRecallF1score(BaseMetric):
+class SingleLabelPrecisionRecallF1score(BaseMetric):
     """A collection of metrics for single-label multi-class classification task
     based on confusion matrix.
 
@@ -210,8 +210,8 @@ class SingleLabelPrecsionRecallF1score(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import SingleLabelPrecsionRecallF1score
-        >>> single_lable_metic = SingleLabelPrecsionRecallF1score(num_classes=4)
+        >>> from mmeval import SingleLabelPrecisionRecallF1score
+        >>> single_lable_metic = SingleLabelPrecisionRecallF1score(num_classes=4)
 
     Use NumPy implementation:
 
@@ -237,7 +237,7 @@ class SingleLabelPrecsionRecallF1score(BaseMetric):
             [0.3, 0.4, 0.2, 0.1],
             [0.0, 0.0, 0.1, 0.9]])
         >>> labels = np.asarray([0, 1, 2, 3])
-        >>> single_lable_metic = SingleLabelPrecsionRecallF1score(average='micro')
+        >>> single_lable_metic = SingleLabelPrecisionRecallF1score(average='micro')
         >>> single_lable_metic(preds, labels)
         {'precision_micro': 50.0, 'recall_micro': 50.0, 'f1-score_micro': 50.0} # noqa
 
@@ -532,7 +532,7 @@ class SingleLabelPrecsionRecallF1score(BaseMetric):
         return self._format_metric_results(metric_results)
 
 
-class MultiLabelPrecsionRecallF1score(MultiLabelMixin, BaseMetric):
+class MultiLabelPrecisionRecallF1score(MultiLabelMixin, BaseMetric):
     """A collection of metrics for multi-label multi-class classification task
     based on confusion matrix.
 
@@ -571,15 +571,15 @@ class MultiLabelPrecsionRecallF1score(MultiLabelMixin, BaseMetric):
             Defaults to "macro".
 
     .. note::
-        MultiLabelPrecsionRecallF1score supports different kinds of inputs. Such as:
+        MultiLabelPrecisionRecallF1score supports different kinds of inputs. Such as:
         1. Each sample has scores for every classes. (Only for predictions)
         2. Each sample has one-hot indices for every classes.
         3. Each sample has label-format indices.
 
     Examples:
 
-        >>> from mmeval import MultiLabelPrecsionRecallF1score
-        >>> multi_lable_metic = MultiLabelPrecsionRecallF1score(num_classes=4)
+        >>> from mmeval import MultiLabelPrecisionRecallF1score
+        >>> multi_lable_metic = MultiLabelPrecisionRecallF1score(num_classes=4)
 
     Use Builtin implementation with raw indices:
 
@@ -638,7 +638,7 @@ class MultiLabelPrecsionRecallF1score(MultiLabelMixin, BaseMetric):
             [0.3, 0.4, 0.2, 0.1],
             [0.0, 0.0, 0.1, 0.9]])
         >>> labels = np.array([0, 1, 2, 3])
-        >>> multi_lable_metic = MultiLabelPrecsionRecallF1score(4, average='micro', topk=2)
+        >>> multi_lable_metic = MultiLabelPrecisionRecallF1score(4, average='micro', topk=2)
         >>> multi_lable_metic(preds, labels)
         {'precision_top2_micro': 37.5, 'recall_top2_micro': 75.0, 'f1-score_top2_micro': 50.0} # noqa
 
@@ -674,7 +674,7 @@ class MultiLabelPrecsionRecallF1score(MultiLabelMixin, BaseMetric):
         for item in items:
             assert item in ['precision', 'recall', 'f1-score', 'support'], \
                 f'The metric {item} is not supported by' \
-                ' `MultiLabelPrecsionRecallF1score`,' \
+                ' `MultiLabelPrecisionRecallF1score`,' \
                 ' please specify from "precision", "recall", "f1-score" and ' \
                 '"support".'
         self.items = tuple(items)

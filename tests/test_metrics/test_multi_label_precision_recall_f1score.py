@@ -7,7 +7,7 @@ import pytest
 from distutils.version import LooseVersion
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.metrics import MultiLabelPrecsionRecallF1score
+from mmeval.metrics import MultiLabelPrecisionRecallF1score
 from mmeval.utils import try_import
 
 torch = try_import('torch')
@@ -17,10 +17,10 @@ flow = try_import('oneflow')
 def test_metric_init_assertion():
     with pytest.raises(AssertionError,
                        match='Invalid `average` argument'):
-        MultiLabelPrecsionRecallF1score(3, average='mean')
+        MultiLabelPrecisionRecallF1score(3, average='mean')
     with pytest.raises(AssertionError,
                        match='The metric map is not supported'):
-        MultiLabelPrecsionRecallF1score(3, items=('map',))
+        MultiLabelPrecisionRecallF1score(3, items=('map',))
 
 
 @pytest.mark.parametrize(
@@ -40,7 +40,7 @@ def test_metric_init_assertion():
 )
 def test_metric_inputs(metric_kwargs):
     # test predictions with labels
-    multi_label_metric = MultiLabelPrecsionRecallF1score(
+    multi_label_metric = MultiLabelPrecisionRecallF1score(
         num_classes=3, **metric_kwargs)
     assert isinstance(multi_label_metric, BaseMetric)
     results = multi_label_metric(
@@ -59,7 +59,7 @@ def test_metric_inputs(metric_kwargs):
 ])
 def test_metric_interface_builtin(metric_kwargs, preds, labels):
     """Test builtin inputs."""
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
@@ -78,7 +78,7 @@ def test_metric_interface_builtin(metric_kwargs, preds, labels):
 ])
 def test_metric_interface_topk(metric_kwargs, preds, labels):
     """Test scores inputs with topk."""
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
@@ -98,7 +98,7 @@ def test_metric_interface_topk(metric_kwargs, preds, labels):
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
 def test_metric_interface_torch_topk(metric_kwargs, preds, labels):
     """Test scores inputs with topk in torch."""
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
@@ -128,7 +128,7 @@ def test_metric_interface_oneflow_topk(metric_kwargs, preds, labels):
         labels = flow.tensor(labels)
     else:
         labels = list(flow.tensor(label) for label in labels)
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
@@ -151,7 +151,7 @@ def test_metric_interface_oneflow_topk(metric_kwargs, preds, labels):
 ])
 def test_metric_interface(metric_kwargs, preds, labels):
     """Test all kinds of inputs."""
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
@@ -175,7 +175,7 @@ def test_metric_interface(metric_kwargs, preds, labels):
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
 def test_metric_interface_torch(metric_kwargs, preds, labels):
     """Test all kinds of inputs in torch."""
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
@@ -209,7 +209,7 @@ def test_metric_interface_oneflow(metric_kwargs, preds, labels):
         labels = flow.tensor(labels)
     else:
         labels = list(flow.tensor(label) for label in labels)
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
     results = multi_label_metric(preds, labels)
     assert isinstance(results, dict)
 
@@ -244,14 +244,14 @@ def test_metric_interface_oneflow(metric_kwargs, preds, labels):
 )
 def test_metric_accurate(metric_kwargs, preds, labels, results):
     """Test accurate."""
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
     assert multi_label_metric(
         np.asarray(preds), np.asarray(labels)) == results
 
 
 def test_metric_accurate_is_onehot():
     """Test ambiguous cases when num_classes=2."""
-    multi_label_metric = MultiLabelPrecsionRecallF1score(num_classes=2, items=('precision', 'recall')) # noqa
+    multi_label_metric = MultiLabelPrecisionRecallF1score(num_classes=2, items=('precision', 'recall')) # noqa
     assert multi_label_metric.pred_is_onehot is False
     assert multi_label_metric.label_is_onehot is False
     assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 100.0, 'recall': 100.0} # noqa
@@ -273,7 +273,7 @@ def test_metric_accurate_is_onehot():
 )
 def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
     """Metamorphic testing for NumPy and PyTorch implementation."""
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
 
     preds = np.random.rand(length, classes_num)
     labels = np.random.randint(0, classes_num, length)
@@ -305,7 +305,7 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
 )
 def test_metamorphic_numpy_oneflow(metric_kwargs, classes_num, length):
     """Metamorphic testing for NumPy and OneFlow implementation."""
-    multi_label_metric = MultiLabelPrecsionRecallF1score(**metric_kwargs)
+    multi_label_metric = MultiLabelPrecisionRecallF1score(**metric_kwargs)
 
     preds = np.random.rand(length, classes_num)
     labels = np.random.randint(0, classes_num, length)

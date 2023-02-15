@@ -108,11 +108,16 @@ def format_data(
                           'parms related to `is_onehot` if use one-hot '
                           'encoding data to compute metrics.')
             assert is_onehot
+        is_onehot = True
     # Error corresponds to np, torch, oneflow, stack_func respectively
     except (ValueError, RuntimeError, AssertionError):
+        is_onehot = False
+
+    if not is_onehot:
         # convert label-format inputs to one-hot encodings
         formated_data = stack_func(
             [label_to_onehot(sample, num_classes) for sample in data])
+
     return formated_data
 
 

@@ -269,7 +269,8 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
         Args:
             preds (Sequence): Predictions from the model. It should
                 be scores of every class (N, C).
-            labels (Sequence): The ground truth labels. It should be (N, ).
+            labels (Sequence): The ground truth labels. It should be (N, ) for
+                label-format, or (N, C) for one-hot encoding.
         """
         for pred, target in zip(preds, labels):
             self._results.append((pred, target))
@@ -278,7 +279,8 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
         """Format the given metric results into a dictionary.
 
         Args:
-            results (list): Results of precision, recall, f1 and support.
+            ap (list): Results of average precision for each categories
+                or the single marco result.
 
         Returns:
             dict: The formatted dictionary.
