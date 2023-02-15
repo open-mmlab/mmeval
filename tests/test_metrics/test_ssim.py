@@ -5,7 +5,7 @@
 import numpy as np
 import pytest
 
-from mmeval.metrics import SSIM
+from mmeval import StructuralSimilarity as SSIM
 
 
 def test_ssim_init():
@@ -37,6 +37,8 @@ def test_ssim_init():
          [np.ones((3, 32, 32)) * 2], 0.9130623),
         ({'convert_to': 'Y', 'input_order': 'HWC'}, [np.ones((32, 32, 3))],
          [np.ones((32, 32, 3)) * 2], 0.9987801),
+        ({}, [np.ones((5, 3, 32, 32))], [np.ones((5, 3, 32, 32)) * 2],
+         0.9130623)
     ]
 )
 def test_ssim(metric_kwargs, img1, img2, results):
