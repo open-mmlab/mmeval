@@ -22,6 +22,7 @@ from .mean_iou import MeanIoU
 from .mse import MeanSquaredError
 from .niqe import NaturalImageQualityEvaluator
 from .oid_map import OIDMeanAP
+from .one_minus_norm_edit_distance import OneMinusNormEditDistance
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .perplexity import Perplexity
 from .precision_recall_f1score import (MultiLabelPrecisionRecallF1score,
@@ -46,7 +47,8 @@ __all__ = [
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
     'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
     'WordAccuracy', 'PrecisionRecallF1score',
-    'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score'
+    'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score',
+    'OneMinusNormEditDistance'
 ]
 
 _deprecated_msg = (
