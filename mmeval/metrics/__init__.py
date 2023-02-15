@@ -32,6 +32,7 @@ from .single_label import SingleLabelMetric
 from .snr import SignalNoiseRatio
 from .ssim import StructuralSimilarity
 from .voc_map import VOCMeanAP
+from .word_accuracy import WordAccuracy
 
 __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
@@ -42,7 +43,8 @@ __all__ = [
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
-    'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator'
+    'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
+    'WordAccuracy'
 ]
 
 _deprecated_msg = (
