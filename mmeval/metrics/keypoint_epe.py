@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 from collections import OrderedDict
-from typing import Dict, List
+from typing import Dict, Sequence
 
 from mmeval.core.base_metric import BaseMetric
 from .utils import calc_distances
@@ -48,7 +48,7 @@ class KeypointEndPointError(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import KeypointAUC
+        >>> from mmeval.metrics import KeypointEndPointError
         >>> import numpy as np
         >>> output = np.array([[[10.,  4.],
         ...     [10., 18.],
@@ -61,17 +61,14 @@ class KeypointEndPointError(BaseMetric):
         ...     [30., 30.],
         ...     [ 0., 10.]]])
         >>> keypoints_visible = np.array([[True, True, False, True, True]])
-        >>> num_keypoints = 15
-        >>> prediction = {'coords': output}
-        >>> groundtruth = {'coords': target, 'mask': keypoints_visible}
-        >>> predictions = [prediction]
-        >>> groundtruths = [groundtruth]
+        >>> predictions = [{'coords': output}]
+        >>> groundtruths = [{'coords': target, 'mask': keypoints_visible}]
         >>> epe_metric = KeypointEndPointError()
         >>> epe_metric(predictions, groundtruths)
         OrderedDict([('EPE', 11.535533905029297)])
     """
 
-    def add(self, predictions: List[Dict], groundtruths: List[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
+    def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Process one batch of predictions and groundtruths and add the
         intermediate results to `self._results`.
 
