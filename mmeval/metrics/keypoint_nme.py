@@ -67,43 +67,29 @@ class KeypointNME(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import KeypointNME
+        >>> from mmeval.metrics import KeypointNME
         >>> import numpy as np
         >>> aflw_dataset_meta = {
         ...     'dataset_name': 'aflw',
         ...     'num_keypoints': 19,
         ...     'sigmas': np.array([]),
         ... }
-        >>> def _generate_data(self,
-        ...                    batch_size: int = 1,
-        ...                    num_keypoints: int = 5,
-        ...                    norm_item: str = 'box_size'):
-        ...     predictions = []
-        ...     groundtruths = []
-        ...     for i in range(batch_size):
-        ...         keypoints = np.zeros((1, num_keypoints, 2))
-        ...         keypoints[0, i] = [0.5 * i, 0.5 * i]
-        ...         keypoints_visible = np.ones(
-        ...             (1, num_keypoints)).astype(bool)
-        ...         keypoints_visible[0, (2 * i) % 8] = False
-        ...         prediction = {'coords': keypoints}
-        ...         groundtruth = {
-        ...             'coords': keypoints,
-        ...             'mask': keypoints_visible,
-        ...             norm_item: np.random.random((1, 1)) * 20 * i
-        ...         }
-        ...         predictions.append(prediction)
-        ...         groundtruths.append(groundtruth)
-        ...     return predictions, groundtruths
+        >>> batch_size = 2
+        >>> predictions = [{
+        ...     'coords': np.zeros((1, 19, 2))
+        ... } for _ in range(batch_size)]
+        >>> groundtruths = [{
+        ...     'coords': np.zeros((1, 19, 2)) + 0.5,
+        ...     'mask': np.ones((1, 19)).astype(bool),
+        ...     'box_size': np.ones((1, 1)) * i * 20
+        ... } for i in range(batch_size)]
         >>> norm_item = 'box_size'
-        >>> predictions, groundtruths = _generate_data(
-        ...     batch_size=4, num_keypoints=19, norm_item=norm_item)
         >>> nme_metric = KeypointNME(
         ...     norm_mode='use_norm_item',
         ...     norm_item=norm_item,
         ...     dataset_meta=aflw_dataset_meta)
         >>> nme_metric(predictions, groundtruths)
-        OrderedDict([('NME', 0.0)])
+        rderedDict([('NME', 0.03535533892480951)])
     """
     DEFAULT_KEYPOINT_INDICES = {
         # horse10: corresponding to `nose` and `eye` keypoints
@@ -212,6 +198,8 @@ class KeypointNME(BaseMetric):
                                         normalize_factor)
             metric_results['NME'] = nme
         else:
+            assert self.dataset_meta is not None, 'When `norm_mode` is '\
+                '`keypoint_distance`, `dataset_meta` cannot be None.'
             if self.keypoint_indices is None:
                 # use default keypoint_indices in some datasets
                 dataset_name = self.dataset_meta['dataset_name']
@@ -251,6 +239,7 @@ class KeypointNME(BaseMetric):
         Returns:
             np.ndarray[N, 2]: normalized factor
         """
+        assert self.keypoint_indices is not None
         idx1, idx2 = self.keypoint_indices
 
         interocular = np.linalg.norm(

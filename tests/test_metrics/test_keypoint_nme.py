@@ -6,7 +6,6 @@ from mmeval.metrics import KeypointNME
 
 
 class TestKeypointNME(TestCase):
-
     coco_sigmas = np.array([
         0.026, 0.025, 0.025, 0.035, 0.035, 0.079, 0.079, 0.072, 0.072, 0.062,
         0.062, 0.107, 0.107, 0.087, 0.087, 0.089, 0.089
@@ -40,10 +39,9 @@ class TestKeypointNME(TestCase):
     def _generate_data(self,
                        batch_size: int = 1,
                        num_keypoints: int = 5,
-                       norm_item: str = 'box_size') -> tuple:
+                       norm_item: str = 'box_size'):
         """Generate data_batch and data_samples according to different
-        settings.
-        """
+        settings."""
         self.predictions = []
         self.groundtruths = []
 
@@ -146,6 +144,18 @@ class TestKeypointNME(TestCase):
             # raise AssertionError here
             _ = nme_metric(self.predictions, self.groundtruths)
 
+        # test when norm_mode = 'keypoint_distance'
+        # but the `dataset_meta` is None
+        with self.assertRaisesRegex(
+                AssertionError, 'When `norm_mode` is `keypoint_distance`, '
+                '`dataset_meta` cannot be None.'):
+            nme_metric = KeypointNME(
+                norm_mode='keypoint_distance', keypoint_indices=[0, 1])
+
+            self._generate_data()
+            # raise AssertionError here
+            _ = nme_metric(self.predictions, self.groundtruths)
+
         # test when norm_mode = 'keypoint_distance', `keypoint_indices` = None
         # but the dataset_name not in `DEFAULT_KEYPOINT_INDICES`
         with self.assertRaisesRegex(
@@ -166,7 +176,9 @@ class TestKeypointNME(TestCase):
                 'The keypoint indices used for normalization should be a pair.'
         ):
             nme_metric = KeypointNME(
-                norm_mode='keypoint_distance', keypoint_indices=[0, 1, 2])
+                norm_mode='keypoint_distance',
+                keypoint_indices=[0, 1, 2],
+                dataset_meta=self.coco_dataset_meta)
 
             self._generate_data()
             # raise AssertionError here
