@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 
-from mmeval.metrics import MattingMSE
+from mmeval import MattingMeanSquaredError as MattingMSE
 
 
 def test_matting_mse():

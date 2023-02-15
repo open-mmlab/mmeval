@@ -5,18 +5,18 @@
 import numpy as np
 import pytest
 
-from mmeval.metrics import SNR
+from mmeval.metrics import SignalNoiseRatio
 
 
 def test_snr_init():
     with pytest.raises(AssertionError):
-        SNR(crop_border=0, input_order='HH')
+        SignalNoiseRatio(crop_border=0, input_order='HH')
 
     with pytest.raises(AssertionError):
-        SNR(crop_border=0, convert_to='ABC')
+        SignalNoiseRatio(crop_border=0, convert_to='ABC')
 
     with pytest.raises(AssertionError):
-        SNR(crop_border=0, convert_to='y', channel_order='qwe')
+        SignalNoiseRatio(crop_border=0, convert_to='y', channel_order='qwe')
 
 
 @pytest.mark.parametrize(
@@ -39,11 +39,13 @@ def test_snr_init():
         ({'input_order': 'HWC', 'convert_to': 'Y'}, [np.ones((32, 32, 3))],
          [np.ones((32, 32, 3)) * 2], 26.290039980499536),
         ({}, [np.ones((32, 32))], [np.ones((32, 32))], float('inf')),
-        ({}, [np.zeros((32, 32))], [np.ones((32, 32))], 0)
+        ({}, [np.zeros((32, 32))], [np.ones((32, 32))], 0),
+        ({}, [np.ones((5, 3, 32, 32))], [np.ones((5, 3, 32, 32)) * 2],
+         6.020599913279624)
     ]
 )
 def test_snr(metric_kwargs, img1, img2, results):
-    snr = SNR(**metric_kwargs)
+    snr = SignalNoiseRatio(**metric_kwargs)
     snr_results = snr(img1, img2)
     assert isinstance(snr_results, dict)
     np.testing.assert_almost_equal(snr_results['snr'], results)

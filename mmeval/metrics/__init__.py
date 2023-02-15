@@ -1,35 +1,80 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
+import warnings
+
 from .accuracy import Accuracy
 from .ava_map import AVAMeanAP
 from .bleu import BLEU
-from .coco_detection import COCODetectionMetric
+from .coco_detection import COCODetection
 from .connectivity_error import ConnectivityError
+from .dota_map import DOTAMeanAP
 from .end_point_error import EndPointError
-from .f_metric import F1Metric
+from .f1_score import F1Score
 from .gradient_error import GradientError
 from .hmean_iou import HmeanIoU
 from .instance_seg import InstanceSeg
-from .mae import MAE
-from .matting_mse import MattingMSE
+from .mae import MeanAbsoluteError
+from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
-from .mse import MSE
+from .mse import MeanSquaredError
 from .multi_label import AveragePrecision, MultiLabelMetric
 from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .proposal_recall import ProposalRecall
-from .psnr import PSNR
-from .sad import SAD
+from .psnr import PeakSignalNoiseRatio
+from .rouge import ROUGE
+from .sad import SumAbsoluteDifferences
 from .single_label import SingleLabelMetric
-from .snr import SNR
-from .ssim import SSIM
+from .snr import SignalNoiseRatio
+from .ssim import StructuralSimilarity
 from .voc_map import VOCMeanAP
 
 __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
-    'F1Metric', 'HmeanIoU', 'SingleLabelMetric', 'COCODetectionMetric',
-    'PCKAccuracy', 'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
-    'PSNR', 'MAE', 'MSE', 'SSIM', 'SNR', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'InstanceSeg', 'SAD',
-    'GradientError', 'MattingMSE', 'ConnectivityError'
+    'F1Score', 'HmeanIoU', 'SingleLabelMetric', 'COCODetection', 'PCKAccuracy',
+    'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
+    'PeakSignalNoiseRatio', 'MeanAbsoluteError', 'MeanSquaredError',
+    'StructuralSimilarity', 'SignalNoiseRatio', 'MultiLabelMetric',
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'InstanceSeg', 'DOTAMeanAP',
+    'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
+    'ConnectivityError', 'ROUGE'
 ]
+
+_deprecated_msg = (
+    '`{n1}` is a deprecated metric alias for `{n2}`. '
+    'To silence this warning, use `{n2}` by itself. '
+    'The deprecated metric alias would be removed in mmeval 1.0.0!')
+
+__deprecated_metric_names__ = {
+    'COCODetectionMetric': 'COCODetection',
+    'F1Metric': 'F1Score',
+    'MAE': 'MeanAbsoluteError',
+    'MSE': 'MeanSquaredError',
+    'PSNR': 'PeakSignalNoiseRatio',
+    'SNR': 'SignalNoiseRatio',
+    'SSIM': 'StructuralSimilarity',
+    'SAD': 'SumAbsoluteDifferences',
+    'MattingMSE': 'MattingMeanSquaredError'
+}
+
+
+def __getattr__(attr: str):
+    """Customization of module attribute access.
+
+    Thanks to pep-0562, we can customize moudel's attribute access
+    via ``__getattr__`` to implement deprecation warnings.
+
+    With this function, we can implement the following features:
+
+        >>> from mmeval.metrics import COCODetectionMetric
+        <stdin>:1: DeprecationWarning: `COCODetectionMetric` is a deprecated
+        metric alias for `COCODetection`. To silence this warning, use
+        `COCODetection` by itself. The deprecated metric alias would be
+        removed in mmeval 1.0.0!
+    """
+    if attr in __deprecated_metric_names__:
+        message = _deprecated_msg.format(
+            n1=attr, n2=__deprecated_metric_names__[attr])
+        warnings.warn(message, DeprecationWarning, stacklevel=2)
+        return globals()[__deprecated_metric_names__[attr]]
+    raise AttributeError(f'module {__name__!r} has no attribute {attr!r}')
