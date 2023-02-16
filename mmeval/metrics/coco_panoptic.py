@@ -13,8 +13,10 @@ from mmeval.core.base_metric import BaseMetric
 from mmeval.fileio import get_local_path, load, get
 from mmeval.metrics.utils.coco_wrapper import COCOPanoptic
 from mmeval.metrics._vendor.panopticapi import panopticapi as panopticapi
-from panopticapi.evaluation import VOID, PQStat, OFFSET
-from panopticapi.utils import id2rgb, rgb2id
+from mmeval.metrics._vendor.panopticapi.panopticapi.evaluation import \
+VOID, PQStat, OFFSET
+from  mmeval.metrics._vendor.panopticapi.panopticapi.utils import \
+id2rgb, rgb2id
 
 
 class COCOPanopticMetric(BaseMetric):
@@ -238,7 +240,7 @@ class COCOPanopticMetric(BaseMetric):
                     }
                     new_cat_list.append(cat_info)
                 categories = new_cat_list
-            if 'id' not in categories[0]:
+            if 'id' not in categories[0].keys():
                 for i, item in enumerate(categories):
                     item['id'] = i
 
@@ -389,8 +391,8 @@ class COCOPanopticMetric(BaseMetric):
                         'category_id']:
                     continue
 
-                union = pred_segms[pred_label]['area'] + gt_segms[gt_label]
-                ['area'] - intersection - gt_pred_map.get((VOID, pred_label), 0)
+                union = pred_segms[pred_label]['area'] + gt_segms[gt_label][
+                    'area'] - intersection - gt_pred_map.get((VOID, pred_label), 0)
                 iou = intersection / union
                 if iou > 0.5:
                     pq_stat[gt_segms[gt_label]['category_id']].tp += 1
@@ -520,7 +522,8 @@ class COCOPanopticMetric(BaseMetric):
                 thing_classes_list = self.dataset_meta['thing_classes']
                 isthing = 1 if name in thing_classes_list else 0
                 cats.append({'id': id, 'name': name, 'isthing': isthing})
-            self.categories = {el['id']: el for el in cats}
+
+            self.categories = cats
 
         assert isinstance(self.gt_folder, str)
         assert isinstance(self.pred_folder, str)

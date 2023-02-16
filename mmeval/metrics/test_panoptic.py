@@ -3,7 +3,7 @@ from PIL import ImageDraw
 import numpy as np
 import os
 import sys
-sys.path.append('D:\\1课程资料\\大四上\\实习\\mmlab比赛\\mmeval')
+sys.path.append('/home/PJLAB/liangyiwen/Even/code/mmeval_exp/mmeval')
 
 from coco_panoptic import COCOPanopticMetric
 
