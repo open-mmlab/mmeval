@@ -5,7 +5,7 @@ import tempfile
 from collections import Iterable
 from io import BytesIO
 from json import dump
-from typing import Dict, Optional, Sequence, cast
+from typing import Dict, Optional, Sequence
 import multiprocessing
 from PIL import Image
 
@@ -518,7 +518,7 @@ class COCOPanopticMetric(BaseMetric):
                 - pq_results(dict): The Panoptic Quality results.
                 - classwise_results(dict): The classwise Panoptic
                     Quality.results. The keys are class names and the values
-                    are metrics. Defaults to None.
+                    are metrics.
                 - parse_results(dict): The parsed Panoptic Quality results.
         """
         metric_results = []
@@ -633,6 +633,7 @@ class COCOPanopticMetric(BaseMetric):
 
         metrics = [('All', None), ('Things', True), ('Stuff', False)]
         pq_results = {}
+        classwise_results = {}
 
         for name, isthing in metrics:
             pq_results[name], classwise_results = pq_stat.pq_average(
@@ -641,7 +642,6 @@ class COCOPanopticMetric(BaseMetric):
             if name == 'All':
                 pq_results['classwise'] = classwise_results
 
-        classwise_results = {}
         if self.classwise:
             assert isinstance(self.dataset_meta['classes'], Iterable)
             classwise_results = {

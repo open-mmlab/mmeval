@@ -13,7 +13,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import os
-import sys
 import argparse
 import numpy as np
 from collections import defaultdict

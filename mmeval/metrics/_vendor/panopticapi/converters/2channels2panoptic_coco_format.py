@@ -21,13 +21,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import os
-import sys
 import argparse
 import numpy as np
 import json
 import time
 import multiprocessing
-import itertools
 
 import PIL.Image as Image
 
@@ -58,9 +56,9 @@ def convert_single_core(proc_id, image_set, categories, source_folder, segmentat
 
         id_generator = IdGenerator(categories)
 
-        l = np.unique(pan)
+        lst = np.unique(pan)
         segm_info = []
-        for el in l:
+        for el in lst:
             sem = el // OFFSET
             if sem == VOID:
                 continue

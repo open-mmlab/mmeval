@@ -4,8 +4,6 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 import os
-import sys
-import json
 import glob
 import numpy as np
 import PIL.Image as Image
