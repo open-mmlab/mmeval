@@ -19,7 +19,7 @@ except ImportError:
     HAS_COCOAPI = False
 
 
-class COCODetectionMetric(BaseMetric):
+class COCODetection(BaseMetric):
     """COCO object detection task evaluation metric.
 
     Evaluate AR, AP, and mAP for detection tasks including proposal/box
@@ -58,7 +58,7 @@ class COCODetectionMetric(BaseMetric):
 
     Examples:
         >>> import numpy as np
-        >>> from mmeval import COCODetectionMetric
+        >>> from mmeval import COCODetection
         >>> try:
         >>>     from mmeval.metrics.utils.coco_wrapper import mask_util
         >>> except ImportError as e:
@@ -69,7 +69,7 @@ class COCODetectionMetric(BaseMetric):
         ...     'CLASSES': tuple([str(i) for i in range(num_classes)])
         ... }
         >>>
-        >>> coco_det_metric = COCODetectionMetric(
+        >>> coco_det_metric = COCODetection(
         ...     dataset_meta=fake_dataset_metas,
         ...     metric=['bbox', 'segm']
         ... )
@@ -92,7 +92,7 @@ class COCODetectionMetric(BaseMetric):
         ...         bbox = bbox.astype(np.int32)
         ...         box_mask = (np.random.rand(
         ...             bbox[3] - bbox[1],
-        ...             bbox[2] - bbox[0]) > 0.3).astype(np.int)
+        ...             bbox[2] - bbox[0]) > 0.3).astype(np.int32)
         ...         mask[bbox[1]:bbox[3], bbox[0]:bbox[2]] = box_mask
         ...         masks.append(
         ...             mask_util.encode(
@@ -442,11 +442,11 @@ class COCODetectionMetric(BaseMetric):
 
         Args:
             predictions (Sequence[dict]): Refer to
-                :class:`COCODetectionMetric.add`.
+                :class:`COCODetection.add`.
         """
         assert self._coco_api is not None, 'The `ann_file` should be ' \
-            'passesd when use the `COCODetectionMetric.add_predictions` ' \
-            'method, otherwisw use the `COCODetectionMetric.add` instead!'
+            'passesd when use the `COCODetection.add_predictions` ' \
+            'method, otherwisw use the `COCODetection.add` instead!'
         self.add(predictions, groundtruths=[{}] * len(predictions))
 
     def __call__(self, *args, **kwargs) -> Dict:
@@ -630,3 +630,8 @@ class COCODetectionMetric(BaseMetric):
         if tmp_dir is not None:
             tmp_dir.cleanup()
         return eval_results
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+COCODetectionMetric = COCODetection

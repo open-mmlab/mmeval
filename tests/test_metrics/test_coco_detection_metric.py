@@ -6,7 +6,7 @@ import tempfile
 from json import dump
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.metrics import COCODetectionMetric
+from mmeval.metrics import COCODetection
 from mmeval.utils import try_import
 
 coco_wrapper = try_import('mmeval.metrics.utils.coco_wrapper')
@@ -155,7 +155,7 @@ def _gen_masks(bboxes, img_w=256, img_h=256):
         mask = np.zeros((img_h, img_w))
         bbox = bbox.astype(np.int32)
         box_mask = (np.random.rand(bbox[3] - bbox[1], bbox[2] - bbox[0]) >
-                    0.3).astype(np.int)
+                    0.3).astype(np.int32)
         mask[bbox[1]:bbox[3], bbox[0]:bbox[2]] = box_mask
         masks.append(
             coco_wrapper.mask_util.encode(
@@ -235,7 +235,7 @@ def test_box_metric_interface(metric_kwargs):
     fake_dataset_metas = {
         'CLASSES': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         metric=metric, dataset_meta=fake_dataset_metas, **metric_kwargs)
     assert isinstance(coco_det_metric, BaseMetric)
 
@@ -280,7 +280,7 @@ def test_segm_metric_interface(metric_kwargs):
     fake_dataset_metas = {
         'CLASSES': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         metric=metric, dataset_meta=fake_dataset_metas, **metric_kwargs)
     assert isinstance(coco_det_metric, BaseMetric)
 
@@ -302,20 +302,20 @@ def test_segm_metric_interface(metric_kwargs):
     coco_wrapper is None, reason='coco_wrapper is not available!')
 def test_metric_invalid_usage():
     with pytest.raises(KeyError):
-        COCODetectionMetric(metric='xxx')
+        COCODetection(metric='xxx')
 
     with pytest.raises(TypeError):
-        COCODetectionMetric(iou_thrs=1)
+        COCODetection(iou_thrs=1)
 
     with pytest.raises(AssertionError):
-        COCODetectionMetric(format_only=True)
+        COCODetection(format_only=True)
 
     num_classes = 10
     # Avoid some potential error
     fake_dataset_metas = {
         'CLASSES': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = COCODetectionMetric(dataset_meta=fake_dataset_metas)
+    coco_det_metric = COCODetection(dataset_meta=fake_dataset_metas)
 
     with pytest.raises(KeyError):
         prediction = _gen_prediction(num_classes=num_classes)
@@ -341,7 +341,7 @@ def test_compute_metric():
     fake_dataset_metas = dict(CLASSES=['car', 'bicycle'])
 
     # test single coco dataset evaluation
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         ann_file=fake_json_file,
         classwise=False,
         outfile_prefix=f'{tmp_dir.name}/test',
@@ -360,7 +360,7 @@ def test_compute_metric():
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
 
     # test box and segm coco dataset evaluation
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         ann_file=fake_json_file,
         classwise=False,
         metric=['bbox', 'segm'],
@@ -388,7 +388,7 @@ def test_compute_metric():
     assert osp.isfile(osp.join(tmp_dir.name, 'test.segm.json'))
 
     # test classwise result evaluation
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         ann_file=fake_json_file,
         classwise=True,
         outfile_prefix=f'{tmp_dir.name}/test',
@@ -409,7 +409,7 @@ def test_compute_metric():
     assert eval_results == target
 
     # test proposal
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         ann_file=fake_json_file,
         metric='proposal',
         classwise=False,
@@ -428,7 +428,7 @@ def test_compute_metric():
     assert eval_results == target
 
     # test empty results
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         ann_file=fake_json_file,
         classwise=False,
         outfile_prefix=f'{tmp_dir.name}/test',
@@ -439,7 +439,7 @@ def test_compute_metric():
     assert eval_results == dict()
 
     # test format only evaluation
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         ann_file=fake_json_file,
         classwise=False,
         format_only=True,
@@ -452,7 +452,7 @@ def test_compute_metric():
     # test evaluate metric without loading ann_file
     # the gt instance area based on mask
     dummy_gt = _create_dummy_gts()
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         outfile_prefix=f'{tmp_dir.name}/test',
         metric=['bbox', 'segm'],
         dataset_meta=fake_dataset_metas,
@@ -479,7 +479,7 @@ def test_compute_metric():
 
     # test evaluate metric without loading ann_file
     # the gt instance area based on bounding box
-    coco_det_metric = COCODetectionMetric(
+    coco_det_metric = COCODetection(
         outfile_prefix=f'{tmp_dir.name}/test',
         metric=['bbox', 'segm'],
         dataset_meta=fake_dataset_metas,

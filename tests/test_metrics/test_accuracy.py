@@ -97,7 +97,7 @@ def test_metric_interface_jnp():
 
 
 @pytest.mark.parametrize(
-    argnames=['metric_kwargs', 'preditions', 'labels', 'results'],
+    argnames=['metric_kwargs', 'predictions', 'labels', 'results'],
     argvalues=[
         ({}, [0, 2, 1, 3], [0, 1, 2, 3], {'top1': 0.5}),
         (
@@ -124,9 +124,9 @@ def test_metric_interface_jnp():
         )
     ]
 )
-def test_metric_accurate(metric_kwargs, preditions, labels, results):
+def test_metric_accurate(metric_kwargs, predictions, labels, results):
     accuracy = Accuracy(**metric_kwargs)
-    assert accuracy(np.asarray(preditions), np.asarray(labels)) == results
+    assert accuracy(np.asarray(predictions), np.asarray(labels)) == results
 
 
 @pytest.mark.skipif(torch is None, reason='PyTorch is not available!')
