@@ -53,3 +53,4 @@ Metrics
    KeypointEndPointError
    KeypointAUC
    KeypointNME
+   WordAccuracy
