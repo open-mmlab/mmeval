@@ -49,6 +49,7 @@ Metrics
    DOTAMeanAP
    ROUGE
    NaturalImageQualityEvaluator
+   OneMinusNormEditDistance
    Perplexity
    KeypointEndPointError
    KeypointAUC
