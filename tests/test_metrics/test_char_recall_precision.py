@@ -20,3 +20,9 @@ def test_char_recall_precision_metric(letter_case, recall, precision):
     res = metric(['helL', 'HEL'], ['hello', 'HELLO'])
     assert abs(res['recall'] - recall) < 1e-7
     assert abs(res['precision'] - precision) < 1e-7
+    metric.reset()
+    for pred, label in zip(['helL', 'HEL'], ['hello', 'HELLO']):
+        metric.add([pred], [label])
+    res = metric.compute()
+    assert abs(res['recall'] - recall) < 1e-7
+    assert abs(res['precision'] - precision) < 1e-7
