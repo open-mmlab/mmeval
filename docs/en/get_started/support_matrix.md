@@ -16,27 +16,26 @@ The following table lists the metrics implemented by MMEval and the correspondin
 MMEval tested with PyTorch 1.6+, TensorFlow 2.4+, Paddle 2.2+ and OneFlow 0.8+.
 ```
 
-|                                                          Metric                                                          | numpy.ndarray | torch.Tensor | tensorflow.Tensor | paddle.Tensor | oneflow.Tensor |
-| :----------------------------------------------------------------------------------------------------------------------: | :-----------: | :----------: | :---------------: | :-----------: | :------------: |
-|                    [Accuracy](../api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                     |       ✔       |      ✔       |         ✔         |       ✔       |       ✔        |
-|       [SingleLabelMetric](../api/generated/mmeval.metrics.SingleLabelMetric.html#mmeval.metrics.SingleLabelMetric)       |       ✔       |      ✔       |                   |               |       ✔        |
-|        [MultiLabelMetric](../api/generated/mmeval.metrics.MultiLabelMetric.html#mmeval.metrics.MultiLabelMetric)         |       ✔       |      ✔       |                   |               |       ✔        |
-|        [AveragePrecision](../api/generated/mmeval.metrics.AveragePrecision.html#mmeval.metrics.AveragePrecision)         |       ✔       |      ✔       |                   |               |       ✔        |
-|                      [MeanIoU](../api/generated/mmeval.metrics.MeanIoU.html#mmeval.metrics.MeanIoU)                      |       ✔       |      ✔       |         ✔         |       ✔       |       ✔        |
-|                   [VOCMeanAP](../api/generated/mmeval.metrics.VOCMeanAP.html#mmeval.metrics.VOCMeanAP)                   |       ✔       |              |                   |               |                |
-|                   [OIDMeanAP](../api/generated/mmeval.metrics.OIDMeanAP.html#mmeval.metrics.OIDMeanAP)                   |       ✔       |              |                   |               |                |
-|             [COCODetection](../api/generated/mmeval.metrics.COCODetection.html#mmeval.metrics.COCODetection)             |       ✔       |              |                   |               |                |
-|           [ProposalRecall](../api/generated/mmeval.metrics.ProposalRecall.html#mmeval.metrics.ProposalRecall)            |       ✔       |              |                   |               |                |
-|                      [F1Score](../api/generated/mmeval.metrics.F1Score.html#mmeval.metrics.F1Score)                      |       ✔       |      ✔       |                   |               |       ✔        |
-|                    [HmeanIoU](../api/generated/mmeval.metrics.HmeanIoU.html#mmeval.metrics.HmeanIoU)                     |       ✔       |              |                   |               |                |
-|                [PCKAccuracy](../api/generated/mmeval.metrics.PCKAccuracy.html#mmeval.metrics.PCKAccuracy)                |       ✔       |              |                   |               |                |
-|          [MpiiPCKAccuracy](../api/generated/mmeval.metrics.MpiiPCKAccuracy.html#mmeval.metrics.MpiiPCKAccuracy)          |       ✔       |              |                   |               |                |
-|        [JhmdbPCKAccuracy](../api/generated/mmeval.metrics.JhmdbPCKAccuracy.html#mmeval.metrics.JhmdbPCKAccuracy)         |       ✔       |              |                   |               |                |
-|             [EndPointError](../api/generated/mmeval.metrics.EndPointError.html#mmeval.metrics.EndPointError)             |       ✔       |      ✔       |                   |               |       ✔        |
-|                   [AVAMeanAP](../api/generated/mmeval.metrics.AVAMeanAP.html#mmeval.metrics.AVAMeanAP)                   |       ✔       |              |                   |               |                |
-|  [StructuralSimilarity](../api/generated/mmeval.metrics.StructuralSimilarity.html#mmeval.metrics.StructuralSimilarity)   |       ✔       |              |                   |               |                |
-|        [SignalNoiseRatio](../api/generated/mmeval.metrics.SignalNoiseRatio.html#mmeval.metrics.SignalNoiseRatio)         |       ✔       |              |                   |               |                |
-|  [PeakSignalNoiseRatio](../api/generated/mmeval.metrics.PeakSignalNoiseRatio.html#mmeval.metrics.PeakSignalNoiseRatio)   |       ✔       |              |                   |               |                |
-|       [MeanAbsoluteError](../api/generated/mmeval.metrics.MeanAbsoluteError.html#mmeval.metrics.MeanAbsoluteError)       |       ✔       |              |                   |               |                |
-|        [MeanSquaredError](../api/generated/mmeval.metrics.MeanSquaredError.html#mmeval.metrics.MeanSquaredError)         |       ✔       |              |                   |               |                |
-| [KeypointEndPointError](../api/generated/mmeval.metrics.KeypointEndPointError.html#mmeval.metrics.KeypointEndPointError) |       ✔       |              |                   |               |                |
+|                                                        Metric                                                         | numpy.ndarray | torch.Tensor | tensorflow.Tensor | paddle.Tensor | oneflow.Tensor |
+| :-------------------------------------------------------------------------------------------------------------------: | :-----------: | :----------: | :---------------: | :-----------: | :------------: |
+|                   [Accuracy](../api/generated/mmeval.metrics.Accuracy.html#mmeval.metrics.Accuracy)                   |       ✔       |      ✔       |         ✔         |       ✔       |       ✔        |
+|     [SingleLabelMetric](../api/generated/mmeval.metrics.SingleLabelMetric.html#mmeval.metrics.SingleLabelMetric)      |       ✔       |      ✔       |                   |               |       ✔        |
+|       [MultiLabelMetric](../api/generated/mmeval.metrics.MultiLabelMetric.html#mmeval.metrics.MultiLabelMetric)       |       ✔       |      ✔       |                   |               |       ✔        |
+|       [AveragePrecision](../api/generated/mmeval.metrics.AveragePrecision.html#mmeval.metrics.AveragePrecision)       |       ✔       |      ✔       |                   |               |       ✔        |
+|                    [MeanIoU](../api/generated/mmeval.metrics.MeanIoU.html#mmeval.metrics.MeanIoU)                     |       ✔       |      ✔       |         ✔         |       ✔       |       ✔        |
+|                 [VOCMeanAP](../api/generated/mmeval.metrics.VOCMeanAP.html#mmeval.metrics.VOCMeanAP)                  |       ✔       |              |                   |               |                |
+|                 [OIDMeanAP](../api/generated/mmeval.metrics.OIDMeanAP.html#mmeval.metrics.OIDMeanAP)                  |       ✔       |              |                   |               |                |
+|           [COCODetection](../api/generated/mmeval.metrics.COCODetection.html#mmeval.metrics.COCODetection)            |       ✔       |              |                   |               |                |
+|          [ProposalRecall](../api/generated/mmeval.metrics.ProposalRecall.html#mmeval.metrics.ProposalRecall)          |       ✔       |              |                   |               |                |
+|                    [F1Score](../api/generated/mmeval.metrics.F1Score.html#mmeval.metrics.F1Score)                     |       ✔       |      ✔       |                   |               |       ✔        |
+|                   [HmeanIoU](../api/generated/mmeval.metrics.HmeanIoU.html#mmeval.metrics.HmeanIoU)                   |       ✔       |              |                   |               |                |
+|              [PCKAccuracy](../api/generated/mmeval.metrics.PCKAccuracy.html#mmeval.metrics.PCKAccuracy)               |       ✔       |              |                   |               |                |
+|        [MpiiPCKAccuracy](../api/generated/mmeval.metrics.MpiiPCKAccuracy.html#mmeval.metrics.MpiiPCKAccuracy)         |       ✔       |              |                   |               |                |
+|       [JhmdbPCKAccuracy](../api/generated/mmeval.metrics.JhmdbPCKAccuracy.html#mmeval.metrics.JhmdbPCKAccuracy)       |       ✔       |              |                   |               |                |
+|           [EndPointError](../api/generated/mmeval.metrics.EndPointError.html#mmeval.metrics.EndPointError)            |       ✔       |      ✔       |                   |               |       ✔        |
+|                 [AVAMeanAP](../api/generated/mmeval.metrics.AVAMeanAP.html#mmeval.metrics.AVAMeanAP)                  |       ✔       |              |                   |               |                |
+| [StructuralSimilarity](../api/generated/mmeval.metrics.StructuralSimilarity.html#mmeval.metrics.StructuralSimilarity) |       ✔       |              |                   |               |                |
+|       [SignalNoiseRatio](../api/generated/mmeval.metrics.SignalNoiseRatio.html#mmeval.metrics.SignalNoiseRatio)       |       ✔       |              |                   |               |                |
+| [PeakSignalNoiseRatio](../api/generated/mmeval.metrics.PeakSignalNoiseRatio.html#mmeval.metrics.PeakSignalNoiseRatio) |       ✔       |              |                   |               |                |
+|     [MeanAbsoluteError](../api/generated/mmeval.metrics.MeanAbsoluteError.html#mmeval.metrics.MeanAbsoluteError)      |       ✔       |              |                   |               |                |
+|       [MeanSquaredError](../api/generated/mmeval.metrics.MeanSquaredError.html#mmeval.metrics.MeanSquaredError)       |       ✔       |              |                   |               |                |
