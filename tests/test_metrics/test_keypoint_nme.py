@@ -51,12 +51,13 @@ class TestKeypointNME(TestCase):
             keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
             keypoints_visible[0, (2 * i) % 8] = False
 
-            prediction = {'coords': keypoints}
             groundtruth = {
                 'coords': keypoints,
                 'mask': keypoints_visible,
                 norm_item: np.random.random((1, 1)) * 20 * i
             }
+            keypoints[0, i] += [0.1, 0.1]
+            prediction = {'coords': keypoints}
 
             self.predictions.append(prediction)
             self.groundtruths.append(groundtruth)
@@ -81,7 +82,14 @@ class TestKeypointNME(TestCase):
         )
         nme_results = nme_metric(self.predictions, self.groundtruths)
         target = {'NME': 0.0}
-        self.assertDictEqual(nme_results, target)
+        self.assertAlmostEqual(nme_results, target)
+
+        # test with multiple ``add`` followed by ``compute``
+        nme_metric._results = []
+        nme_metric.add(self.predictions[:2], self.groundtruths[:2])
+        nme_metric.add(self.predictions[2:], self.groundtruths[2:])
+        nme_results = nme_metric.compute_metric(nme_metric._results)
+        self.assertAlmostEqual(nme_results, target)
 
         # test when norm_mode = 'keypoint_distance'
         # when `keypoint_indices = None`,
@@ -99,7 +107,7 @@ class TestKeypointNME(TestCase):
 
         nme_results = nme_metric(self.predictions, self.groundtruths)
         target = {'NME': 0.0}
-        self.assertDictEqual(nme_results, target)
+        self.assertAlmostEqual(nme_results, target)
 
         # test when norm_mode = 'keypoint_distance'
         # specify custom `keypoint_indices`
@@ -112,7 +120,7 @@ class TestKeypointNME(TestCase):
 
         nme_results = nme_metric(self.predictions, self.groundtruths)
         target = {'NME': 0.0}
-        self.assertDictEqual(nme_results, target)
+        self.assertAlmostEqual(nme_results, target)
 
     def test_exceptions_and_warnings(self):
         """test exceptions and warnings."""

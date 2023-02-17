@@ -45,14 +45,14 @@ class KeypointNME(BaseMetric):
         - number of keypoint dimensions: D (typically D = 2)
 
     Args:
-        norm_mode (str): The normalization mode. There are two valid modes:
-            `'use_norm_item'` and `'keypoint_distance'`.
-            When set as `'use_norm_item'`, should specify the argument
-            `norm_item`, which represents the item in the datainfo that
-            will be used as the normalization factor.
-            When set as `'keypoint_distance'`, should specify the argument
-            `keypoint_indices` that are used to calculate the keypoint
-            distance as the normalization factor.
+        norm_mode (str): The normalization mode, which should be one of the
+            following options:
+                - ``'use_norm_item'``: Should specify the argument `norm_item`,
+                    which represents the item in the datainfo that will be used
+                    as the normalization factor.
+                - ``'keypoint_distance'``: Should specify the argument
+                    `keypoint_indices` that are used to calculate the keypoint
+                    distance as the normalization factor.
         norm_item (str, optional): The item used as the normalization factor.
             For example, `'box_size'` in `'AFLWDataset'`. Only valid when
             ``norm_mode`` is ``use_norm_item``.
@@ -74,6 +74,10 @@ class KeypointNME(BaseMetric):
         ...     'num_keypoints': 19,
         ...     'sigmas': np.array([]),
         ... }
+        >>> nme_metric = KeypointNME(
+        ...     norm_mode='use_norm_item',
+        ...     norm_item=norm_item,
+        ...     dataset_meta=aflw_dataset_meta)
         >>> batch_size = 2
         >>> predictions = [{
         ...     'coords': np.zeros((1, 19, 2))
@@ -84,12 +88,8 @@ class KeypointNME(BaseMetric):
         ...     'box_size': np.ones((1, 1)) * i * 20
         ... } for i in range(batch_size)]
         >>> norm_item = 'box_size'
-        >>> nme_metric = KeypointNME(
-        ...     norm_mode='use_norm_item',
-        ...     norm_item=norm_item,
-        ...     dataset_meta=aflw_dataset_meta)
         >>> nme_metric(predictions, groundtruths)
-        rderedDict([('NME', 0.03535533892480951)])
+        OrderedDict([('NME', 0.03535533892480951)])
     """
     DEFAULT_KEYPOINT_INDICES = {
         # horse10: corresponding to `nose` and `eye` keypoints
@@ -141,11 +141,11 @@ class KeypointNME(BaseMetric):
                 - mask (np.ndarray, [1, K]): ground truth keypoints_visible
 
                 There are some optional keys as well:
-                    - bboxes: it is necessary when ``self.norm_item`` is
-                        `'bbox_size'`
-                    - ``self.norm_item``: it is necessary when
-                        ``self.norm_item`` is neither ``None`` nor
-                        `'bbox_size'`
+
+                - bboxes: it is necessary when ``self.norm_item`` is
+                  `'bbox_size'`
+                - ``self.norm_item``: it is necessary when
+                  ``self.norm_item`` is neither ``None`` nor `'bbox_size'`
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             if self.norm_item:
