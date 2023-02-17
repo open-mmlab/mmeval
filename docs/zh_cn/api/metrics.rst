@@ -48,3 +48,4 @@ Metrics
    ConnectivityError
    DOTAMeanAP
    ROUGE
+   COCOKeyPointDetection

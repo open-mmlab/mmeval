@@ -6,6 +6,7 @@ from .accuracy import Accuracy
 from .ava_map import AVAMeanAP
 from .bleu import BLEU
 from .coco_detection import COCODetection
+from .coco_pose import COCOKeyPointDetection
 from .connectivity_error import ConnectivityError
 from .dota_map import DOTAMeanAP
 from .end_point_error import EndPointError
@@ -36,7 +37,7 @@ __all__ = [
     'StructuralSimilarity', 'SignalNoiseRatio', 'MultiLabelMetric',
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
-    'ConnectivityError', 'ROUGE'
+    'ConnectivityError', 'ROUGE', 'COCOKeyPointDetection'
 ]
 
 _deprecated_msg = (
@@ -46,6 +47,7 @@ _deprecated_msg = (
 
 __deprecated_metric_names__ = {
     'COCODetectionMetric': 'COCODetection',
+    'COCOPoseMetric': 'COCOKeyPointDetection',
     'F1Metric': 'F1Score',
     'MAE': 'MeanAbsoluteError',
     'MSE': 'MeanSquaredError',
