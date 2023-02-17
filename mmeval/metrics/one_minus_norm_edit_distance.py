@@ -25,8 +25,9 @@ class OneMinusNormEditDistance(BaseMetric):
                      characters.
             Usually, it only works for English characters. Defaults to
             'unchanged'.
-        valid_symbol (str): Valid characters. Defaults to
-            '[^A-Z^a-z^0-9^\u4e00-\u9fa5]'.
+        valid_symbol (str): A regular expression to filter out invalid or
+            not cared characters. Defaults to '[^A-Z^a-z^0-9^\u4e00-\u9fa5]'.
+        **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Example:
         >>> from mmeval import OneMinusNormEditDistance

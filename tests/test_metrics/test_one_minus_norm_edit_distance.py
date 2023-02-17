@@ -8,16 +8,10 @@ def test_init():
         OneMinusNormEditDistance(letter_case='fake')
 
 
-def test_one_minus_norm_edit_distance_metric():
-    metric = OneMinusNormEditDistance(letter_case='lower')
+@pytest.mark.parametrize(
+    argnames=['letter_case', 'expected'],
+    argvalues=[('unchanged', 0.6), ('upper', 0.7), ('lower', 0.7)])
+def test_one_minus_norm_edit_distance_metric(letter_case, expected):
+    metric = OneMinusNormEditDistance(letter_case=letter_case)
     res = metric(['helL', 'HEL'], ['hello', 'HELLO'])
-    assert abs(res['1-N.E.D'] - 0.7) < 1e-7
-    metric = OneMinusNormEditDistance(letter_case='upper')
-    res = metric(['helL', 'HEL'], ['hello', 'HELLO'])
-    assert abs(res['1-N.E.D'] - 0.7) < 1e-7
-    metric = OneMinusNormEditDistance()
-    res = metric(['helL', 'HEL'], ['hello', 'HELLO'])
-    assert abs(res['1-N.E.D'] - 0.6) < 1e-7
-
-
-test_one_minus_norm_edit_distance_metric()
+    assert abs(res['1-N.E.D'] - expected) < 1e-7
