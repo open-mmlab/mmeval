@@ -83,34 +83,35 @@ def format_data(
         raise NotImplementedError(f'Data type of {type(data[0])}'
                                   'is not supported.')
 
-    try:
-        # try stack scores or one-hot indices directly
+    shapes = {d.shape for d in data}
+    if len(shapes) == 1:
+        # stack scores or one-hot indices directly if have same shapes
         formated_data = stack_func(data)
-        # all assertions below is to find labels that are
-        # raw indices which should be caught in exception
-        # to convert to one-hot indices.
-        #
-        # 1. all raw indices has only 1 dims
-        assert formated_data.ndim == 2
-        # 2. all raw indices has the same dims
-        assert formated_data.shape[1] == num_classes
-        # 3. all raw indices has the same dims as num_classes
-        # then max indices should greater than 1 for num_classes > 2
-        assert formated_data.max() <= 1
-        # 4. corner case, num_classes=2, then one-hot indices
-        # and raw indices are undistinguishable, for instance:
-        #   [[0, 1], [0, 1]] can be one-hot indices of 2 positives
-        #   or raw indices of 4 positives.
-        # Extra induction is needed.
-        if num_classes == 2:
-            warnings.warn('Ambiguous data detected, reckoned as scores'
-                          ' or label-format data as defaults. Please set '
-                          'parms related to `is_onehot` if use one-hot '
-                          'encoding data to compute metrics.')
-            assert is_onehot
-        is_onehot = True
-    # Error corresponds to np, torch, oneflow, stack_func respectively
-    except (ValueError, RuntimeError, AssertionError):
+        # all the conditions below is to find whether labels that are
+        # raw indices which should be converted to one-hot indices.
+        # 1. one-hot indices should has 2 dims;
+        # 2. one-hot indices should has num_classes as the second dim;
+        # 3. one-hot indices values should always smaller than 2.
+        if formated_data.ndim == 2 \
+            and formated_data.shape[1] == num_classes \
+                and formated_data.max() <= 1:
+            if num_classes > 2:
+                is_onehot = True
+            elif num_classes == 2:
+                # 4. corner case, num_classes=2, then one-hot indices
+                # and raw indices are undistinguishable, for instance:
+                #   [[0, 1], [0, 1]] can be one-hot indices of 2 positives
+                #   or raw indices of 4 positives.
+                # Extra induction is needed.
+                warnings.warn('Ambiguous data detected, reckoned as scores'
+                              ' or label-format data as defaults. Please set '
+                              'parms related to `is_onehot` if use one-hot '
+                              'encoding data to compute metrics.')
+            else:
+                raise ValueError(
+                    'num_classes should greater than 2 in multi label metrics.'
+                )
+    else:
         is_onehot = False
 
     if not is_onehot:

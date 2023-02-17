@@ -368,6 +368,7 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
 
         This method would be invoked in `BaseMetric.compute` after distributed
         synchronization.
+
         Args:
             results (List[Union[NUMPY_IMPL_HINTS, TORCH_IMPL_HINTS,
             ONEFLOW_IMPL_HINTS]]): A list of tuples that consisting the
