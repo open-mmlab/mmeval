@@ -18,8 +18,9 @@ class CharRecallPrecision(BaseMetric):
                      characters.
             Usually, it only works for English characters. Defaults to
             'unchanged'.
-        valid_symbol (str): Valid characters. Defaults to
-            '[^A-Z^a-z^0-9^\u4e00-\u9fa5]'.
+        valid_symbol (str): A regular expression to filter out invalid or
+            not cared characters. Defaults to '[^A-Z^a-z^0-9^\u4e00-\u9fa5]'.
+        **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
         >>> from mmeval import CharRecallPrecision
@@ -51,13 +52,13 @@ class CharRecallPrecision(BaseMetric):
             if self.letter_case in ['upper', 'lower']:
                 pred = getattr(pred, self.letter_case)()
                 label = getattr(label, self.letter_case)()
-            label_ignore = self.valid_symbol.sub('', label)
-            pred_ignore = self.valid_symbol.sub('', pred)
+            valid_label = self.valid_symbol.sub('', label)
+            valid_pred = self.valid_symbol.sub('', pred)
             # number to calculate char level recall & precision
             true_positive_char_num = self._cal_true_positive_char(
-                pred_ignore, label_ignore)
+                valid_pred, valid_label)
             self._results.append(
-                (len(label_ignore), len(pred_ignore), true_positive_char_num))
+                (len(valid_label), len(valid_pred), true_positive_char_num))
 
     def compute_metric(self, results: Sequence[Tuple[int, int, int]]) -> Dict:
         """Compute the metrics from processed results.

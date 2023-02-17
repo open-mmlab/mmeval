@@ -8,18 +8,15 @@ def test_init():
         CharRecallPrecision(letter_case='fake')
 
 
-def test_char_recall_precision_metric():
-    metric = CharRecallPrecision(letter_case='lower')
+@pytest.mark.parametrize(
+    argnames=['letter_case', 'recall', 'precision'],
+    argvalues=[
+        ('lower', 0.7, 1),
+        ('upper', 0.7, 1),
+        ('unchanged', 0.6, 6.0 / 7),
+    ])
+def test_char_recall_precision_metric(letter_case, recall, precision):
+    metric = CharRecallPrecision(letter_case=letter_case)
     res = metric(['helL', 'HEL'], ['hello', 'HELLO'])
-    assert abs(res['recall'] - 0.7) < 1e-7
-    assert abs(res['precision'] - 1) < 1e-7
-
-    metric = CharRecallPrecision(letter_case='upper')
-    res = metric(['helL', 'HEL'], ['hello', 'HELLO'])
-    assert abs(res['recall'] - 0.7) < 1e-7
-    assert abs(res['precision'] - 1) < 1e-7
-
-    metric = CharRecallPrecision(letter_case='unchanged')
-    res = metric(['helL', 'HEL'], ['hello', 'HELLO'])
-    assert abs(res['recall'] - 0.6) < 1e-7
-    assert abs(res['precision'] - 6.0 / 7) < 1e-7
+    assert abs(res['recall'] - recall) < 1e-7
+    assert abs(res['precision'] - precision) < 1e-7
