@@ -4,7 +4,7 @@ import numpy as np
 import os
 import pytest
 
-from mmeval.metrics import NIQE
+from mmeval.metrics import NaturalImageQualityEvaluator
 
 
 def test_niqe():
@@ -13,7 +13,7 @@ def test_niqe():
 
     predictions = [img]
 
-    niqe = NIQE(
+    niqe = NaturalImageQualityEvaluator(
         crop_border=0,
         input_order='HWC',
         convert_to='gray',
@@ -21,12 +21,12 @@ def test_niqe():
     result = niqe(predictions)
     np.testing.assert_almost_equal(result['niqe'], 5.73155, decimal=5)
 
-    niqe = NIQE(
+    niqe = NaturalImageQualityEvaluator(
         crop_border=0, input_order='CHW', convert_to='y', channel_order='bgr')
     result = niqe([img.transpose(2, 0, 1)])
     np.testing.assert_almost_equal(result['niqe'], 5.72996, decimal=5)
 
-    niqe = NIQE(
+    niqe = NaturalImageQualityEvaluator(
         crop_border=0,
         input_order='CHW',
         convert_to='gray',
@@ -34,10 +34,10 @@ def test_niqe():
     result = niqe([img.transpose(2, 0, 1)])
     np.testing.assert_almost_equal(result['niqe'], 5.73155, decimal=5)
 
-    niqe = NIQE(
+    niqe = NaturalImageQualityEvaluator(
         crop_border=6, input_order='HWC', convert_to='y', channel_order='bgr')
     result = niqe(predictions)
     np.testing.assert_almost_equal(result['niqe'], 6.10088, decimal=5)
 
     with pytest.raises(AssertionError):
-        niqe = NIQE(convert_to='a')
+        niqe = NaturalImageQualityEvaluator(convert_to='a')

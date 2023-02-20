@@ -10,8 +10,8 @@ from mmeval.core import BaseMetric
 from .utils import reorder_and_crop
 
 
-class NIQE(BaseMetric):
-    """Calculate NIQE (Natural Image Quality Evaluator) metric.
+class NaturalImageQualityEvaluator(BaseMetric):
+    """Calculate Natural Image Quality Evaluator(NIQE) metric.
 
     Ref: Making a "Completely Blind" Image Quality Analyzer.
     This implementation could produce almost the same results as the official
@@ -29,10 +29,10 @@ class NIQE(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import NIQE
+        >>> from mmeval import NaturalImageQualityEvaluator
         >>> import numpy as np
         >>>
-        >>> niqe = NIQE(input_order='CHW', convert_to='Y', channel_order='rgb')
+        >>> niqe = NaturalImageQualityEvaluator()
         >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
         >>> niqe(preds)  # doctest: +ELLIPSIS
         {'niqe': ...}
