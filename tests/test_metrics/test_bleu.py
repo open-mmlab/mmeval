@@ -1,52 +1,8 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import pytest
-from collections import Counter
 
 from mmeval.metrics import BLEU
-from mmeval.metrics.bleu import get_n_gram
-
-
-@pytest.mark.parametrize('n_gram', [2, 4])
-def test_get_n_gram(n_gram):
-    token = ['a', 'cat', 'is', 'on', 'the', 'mat']
-    result = get_n_gram(token, n_gram)
-    if n_gram == 2:
-        counter = Counter({
-            ('a', ): 1,
-            ('cat', ): 1,
-            ('is', ): 1,
-            ('on', ): 1,
-            ('the', ): 1,
-            ('mat', ): 1,
-            ('a', 'cat'): 1,
-            ('cat', 'is'): 1,
-            ('is', 'on'): 1,
-            ('on', 'the'): 1,
-            ('the', 'mat'): 1
-        })
-    else:
-        counter = Counter({
-            ('a', ): 1,
-            ('cat', ): 1,
-            ('is', ): 1,
-            ('on', ): 1,
-            ('the', ): 1,
-            ('mat', ): 1,
-            ('a', 'cat'): 1,
-            ('cat', 'is'): 1,
-            ('is', 'on'): 1,
-            ('on', 'the'): 1,
-            ('the', 'mat'): 1,
-            ('a', 'cat', 'is'): 1,
-            ('cat', 'is', 'on'): 1,
-            ('is', 'on', 'the'): 1,
-            ('on', 'the', 'mat'): 1,
-            ('a', 'cat', 'is', 'on'): 1,
-            ('cat', 'is', 'on', 'the'): 1,
-            ('is', 'on', 'the', 'mat'): 1
-        })
-    assert result == counter
 
 
 def test_bleu():
@@ -68,12 +24,19 @@ def test_bleu():
         bleu.add([predictions[i]], [references[i]])
     bleu_results = bleu.compute()
     assert isinstance(bleu_results, dict)
-    np.testing.assert_almost_equal(bleu_results['bleu'], 0.4006741601366701)
+    np.testing.assert_almost_equal(bleu_results['bleu'], 0.4006741)
 
     bleu = BLEU(smooth=True)
     bleu_results = bleu(predictions, references)
     assert isinstance(bleu_results, dict)
-    np.testing.assert_almost_equal(bleu_results['bleu'], 0.42504770796962527)
+    np.testing.assert_almost_equal(bleu_results['bleu'], 0.4250477)
+
+    predictions = ['猫坐在垫子上', '公园旁边有棵树']
+    references = [['猫在那边的垫子'], ['一棵树长在公园旁边']]
+    metric = BLEU()
+    metric.add(predictions, references)
+    bleu_results = metric.compute()
+    np.testing.assert_almost_equal(bleu_results['bleu'], 0.2576968)
 
 
 @pytest.mark.parametrize('n_gram', [1, 2, 3, 4])

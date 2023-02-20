@@ -92,7 +92,7 @@ def test_metric_interface_tf():
 
 
 @pytest.mark.parametrize(
-    argnames=['metric_kwargs', 'preditions', 'labels', 'results'],
+    argnames=['metric_kwargs', 'predictions', 'labels', 'results'],
     argvalues=[
         (
             # for this test case argvalues
@@ -121,9 +121,9 @@ def test_metric_interface_tf():
         ),
     ]
 )
-def test_metric_accurate(metric_kwargs, preditions, labels, results):
+def test_metric_accurate(metric_kwargs, predictions, labels, results):
     miou = MeanIoU(**metric_kwargs)
-    metric_results = miou(np.asarray(preditions), np.asarray(labels))
+    metric_results = miou(np.asarray(predictions), np.asarray(labels))
     assert metric_results.keys() == results.keys()
 
     for key in metric_results:

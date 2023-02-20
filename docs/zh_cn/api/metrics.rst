@@ -25,20 +25,26 @@ Metrics
    MultiLabelMetric
    AveragePrecision
    MeanIoU
-   COCODetectionMetric
+   COCODetection
    ProposalRecall
    VOCMeanAP
    OIDMeanAP
-   F1Metric
+   F1Score
    HmeanIoU
    EndPointError
    PCKAccuracy
    MpiiPCKAccuracy
    JhmdbPCKAccuracy
    AVAMeanAP
-   SSIM
-   SNR
-   PSNR
-   MAE
-   MSE
+   StructuralSimilarity
+   SignalNoiseRatio
+   PeakSignalNoiseRatio
+   MeanAbsoluteError
+   MeanSquaredError
    BLEU
+   SumAbsoluteDifferences
+   GradientError
+   MattingMeanSquaredError
+   ConnectivityError
+   DOTAMeanAP
+   ROUGE
