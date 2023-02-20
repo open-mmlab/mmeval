@@ -262,6 +262,7 @@ class AveragePrecision(MultiLabelMixin, BaseMetric):
         assert average in average_options, 'Invalid `average` argument, ' \
             f'please specify from {average_options}.'
         self.average = average
+        self.pred_is_onehot = False
 
     def add(self, preds: Sequence, labels: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to `self._results`.

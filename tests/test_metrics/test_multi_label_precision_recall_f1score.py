@@ -252,8 +252,12 @@ def test_metric_accurate(metric_kwargs, preds, labels, results):
 def test_metric_accurate_is_onehot():
     """Test ambiguous cases when num_classes=2."""
     multi_label_metric = MultiLabelPrecisionRecallF1score(num_classes=2, items=('precision', 'recall')) # noqa
-    assert multi_label_metric.pred_is_onehot is False
-    assert multi_label_metric.label_is_onehot is False
+    assert multi_label_metric.pred_is_onehot is None
+    assert multi_label_metric.label_is_onehot is None
+    assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 100.0, 'recall': 100.0} # noqa
+    multi_label_metric.pred_is_onehot = False
+    assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 100.0, 'recall': 100.0} # noqa
+    multi_label_metric.pred_is_onehot = False
     assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 100.0, 'recall': 100.0} # noqa
     multi_label_metric.pred_is_onehot = True
     assert multi_label_metric([[0, 1], [1, 0]], [[0, 1], [0, 1]]) == {'precision': 100.0, 'recall': 50.0} # noqa

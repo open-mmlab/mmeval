@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 import warnings
-from typing import TYPE_CHECKING, Sequence, Tuple, Union
+from typing import TYPE_CHECKING, Optional, Sequence, Tuple, Union
 
 from mmeval.utils import try_import
 
@@ -56,7 +56,7 @@ def format_data(
     data: Union[Sequence[Union[np.ndarray, 'torch.Tensor', 'oneflow.Tensor']],
                 np.ndarray, 'torch.Tensor', 'oneflow.Tensor'],
     num_classes: int,
-    is_onehot: bool = False
+    is_onehot: Optional[bool] = None
 ) -> Union[np.ndarray, 'torch.Tensor', 'oneflow.Tensor']:
     """Format data from different inputs such as prediction scores, label-
     format data and one-hot encodings into the same output shape of `(N,
@@ -83,41 +83,51 @@ def format_data(
         raise NotImplementedError(f'Data type of {type(data[0])}'
                                   'is not supported.')
 
-    shapes = {d.shape for d in data}
-    if len(shapes) == 1:
-        # stack scores or one-hot indices directly if have same shapes
-        formated_data = stack_func(data)
-        # all the conditions below is to find whether labels that are
-        # raw indices which should be converted to one-hot indices.
-        # 1. one-hot indices should has 2 dims;
-        # 2. one-hot indices should has num_classes as the second dim;
-        # 3. one-hot indices values should always smaller than 2.
-        if formated_data.ndim == 2 \
-            and formated_data.shape[1] == num_classes \
-                and formated_data.max() <= 1:
-            if num_classes > 2:
-                is_onehot = True
-            elif num_classes == 2:
-                # 4. corner case, num_classes=2, then one-hot indices
-                # and raw indices are undistinguishable, for instance:
-                #   [[0, 1], [0, 1]] can be one-hot indices of 2 positives
-                #   or raw indices of 4 positives.
-                # Extra induction is needed.
-                warnings.warn('Ambiguous data detected, reckoned as scores'
-                              ' or label-format data as defaults. Please set '
-                              'parms related to `is_onehot` if use one-hot '
-                              'encoding data to compute metrics.')
-            else:
-                raise ValueError(
-                    'num_classes should greater than 2 in multi label metrics.'
-                )
-    else:
-        is_onehot = False
+    def _induct_is_onehot(inferred_data):
+        """Conduct the input data format."""
+        shapes = {d.shape for d in inferred_data}
+        if len(shapes) == 1:
+            # stack scores or one-hot indices directly if have same shapes
+            cand_formated_data = stack_func(inferred_data)
+            # all the conditions below is to find whether labels that are
+            # raw indices which should be converted to one-hot indices.
+            # 1. one-hot indices should has 2 dims;
+            # 2. one-hot indices should has num_classes as the second dim;
+            # 3. one-hot indices values should always smaller than 2.
+            if cand_formated_data.ndim == 2 \
+                and cand_formated_data.shape[1] == num_classes \
+                    and cand_formated_data.max() <= 1:
+                if num_classes > 2:
+                    return True, cand_formated_data
+                elif num_classes == 2:
+                    # 4. corner case, num_classes=2, then one-hot indices
+                    # and raw indices are undistinguishable, for instance:
+                    #   [[0, 1], [0, 1]] can be one-hot indices of 2 positives
+                    #   or raw indices of 4 positives.
+                    # Extra induction is needed.
+                    warnings.warn(
+                        'Ambiguous data detected, reckoned as scores'
+                        ' or label-format data as defaults. Please set '
+                        'parms related to `is_onehot` to `True` if '
+                        'use one-hot encoding data to compute metrics.')
+                    return False, None
+                else:
+                    raise ValueError(
+                        'num_classes should greater than 2 in multi label'
+                        'metrics.')
+        return False, None
+
+    formated_data = None
+    if is_onehot is None:
+        is_onehot, formated_data = _induct_is_onehot(data)
 
     if not is_onehot:
         # convert label-format inputs to one-hot encodings
         formated_data = stack_func(
             [label_to_onehot(sample, num_classes) for sample in data])
+    elif is_onehot and formated_data is None:
+        # directly stack data if `is_onehot` is set to True without induction
+        formated_data = stack_func(data)
 
     return formated_data
 
@@ -130,41 +140,41 @@ class MultiLabelMixin:
     def __init__(self, *args, **kwargs) -> None:
         # pass arguments for multiple inheritances
         super().__init__(*args, **kwargs)  # type: ignore
-        self._pred_is_onehot = False
-        self._label_is_onehot = False
+        self._pred_is_onehot: Optional[bool] = None
+        self._label_is_onehot: Optional[bool] = None
 
     @property
-    def pred_is_onehot(self) -> bool:
+    def pred_is_onehot(self) -> Optional[bool]:
         """Whether prediction is one-hot encodings.
 
-        Only works for corner case when num_classes=2 to distinguish one-hot
+        Only needed for corner case when num_classes=2 to distinguish one-hot
         encodings or label-format.
         """
         return self._pred_is_onehot
 
     @pred_is_onehot.setter
-    def pred_is_onehot(self, is_onehot: bool):
+    def pred_is_onehot(self, is_onehot: Optional[bool]):
         """Set a flag of whether prediction is one-hot encodings.
 
-        Only works for corner case when num_classes=2 to distinguish one-hot
+        Only needed for corner case when num_classes=2 to distinguish one-hot
         encodings or label-format.
         """
         self._pred_is_onehot = is_onehot
 
     @property
-    def label_is_onehot(self) -> bool:
+    def label_is_onehot(self) -> Optional[bool]:
         """Whether label is one-hot encodings.
 
-        Only works for corner case when num_classes=2 to distinguish one-hot
+        Only needed for corner case when num_classes=2 to distinguish one-hot
         encodings or label-format.
         """
         return self._label_is_onehot
 
     @label_is_onehot.setter
-    def label_is_onehot(self, is_onehot: bool):
+    def label_is_onehot(self, is_onehot: Optional[bool]):
         """Set a flag of whether label is one-hot encodings.
 
-        Only works for corner case when num_classes=2 to distinguish one-hot
+        Only needed for corner case when num_classes=2 to distinguish one-hot
         encodings or label-format.
         """
         self._label_is_onehot = is_onehot
