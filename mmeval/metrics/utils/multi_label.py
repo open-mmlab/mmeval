@@ -68,6 +68,8 @@ def format_data(
             The input data of prediction or labels.
         num_classes (int): The number of classes.
         is_onehot (bool): Whether the data is one-hot encodings.
+            If `None`, this will be automatically inducted.
+            Defaults to `None`.
 
     Return:
         torch.Tensor or oneflow.Tensor or np.ndarray:
