@@ -62,13 +62,8 @@ class KeypointAUC(BaseMetric):
     Args:
         norm_factor (float): AUC normalization factor, Default: 30 (pixels).
         num_thrs (int): number of thresholds to calculate auc. Default: 20.
-        collect_device (str): Device name used for collecting results from
-            different ranks during distributed training. Must be ``'cpu'`` or
-            ``'gpu'``. Default: ``'cpu'``.
-        prefix (str, optional): The prefix that will be added in the metric
-            names to disambiguate homonymous metrics of different evaluators.
-            If prefix is not provided in the argument, ``self.default_prefix``
-            will be used instead. Default: ``None``.
+        **kwargs: Keyword parameters passed to :class:`mmeval.BaseMetric`. Must
+            include ``dataset_meta`` in order to compute the metric.
 
     Examples:
 
