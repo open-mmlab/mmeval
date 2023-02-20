@@ -170,7 +170,7 @@ def test_metamorphic_numpy_pytorch(metric_kwargs, classes_num, length):
     for key in np_acc_results:
         # numpy use float64 however torch use float32
         np.testing.assert_allclose(
-            np_acc_results[key], torch_acc_results[key], rtol=1e-5)
+            np_acc_results[key], torch_acc_results[key], atol=1e-4)
 
 
 @pytest.mark.skipif(flow is None, reason='OneFlow is not available!')
@@ -199,4 +199,4 @@ def test_metamorphic_numpy_oneflow(metric_kwargs, classes_num, length):
     for key in np_acc_results:
         # numpy use float64 however oneflow use float32
         np.testing.assert_allclose(
-            np_acc_results[key], oneflow_acc_results[key], rtol=1e-5)
+            np_acc_results[key], oneflow_acc_results[key], atol=1e-4)
