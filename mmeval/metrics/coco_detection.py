@@ -66,7 +66,7 @@ class COCODetection(BaseMetric):
         >>>
         >>> num_classes = 4
         >>> fake_dataset_metas = {
-        ...     'CLASSES': tuple([str(i) for i in range(num_classes)])
+        ...     'classes': tuple([str(i) for i in range(num_classes)])
         ... }
         >>>
         >>> coco_det_metric = COCODetection(
@@ -325,7 +325,7 @@ class COCODetection(BaseMetric):
 
         categories = [
             dict(id=id, name=name) for id, name in enumerate(
-                self.dataset_meta['CLASSES'])  # type:ignore
+                self.dataset_meta['classes'])  # type:ignore
         ]
         image_infos: list = []
         annotations: list = []
@@ -502,7 +502,7 @@ class COCODetection(BaseMetric):
         # handle lazy init
         if len(self.cat_ids) == 0:
             self.cat_ids = self._coco_api.get_cat_ids(
-                cat_names=self.dataset_meta['CLASSES'])  # type: ignore
+                cat_names=self.dataset_meta['classes'])  # type: ignore
         if len(self.img_ids) == 0:
             self.img_ids = self._coco_api.get_img_ids()
 

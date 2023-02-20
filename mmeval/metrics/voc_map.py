@@ -86,7 +86,7 @@ class VOCMeanAP(BaseMetric):
             mAP. If not specified, all bounding boxes would be included in
             evaluation. Defaults to None.
         num_classes (int, optional): The number of classes. If None, it will be
-            obtained from the 'CLASSES' field in ``self.dataset_meta``.
+            obtained from the 'classes' field in ``self.dataset_meta``.
             Defaults to None.
         eval_mode (str): 'area' or '11points', 'area' means calculating the
             area under precision-recall curve, '11points' means calculating
@@ -188,7 +188,7 @@ class VOCMeanAP(BaseMetric):
         """Returns the number of classes.
 
         The number of classes should be set during initialization, otherwise it
-        will be obtained from the 'CLASSES' field in ``self.dataset_meta``.
+        will be obtained from the 'classes' field in ``self.dataset_meta``.
 
         Returns:
             int: The number of classes.
@@ -198,11 +198,11 @@ class VOCMeanAP(BaseMetric):
         """
         if self._num_classes is not None:
             return self._num_classes
-        if self.dataset_meta and 'CLASSES' in self.dataset_meta:
-            self._num_classes = len(self.dataset_meta['CLASSES'])
+        if self.dataset_meta and 'classes' in self.dataset_meta:
+            self._num_classes = len(self.dataset_meta['classes'])
         else:
             raise RuntimeError(
-                "The `num_claases` is required, and also not found 'CLASSES' "
+                "The `num_claases` is required, and also not found 'classes' "
                 f'in dataset_meta: {self.dataset_meta}')
         return self._num_classes
 
