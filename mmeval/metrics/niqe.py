@@ -19,11 +19,11 @@ class NIQE(BaseMetric):
 
     Args:
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the NIQE calculation. Default to 0.
+            pixels are not involved in the NIQE calculation. Defaults to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
-            Default to 'CHW'.
+            Defaults to 'CHW'.
         convert_to (str): Convert the images to other color models. Options are
-            'y' and 'gray'. Default to 'gray'.
+            'y' and 'gray'. Defaults to 'gray'.
         channel_order (str): The channel order of image. Defaults to 'rgb'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
@@ -130,13 +130,12 @@ class NIQE(BaseMetric):
         are always 0 in the official implementation.
 
         For good performance, it is advisable by the official implementation to
-        divide the distorted image in to the same size patched as used for the
+        divide the distorted image into the same size patched as used for the
         construction of multivariate Gaussian model.
 
         Args:
             prediction (np.ndarray): Input image whose quality to be computed.
-                The image must be a gray or Y (of YCbCr) image with shape
-                (h, w). Range [0, 255] with float type.
+                Range [0, 255] with float type.
             channel_order (str): The channel order of image.
             mu_pris_param (np.ndarray): Mean of a pre-defined multivariate
                 Gaussian model calculated on the pristine dataset.
@@ -145,9 +144,9 @@ class NIQE(BaseMetric):
             gaussian_window (ndarray): A 7x7 Gaussian window used for smoothing
                 the image.
             block_size_h (int): Height of the blocks in to which image is
-                divided. Default to 96.
+                divided. Defaults to 96.
             block_size_w (int): Width of the blocks in to which image is
-                divided. Default to 96.
+                divided. Defaults to 96.
 
         Returns:
             np.float64: NIQE result.
@@ -181,17 +180,17 @@ class NIQE(BaseMetric):
                     convolve(np.square(img), gaussian_window, mode='nearest') -
                     np.square(mu)))
             # normalize, as in Eq. 1 in the paper
-            img_nomalized = (img - mu) / (sigma + 1)
+            img_normalized = (img - mu) / (sigma + 1)
 
             feat = []
             for idx_w in range(num_block_w):
                 for idx_h in range(num_block_h):
                     # process each block
-                    block = img_nomalized[idx_h * block_size_h //
-                                          scale:(idx_h + 1) * block_size_h //
-                                          scale, idx_w * block_size_w //
-                                          scale:(idx_w + 1) * block_size_w //
-                                          scale]
+                    block = img_normalized[idx_h * block_size_h //
+                                           scale:(idx_h + 1) * block_size_h //
+                                           scale, idx_w * block_size_w //
+                                           scale:(idx_w + 1) * block_size_w //
+                                           scale]
                     feat.append(self.compute_feature(block))
 
             distparam.append(np.array(feat))
@@ -276,7 +275,7 @@ class NIQE(BaseMetric):
         return (alpha, beta_l, beta_r)
 
     def matlab_resize(self, img: np.ndarray, scale: float) -> np.ndarray:
-        """Resize an image to the require size.
+        """Resize an image to the required size.
 
         Args:
             img (np.ndarray): The original image.

@@ -227,8 +227,8 @@ def reorder_and_crop(img: np.ndarray,
             img = bgr2ycbcr(img / 255., y_only=True) * 255.
         else:
             raise ValueError(
-                'Only support `rgb2y` and `bgr2y`, but the channel_order '
-                f'is {channel_order}')
+                'Only support `rgb2y` and `bgr2y`, but the channel_order'
+                f' is {channel_order}')
         img = np.expand_dims(img, axis=2)
     elif isinstance(convert_to, str) and convert_to.lower() == 'gray':
         if channel_order == 'rgb':
@@ -237,8 +237,8 @@ def reorder_and_crop(img: np.ndarray,
             img = bgr2gray(img / 255., keepdim=False) * 255.
         else:
             raise ValueError(
-                'Only support `rgb2y` and `bgr2y`, but the channel_order '
-                f'is {channel_order}')
+                'Only support `rgb2gray` and `bgr2gray`, but the channel_order'
+                f' is {channel_order}')
         img = np.expand_dims(img, axis=2)
     elif convert_to is not None:
         raise ValueError('Wrong color model. Supported values are '
