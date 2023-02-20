@@ -233,7 +233,7 @@ def test_box_metric_interface(metric_kwargs):
     metric = ['bbox']
     # Avoid some potential error
     fake_dataset_metas = {
-        'CLASSES': tuple([str(i) for i in range(num_classes)])
+        'classes': tuple([str(i) for i in range(num_classes)])
     }
     coco_det_metric = COCODetection(
         metric=metric, dataset_meta=fake_dataset_metas, **metric_kwargs)
@@ -278,7 +278,7 @@ def test_segm_metric_interface(metric_kwargs):
     metric = ['segm']
     # Avoid some potential error
     fake_dataset_metas = {
-        'CLASSES': tuple([str(i) for i in range(num_classes)])
+        'classes': tuple([str(i) for i in range(num_classes)])
     }
     coco_det_metric = COCODetection(
         metric=metric, dataset_meta=fake_dataset_metas, **metric_kwargs)
@@ -313,7 +313,7 @@ def test_metric_invalid_usage():
     num_classes = 10
     # Avoid some potential error
     fake_dataset_metas = {
-        'CLASSES': tuple([str(i) for i in range(num_classes)])
+        'classes': tuple([str(i) for i in range(num_classes)])
     }
     coco_det_metric = COCODetection(dataset_meta=fake_dataset_metas)
 
@@ -338,7 +338,7 @@ def test_compute_metric():
     fake_json_file = osp.join(tmp_dir.name, 'fake_data.json')
     _create_dummy_coco_json(fake_json_file)
     dummy_pred = _create_dummy_results()
-    fake_dataset_metas = dict(CLASSES=['car', 'bicycle'])
+    fake_dataset_metas = dict(classes=['car', 'bicycle'])
 
     # test single coco dataset evaluation
     coco_det_metric = COCODetection(
