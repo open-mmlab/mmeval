@@ -148,19 +148,6 @@ class KeypointNME(BaseMetric):
                   ``self.norm_item`` is neither ``None`` nor `'bbox_size'`
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
-            if self.norm_item:
-                if self.norm_item == 'bbox_size':
-                    assert 'bboxes' in groundtruth, 'The ground truth data ' \
-                        'info do not have the item ``bboxes`` for expected ' \
-                        'normalized_item ``"bbox_size"``.'
-                    bbox_size = np.max(groundtruth['bboxes'][0][2:] -
-                                       groundtruth['bboxes'][0][:2])
-                    groundtruth['bbox_size'] = np.array([bbox_size
-                                                         ]).reshape(-1, 1)
-                else:
-                    assert self.norm_item in groundtruth, f'The ground ' \
-                        f'truth data info do not have the expected ' \
-                        f'normalized factor "{self.norm_item}".'
             assert isinstance(prediction, dict), 'The prediciton should be ' \
                 f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
             assert isinstance(groundtruth, dict), 'The label should be ' \
