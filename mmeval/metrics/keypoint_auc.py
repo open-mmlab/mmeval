@@ -69,6 +69,7 @@ class KeypointAUC(BaseMetric):
 
         >>> from mmeval import KeypointAUC
         >>> import numpy as np
+        >>> auc_metric = KeypointAUC(norm_factor=20, num_thrs=4)
         >>> output = np.array([[[10.,  4.],
         ...     [10., 18.],
         ...     [ 0.,  0.],
@@ -85,7 +86,6 @@ class KeypointAUC(BaseMetric):
         >>> groundtruth = {'coords': target, 'mask': keypoints_visible}
         >>> predictions = [prediction]
         >>> groundtruths = [groundtruth]
-        >>> auc_metric = KeypointAUC(norm_factor=20, num_thrs=4)
         >>> auc_metric(predictions, groundtruths)
         OrderedDict([('AUC@4', 0.375)])
     """
