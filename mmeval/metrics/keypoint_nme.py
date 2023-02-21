@@ -49,11 +49,11 @@ class KeypointNME(BaseMetric):
             following options:
 
             - ``'use_norm_item'``: Should specify the argument `norm_item`,
-                which represents the item in the datainfo that will be used
-                as the normalization factor.
+              which represents the item in the datainfo that will be used
+              as the normalization factor.
             - ``'keypoint_distance'``: Should specify the argument
-                `keypoint_indices` that are used to calculate the keypoint
-                distance as the normalization factor.
+              `keypoint_indices` that are used to calculate the keypoint
+              distance as the normalization factor.
 
         norm_item (str, optional): The item used as the normalization factor.
             For example, `'box_size'` in `'AFLWDataset'`. Only valid when

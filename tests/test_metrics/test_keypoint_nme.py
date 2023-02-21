@@ -48,16 +48,17 @@ class TestKeypointNME(TestCase):
         for i in range(batch_size):
             keypoints = np.zeros((1, num_keypoints, 2))
             keypoints[0, i] = [0.5 * i, 0.5 * i]
+            keypoints_ = keypoints.copy()
+            keypoints_[0, i] += np.array([0.2, 0.2]) * i
             keypoints_visible = np.ones((1, num_keypoints)).astype(bool)
             keypoints_visible[0, (2 * i) % 8] = False
 
             groundtruth = {
                 'coords': keypoints,
                 'mask': keypoints_visible,
-                norm_item: np.random.random((1, 1)) * 20 * i
+                norm_item: np.array([[10]]) * i
             }
-            keypoints[0, i] += [0.1, 0.1]
-            prediction = {'coords': keypoints}
+            prediction = {'coords': keypoints_}
 
             self.predictions.append(prediction)
             self.groundtruths.append(groundtruth)
@@ -81,15 +82,14 @@ class TestKeypointNME(TestCase):
             dataset_meta=self.aflw_dataset_meta,
         )
         nme_results = nme_metric(self.predictions, self.groundtruths)
-        target = {'NME': 0.0}
-        self.assertAlmostEqual(nme_results, target)
+        self.assertAlmostEqual(nme_results['NME'], 0.00157135)
 
         # test with multiple ``add`` followed by ``compute``
         nme_metric._results = []
         nme_metric.add(self.predictions[:2], self.groundtruths[:2])
         nme_metric.add(self.predictions[2:], self.groundtruths[2:])
         nme_results = nme_metric.compute_metric(nme_metric._results)
-        self.assertAlmostEqual(nme_results, target)
+        self.assertAlmostEqual(nme_results['NME'], 0.00157135)
 
         # test when norm_mode = 'keypoint_distance'
         # when `keypoint_indices = None`,
@@ -106,8 +106,7 @@ class TestKeypointNME(TestCase):
         self._generate_data(batch_size=4, num_keypoints=22)
 
         nme_results = nme_metric(self.predictions, self.groundtruths)
-        target = {'NME': 0.0}
-        self.assertAlmostEqual(nme_results, target)
+        self.assertAlmostEqual(nme_results['NME'], 0.01904762)
 
         # test when norm_mode = 'keypoint_distance'
         # specify custom `keypoint_indices`
@@ -119,8 +118,7 @@ class TestKeypointNME(TestCase):
         self._generate_data(batch_size=2, num_keypoints=17)
 
         nme_results = nme_metric(self.predictions, self.groundtruths)
-        target = {'NME': 0.0}
-        self.assertAlmostEqual(nme_results, target)
+        self.assertAlmostEqual(nme_results['NME'], 0.0)
 
     def test_exceptions_and_warnings(self):
         """test exceptions and warnings."""
