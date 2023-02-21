@@ -61,7 +61,7 @@ class KeypointAUC(BaseMetric):
 
     Args:
         norm_factor (float): AUC normalization factor, Default: 30 (pixels).
-        num_thrs (int): number of thresholds to calculate auc. Default: 20.
+        num_thrs (int): Number of thresholds to calculate AUC. Defaults to 20.
         **kwargs: Keyword parameters passed to :class:`mmeval.BaseMetric`. Must
             include ``dataset_meta`` in order to compute the metric.
 
