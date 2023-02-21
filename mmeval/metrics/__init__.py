@@ -15,6 +15,7 @@ from .hmean_iou import HmeanIoU
 from .keypoint_auc import KeypointAUC
 from .keypoint_epe import KeypointEndPointError
 from .keypoint_nme import KeypointNME
+from .lvis import LVISDetection
 from .mae import MeanAbsoluteError
 from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
@@ -41,7 +42,7 @@ __all__ = [
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
-    'KeypointAUC', 'KeypointNME'
+    'KeypointAUC', 'KeypointNME', 'LVISDetection'
 ]
 
 _deprecated_msg = (

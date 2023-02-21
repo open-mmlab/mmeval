@@ -6,14 +6,13 @@ import tempfile
 from json import dump
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.metrics import COCODetection
+from mmeval.metrics import LVISDetection
 from mmeval.utils import try_import
 
 coco_wrapper = try_import('mmeval.metrics.utils.coco_wrapper')
 
 
 def _create_dummy_coco_json(json_name):
-    # create and dump fake json file
     dummy_mask = np.zeros((10, 10), order='F', dtype=np.uint8)
     dummy_mask[:5, :5] = 1
     rle_mask = coco_wrapper.mask_util.encode(dummy_mask)
@@ -22,59 +21,59 @@ def _create_dummy_coco_json(json_name):
         'id': 0,
         'width': 640,
         'height': 640,
-        'file_name': 'fake_name.jpg',
+        'neg_category_ids': [],
+        'not_exhaustive_category_ids': [],
+        'coco_url': 'http://images.cocodataset.org/val2017/0.jpg',
     }
 
     annotation_1 = {
         'id': 1,
         'image_id': 0,
-        'category_id': 0,
+        'category_id': 1,
         'area': 400,
         'bbox': [50, 60, 20, 20],
-        'iscrowd': 0,
         'segmentation': rle_mask,
     }
 
     annotation_2 = {
         'id': 2,
         'image_id': 0,
-        'category_id': 0,
+        'category_id': 1,
         'area': 900,
         'bbox': [100, 120, 30, 30],
-        'iscrowd': 0,
         'segmentation': rle_mask,
     }
 
     annotation_3 = {
         'id': 3,
         'image_id': 0,
-        'category_id': 1,
+        'category_id': 2,
         'area': 1600,
         'bbox': [150, 160, 40, 40],
-        'iscrowd': 0,
         'segmentation': rle_mask,
     }
 
     annotation_4 = {
         'id': 4,
         'image_id': 0,
-        'category_id': 0,
+        'category_id': 1,
         'area': 10000,
         'bbox': [250, 260, 100, 100],
-        'iscrowd': 0,
         'segmentation': rle_mask,
     }
 
     categories = [
         {
-            'id': 0,
-            'name': 'car',
-            'supercategory': 'car',
+            'id': 1,
+            'name': 'aerosol_can',
+            'frequency': 'c',
+            'image_count': 64
         },
         {
-            'id': 1,
-            'name': 'bicycle',
-            'supercategory': 'bicycle',
+            'id': 2,
+            'name': 'air_conditioner',
+            'frequency': 'f',
+            'image_count': 364
         },
     ]
 
@@ -84,6 +83,7 @@ def _create_dummy_coco_json(json_name):
         [annotation_1, annotation_2, annotation_3, annotation_4],
         'categories': categories
     }
+
     with open(json_name, 'w') as f:
         dump(fake_json, f)
 
@@ -108,30 +108,6 @@ def _create_dummy_results():
         bboxes=bboxes,
         scores=scores,
         labels=labels,
-        masks=dummy_mask)
-
-
-def _create_dummy_gts():
-    # create fake gts
-    bboxes = np.array([[50, 60, 70, 80], [100, 120, 130, 150],
-                       [150, 160, 190, 200], [250, 260, 350, 360]])
-    labels = np.array([0, 0, 1, 0])
-    ignore_flags = np.array([0, 0, 0, 0])
-    mask = np.zeros((10, 10), dtype=np.uint8)
-    mask[:5, :5] = 1
-
-    dummy_mask = [
-        coco_wrapper.mask_util.encode(
-            np.array(mask[:, :, np.newaxis], order='F', dtype='uint8'))[0]
-        for _ in range(4)
-    ]
-    return dict(
-        img_id=0,
-        width=640,
-        height=640,
-        bboxes=bboxes,
-        labels=labels,
-        ignore_flags=ignore_flags,
         masks=dummy_mask)
 
 
@@ -165,10 +141,10 @@ def _gen_masks(bboxes, img_w=256, img_h=256):
 
 
 def _gen_prediction(num_pred=10,
-                    num_classes=10,
+                    num_classes=2,
                     img_w=256,
                     img_h=256,
-                    img_id=1,
+                    img_id=0,
                     with_mask=False):
     # random create prediction
     pred_boxes = _gen_bboxes(num_bboxes=num_pred, img_w=img_w, img_h=img_h)
@@ -185,10 +161,10 @@ def _gen_prediction(num_pred=10,
 
 
 def _gen_groundtruth(num_gt=10,
-                     num_classes=10,
+                     num_classes=2,
                      img_w=256,
                      img_h=256,
-                     img_id=1,
+                     img_id=0,
                      with_mask=False):
     # random create prediction
     gt_boxes = _gen_bboxes(num_bboxes=num_gt, img_w=img_w, img_h=img_h)
@@ -196,6 +172,7 @@ def _gen_groundtruth(num_gt=10,
         'img_id': img_id,
         'width': img_w,
         'height': img_h,
+        'neg_category_ids': [],
         'bboxes': gt_boxes,
         'labels': np.random.randint(0, num_classes, size=(num_gt, )),
         'ignore_flags': np.zeros(num_gt)
@@ -213,42 +190,41 @@ def _gen_groundtruth(num_gt=10,
     argvalues=[
         {},
         {
-            'ann_file': 'tests/test_metrics/data/coco_sample.json'
-        },
-        {
             'iou_thrs': [0.5, 0.75]
         },
         {
             'classwise': True
         },
         {
-            'metric_items': ['mAP', 'mAP_50']
+            'metric_items': ['AP', 'AP50']
         },
         {
             'proposal_nums': [10, 30, 100]
         },
     ])
 def test_box_metric_interface(metric_kwargs):
-    num_classes = 10
+    tmp_dir = tempfile.TemporaryDirectory()
+
+    # create dummy data
+    fake_json_file = osp.join(tmp_dir.name, 'fake_data.json')
+    _create_dummy_coco_json(fake_json_file)
+
+    num_classes = 2
     metric = ['bbox']
     # Avoid some potential error
     fake_dataset_metas = {
         'classes': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = COCODetection(
+    coco_det_metric = LVISDetection(ann_file=fake_json_file,
         metric=metric, dataset_meta=fake_dataset_metas, **metric_kwargs)
     assert isinstance(coco_det_metric, BaseMetric)
 
-    metric_results = coco_det_metric(
-        predictions=[
-            _gen_prediction(num_classes=num_classes) for _ in range(10)
-        ],
-        groundtruths=[
-            _gen_groundtruth(num_classes=num_classes) for _ in range(10)
-        ],
+    metric_results = coco_det_metric(predictions=[_create_dummy_results()],
+        groundtruths=[dict()],
+
     )
     assert isinstance(metric_results, dict)
-    assert 'bbox_mAP' in metric_results
+    assert 'bbox_AP' in metric_results
 
 
 @pytest.mark.skipif(
@@ -258,64 +234,61 @@ def test_box_metric_interface(metric_kwargs):
     argvalues=[
         {},
         {
-            'ann_file': 'tests/test_metrics/data/coco_sample.json'
-        },
-        {
             'iou_thrs': [0.5, 0.75]
         },
         {
             'classwise': True
         },
         {
-            'metric_items': ['mAP', 'mAP_50']
+            'metric_items': ['AP', 'AP50']
         },
         {
             'proposal_nums': [10, 30, 100]
         },
     ])
 def test_segm_metric_interface(metric_kwargs):
-    num_classes = 10
+    tmp_dir = tempfile.TemporaryDirectory()
+
+    # create dummy data
+    fake_json_file = osp.join(tmp_dir.name, 'fake_data.json')
+    _create_dummy_coco_json(fake_json_file)
+
+    num_classes = 2
     metric = ['segm']
     # Avoid some potential error
     fake_dataset_metas = {
         'classes': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = COCODetection(
+    coco_det_metric = LVISDetection(ann_file=fake_json_file,
         metric=metric, dataset_meta=fake_dataset_metas, **metric_kwargs)
     assert isinstance(coco_det_metric, BaseMetric)
 
     metric_results = coco_det_metric(
-        predictions=[
-            _gen_prediction(num_classes=num_classes, with_mask=True)
-            for _ in range(10)
-        ],
-        groundtruths=[
-            _gen_groundtruth(num_classes=num_classes, with_mask=True)
-            for _ in range(10)
-        ],
+        predictions=[_create_dummy_results()],
+        groundtruths=[dict()],
     )
     assert isinstance(metric_results, dict)
-    assert 'segm_mAP' in metric_results
+    assert 'segm_AP' in metric_results
 
 
 @pytest.mark.skipif(
     coco_wrapper is None, reason='coco_wrapper is not available!')
 def test_metric_invalid_usage():
     with pytest.raises(KeyError):
-        COCODetection(metric='xxx')
+        LVISDetection(metric='xxx')
 
     with pytest.raises(TypeError):
-        COCODetection(iou_thrs=1)
+        LVISDetection(iou_thrs=1)
 
     with pytest.raises(AssertionError):
-        COCODetection(format_only=True)
+        LVISDetection(format_only=True)
 
-    num_classes = 10
+    num_classes = 2
     # Avoid some potential error
     fake_dataset_metas = {
         'classes': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = COCODetection(dataset_meta=fake_dataset_metas)
+    coco_det_metric = LVISDetection(dataset_meta=fake_dataset_metas)
 
     with pytest.raises(KeyError):
         prediction = _gen_prediction(num_classes=num_classes)
@@ -341,26 +314,30 @@ def test_compute_metric():
     fake_dataset_metas = dict(classes=['car', 'bicycle'])
 
     # test single coco dataset evaluation
-    coco_det_metric = COCODetection(
+    coco_det_metric = LVISDetection(
         ann_file=fake_json_file,
         classwise=False,
         outfile_prefix=f'{tmp_dir.name}/test',
         dataset_meta=fake_dataset_metas)
     eval_results = coco_det_metric([dummy_pred], [dict()])
     target = {
-        'bbox_mAP': 1.0,
-        'bbox_mAP_50': 1.0,
-        'bbox_mAP_75': 1.0,
-        'bbox_mAP_s': 1.0,
-        'bbox_mAP_m': 1.0,
-        'bbox_mAP_l': 1.0,
+        'bbox_AP': 1.0,
+        'bbox_AP50': 1.0,
+        'bbox_AP75': 1.0,
+        'bbox_APc': 1.0,
+        'bbox_APf': 1.0,
+        'bbox_APr': -1.0,
+        'bbox_APs': 1.0,
+        'bbox_APm': 1.0,
+        'bbox_APl': 1.0,
     }
+
     eval_results.pop('bbox_result')
     assert eval_results == target
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
 
     # test box and segm coco dataset evaluation
-    coco_det_metric = COCODetection(
+    coco_det_metric = LVISDetection(
         ann_file=fake_json_file,
         classwise=False,
         metric=['bbox', 'segm'],
@@ -368,18 +345,24 @@ def test_compute_metric():
         dataset_meta=fake_dataset_metas)
     eval_results = coco_det_metric([dummy_pred], [dict()])
     target = {
-        'bbox_mAP': 1.0,
-        'bbox_mAP_50': 1.0,
-        'bbox_mAP_75': 1.0,
-        'bbox_mAP_s': 1.0,
-        'bbox_mAP_m': 1.0,
-        'bbox_mAP_l': 1.0,
-        'segm_mAP': 1.0,
-        'segm_mAP_50': 1.0,
-        'segm_mAP_75': 1.0,
-        'segm_mAP_s': 1.0,
-        'segm_mAP_m': 1.0,
-        'segm_mAP_l': 1.0,
+        'bbox_AP': 1.0,
+        'bbox_AP50': 1.0,
+        'bbox_AP75': 1.0,
+        'bbox_APc': 1.0,
+        'bbox_APf': 1.0,
+        'bbox_APr': -1.0,
+        'bbox_APs': 1.0,
+        'bbox_APm': 1.0,
+        'bbox_APl': 1.0,
+        'segm_AP': 1.0,
+        'segm_AP50': 1.0,
+        'segm_AP75': 1.0,
+        'segm_APc': 1.0,
+        'segm_APf': 1.0,
+        'segm_APr': -1.0,
+        'segm_APs': 1.0,
+        'segm_APm': 1.0,
+        'segm_APl': 1.0,
     }
     eval_results.pop('bbox_result')
     eval_results.pop('segm_result')
@@ -387,59 +370,8 @@ def test_compute_metric():
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
     assert osp.isfile(osp.join(tmp_dir.name, 'test.segm.json'))
 
-    # test classwise result evaluation
-    coco_det_metric = COCODetection(
-        ann_file=fake_json_file,
-        classwise=True,
-        outfile_prefix=f'{tmp_dir.name}/test',
-        dataset_meta=fake_dataset_metas)
-    eval_results = coco_det_metric([dummy_pred], [dict()])
-    target = {
-        'bbox_mAP': 1.0,
-        'bbox_mAP_50': 1.0,
-        'bbox_mAP_75': 1.0,
-        'bbox_mAP_s': 1.0,
-        'bbox_mAP_m': 1.0,
-        'bbox_mAP_l': 1.0,
-        'bbox_car_precision': 1.0,
-        'bbox_bicycle_precision': 1.0,
-    }
-    eval_results.pop('bbox_result')
-    eval_results.pop('bbox_classwise_result')
-    assert eval_results == target
-
-    # test proposal
-    coco_det_metric = COCODetection(
-        ann_file=fake_json_file,
-        metric='proposal',
-        classwise=False,
-        outfile_prefix=f'{tmp_dir.name}/test',
-        dataset_meta=fake_dataset_metas)
-    eval_results = coco_det_metric([dummy_pred], [dict()])
-    target = {
-        'AR@100': 1,
-        'AR@300': 1.0,
-        'AR@1000': 1.0,
-        'AR_s@1000': 1.0,
-        'AR_m@1000': 1.0,
-        'AR_l@1000': 1.0
-    }
-    eval_results.pop('proposal_result')
-    assert eval_results == target
-
-    # test empty results
-    coco_det_metric = COCODetection(
-        ann_file=fake_json_file,
-        classwise=False,
-        outfile_prefix=f'{tmp_dir.name}/test',
-        dataset_meta=fake_dataset_metas)
-
-    empty_pred = _gen_prediction(num_pred=0, num_classes=2, img_id=0)
-    eval_results = coco_det_metric([empty_pred], [dict()])
-    assert eval_results == dict()
-
     # test format only evaluation
-    coco_det_metric = COCODetection(
+    coco_det_metric = LVISDetection(
         ann_file=fake_json_file,
         classwise=False,
         format_only=True,
@@ -448,59 +380,4 @@ def test_compute_metric():
     eval_results = coco_det_metric([dummy_pred], [dict()])
     assert osp.exists(f'{tmp_dir.name}/test.bbox.json')
     assert eval_results == dict()
-
-    # test evaluate metric without loading ann_file
-    # the gt instance area based on mask
-    dummy_gt = _create_dummy_gts()
-    coco_det_metric = COCODetection(
-        outfile_prefix=f'{tmp_dir.name}/test',
-        metric=['bbox', 'segm'],
-        dataset_meta=fake_dataset_metas,
-        gt_mask_area=True)
-    target = {
-        'bbox_mAP': 1.0,
-        'bbox_mAP_50': 1.0,
-        'bbox_mAP_75': 1.0,
-        'bbox_mAP_s': 1.0,
-        'bbox_mAP_m': -1.0,
-        'bbox_mAP_l': -1.0,
-        'segm_mAP': 1.0,
-        'segm_mAP_50': 1.0,
-        'segm_mAP_75': 1.0,
-        'segm_mAP_s': 1.0,
-        'segm_mAP_m': -1.0,
-        'segm_mAP_l': -1.0,
-    }
-
-    eval_results = coco_det_metric([dummy_pred], [dummy_gt])
-    eval_results.pop('bbox_result')
-    eval_results.pop('segm_result')
-    assert eval_results == target
-
-    # test evaluate metric without loading ann_file
-    # the gt instance area based on bounding box
-    coco_det_metric = COCODetection(
-        outfile_prefix=f'{tmp_dir.name}/test',
-        metric=['bbox', 'segm'],
-        dataset_meta=fake_dataset_metas,
-        gt_mask_area=False)
-    target = {
-        'bbox_mAP': 1.0,
-        'bbox_mAP_50': 1.0,
-        'bbox_mAP_75': 1.0,
-        'bbox_mAP_s': 1.0,
-        'bbox_mAP_m': 1.0,
-        'bbox_mAP_l': 1.0,
-        'segm_mAP': 1.0,
-        'segm_mAP_50': 1.0,
-        'segm_mAP_75': 1.0,
-        'segm_mAP_s': 1.0,
-        'segm_mAP_m': 1.0,
-        'segm_mAP_l': 1.0,
-    }
-
-    eval_results = coco_det_metric([dummy_pred], [dummy_gt])
-    eval_results.pop('bbox_result')
-    eval_results.pop('segm_result')
-    assert eval_results == target
     tmp_dir.cleanup()
