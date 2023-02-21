@@ -356,7 +356,8 @@ def test_compute_metric():
         'bbox_mAP_l': 1.0,
     }
     eval_results.pop('bbox_result')
-    assert eval_results == target
+    results = {k: round(v, 4) for k, v in eval_results.items()}
+    assert results == target
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
 
     # test box and segm coco dataset evaluation
@@ -383,7 +384,8 @@ def test_compute_metric():
     }
     eval_results.pop('bbox_result')
     eval_results.pop('segm_result')
-    assert eval_results == target
+    results = {k: round(v, 4) for k, v in eval_results.items()}
+    assert results == target
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
     assert osp.isfile(osp.join(tmp_dir.name, 'test.segm.json'))
 
@@ -406,7 +408,8 @@ def test_compute_metric():
     }
     eval_results.pop('bbox_result')
     eval_results.pop('bbox_classwise_result')
-    assert eval_results == target
+    results = {k: round(v, 4) for k, v in eval_results.items()}
+    assert results == target
 
     # test proposal
     coco_det_metric = COCODetection(
@@ -417,15 +420,16 @@ def test_compute_metric():
         dataset_meta=fake_dataset_metas)
     eval_results = coco_det_metric([dummy_pred], [dict()])
     target = {
-        'AR@100': 1,
-        'AR@300': 1.0,
-        'AR@1000': 1.0,
-        'AR_s@1000': 1.0,
-        'AR_m@1000': 1.0,
-        'AR_l@1000': 1.0
+        'AR@1': 0.25,
+        'AR@10': 1.0,
+        'AR@100': 1.0,
+        'AR_s@100': 1.0,
+        'AR_m@100': 1.0,
+        'AR_l@100': 1.0
     }
     eval_results.pop('proposal_result')
-    assert eval_results == target
+    results = {k: round(v, 4) for k, v in eval_results.items()}
+    assert results == target
 
     # test empty results
     coco_det_metric = COCODetection(
@@ -434,7 +438,7 @@ def test_compute_metric():
         outfile_prefix=f'{tmp_dir.name}/test',
         dataset_meta=fake_dataset_metas)
 
-    empty_pred = _gen_prediction(num_pred=0, num_classes=2, img_id=0)
+    empty_pred = _gen_prediction(num_pred=0, num_classes=2, img_id=1)
     eval_results = coco_det_metric([empty_pred], [dict()])
     assert eval_results == dict()
 
@@ -475,7 +479,8 @@ def test_compute_metric():
     eval_results = coco_det_metric([dummy_pred], [dummy_gt])
     eval_results.pop('bbox_result')
     eval_results.pop('segm_result')
-    assert eval_results == target
+    results = {k: round(v, 4) for k, v in eval_results.items()}
+    assert results == target
 
     # test evaluate metric without loading ann_file
     # the gt instance area based on bounding box
@@ -502,5 +507,6 @@ def test_compute_metric():
     eval_results = coco_det_metric([dummy_pred], [dummy_gt])
     eval_results.pop('bbox_result')
     eval_results.pop('segm_result')
-    assert eval_results == target
+    results = {k: round(v, 4) for k, v in eval_results.items()}
+    assert results == target
     tmp_dir.cleanup()

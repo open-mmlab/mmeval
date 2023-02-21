@@ -38,7 +38,7 @@ class COCODetection(BaseMetric):
         classwise (bool): Whether to return the computed  results of each
             class. Defaults to False.
         proposal_nums (Sequence[int]): Numbers of proposals to be evaluated.
-            Defaults to (100, 300, 1000).
+            Defaults to (1, 10, 100).
         metric_items (List[str], optional): Metric result names to be
             recorded in the evaluation result. Defaults to None.
         format_only (bool): Format the output results without perform
@@ -146,7 +146,7 @@ class COCODetection(BaseMetric):
                  metric: Union[str, List[str]] = 'bbox',
                  iou_thrs: Union[float, Sequence[float], None] = None,
                  classwise: bool = False,
-                 proposal_nums: Sequence[int] = (100, 300, 1000),
+                 proposal_nums: Sequence[int] = (1, 10, 100),
                  metric_items: Optional[Sequence[str]] = None,
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
@@ -165,8 +165,8 @@ class COCODetection(BaseMetric):
         for metric in self.metrics:
             if metric not in allowed_metrics:
                 raise KeyError(
-                    "metric should be one of 'bbox', 'segm', 'proposal', "
-                    f"'proposal_fast', but got {metric}.")
+                    "metric should be one of 'bbox', 'segm', and 'proposal', "
+                    f'but got {metric}.')
 
         # do class wise evaluation, default False
         self.classwise = classwise
@@ -554,12 +554,12 @@ class COCODetection(BaseMetric):
                 'mAP_s': 3,
                 'mAP_m': 4,
                 'mAP_l': 5,
-                'AR@100': 6,
-                'AR@300': 7,
-                'AR@1000': 8,
-                'AR_s@1000': 9,
-                'AR_m@1000': 10,
-                'AR_l@1000': 11
+                f'AR@{self.proposal_nums[0]}': 6,
+                f'AR@{self.proposal_nums[1]}': 7,
+                f'AR@{self.proposal_nums[2]}': 8,
+                f'AR_s@{self.proposal_nums[2]}': 9,
+                f'AR_m@{self.proposal_nums[2]}': 10,
+                f'AR_l@{self.proposal_nums[2]}': 11
             }
             metric_items = self.metric_items
             if metric_items is not None:
@@ -575,21 +575,37 @@ class COCODetection(BaseMetric):
                 coco_eval.summarize()
                 if metric_items is None:
                     metric_items = [
-                        'AR@100', 'AR@300', 'AR@1000', 'AR_s@1000',
-                        'AR_m@1000', 'AR_l@1000'
+                        f'AR@{self.proposal_nums[0]}',
+                        f'AR@{self.proposal_nums[1]}',
+                        f'AR@{self.proposal_nums[2]}',
+                        f'AR_s@{self.proposal_nums[2]}',
+                        f'AR_m@{self.proposal_nums[2]}',
+                        f'AR_l@{self.proposal_nums[2]}'
                     ]
 
                 results_list = []
                 for item in metric_items:
-                    val = float(
-                        f'{coco_eval.stats[coco_metric_names[item]]:.3f}')
-                    results_list.append(f'{val * 100:.1f}')
+                    val = float(coco_eval.stats[coco_metric_names[item]])
+                    results_list.append(f'{round(val * 100, 2)}')
                     eval_results[item] = val
                 eval_results[f'{metric}_result'] = results_list
             else:
                 coco_eval.evaluate()
                 coco_eval.accumulate()
                 coco_eval.summarize()
+                if metric_items is None:
+                    metric_items = [
+                        'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
+                    ]
+
+                results_list = []
+                for metric_item in metric_items:
+                    key = f'{metric}_{metric_item}'
+                    val = coco_eval.stats[coco_metric_names[metric_item]]
+                    results_list.append(f'{round(val * 100, 2)}')
+                    eval_results[key] = float(val)
+                eval_results[f'{metric}_result'] = results_list
+
                 if self.classwise:  # Compute per-category AP
                     # Compute per-category AP
                     # from https://github.com/facebookresearch/detectron2/
@@ -609,24 +625,11 @@ class COCODetection(BaseMetric):
                         else:
                             ap = float('nan')
                         results_per_category.append(
-                            (f'{nm["name"]}', f'{round(ap, 3)}'))
-                        eval_results[f'{metric}_{nm["name"]}_precision'] = \
-                            round(ap, 3)
+                            (f'{nm["name"]}', f'{round(ap * 100, 2)}'))
+                        eval_results[f'{metric}_{nm["name"]}_precision'] = ap
 
                     eval_results[f'{metric}_classwise_result'] = \
                         results_per_category
-                if metric_items is None:
-                    metric_items = [
-                        'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
-                    ]
-
-                results_list = []
-                for metric_item in metric_items:
-                    key = f'{metric}_{metric_item}'
-                    val = coco_eval.stats[coco_metric_names[metric_item]]
-                    results_list.append(f'{round(val, 3) * 100:.1f}')
-                    eval_results[key] = float(f'{round(val, 3)}')
-                eval_results[f'{metric}_result'] = results_list
         if tmp_dir is not None:
             tmp_dir.cleanup()
         return eval_results

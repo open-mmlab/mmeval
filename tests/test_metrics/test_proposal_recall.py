@@ -89,7 +89,7 @@ def test_metric_accurate():
     proposal_recall = ProposalRecall()
     metric_results = proposal_recall(predictions, groundtruths)
     metric_results.pop('proposal_result')
-    target = {'AR@100': 1.0, 'AR@300': 1.0, 'AR@1000': 1.0}
+    target = {'AR@1': 0.25, 'AR@10': 1.0, 'AR@100': 1.0, 'AR@1000': 1.0}
     assert metric_results == target
 
     # test manually set proposal nums
