@@ -1,5 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-
+import warnings
 from abc import ABCMeta, abstractmethod
 from typing import Any, Dict, List, Optional
 
@@ -63,15 +63,23 @@ class BaseMetric(metaclass=ABCMeta):
         >>> accuracy.compute()  # doctest: +SKIP
     """
 
+    default_prefix: Optional[str] = None
+
     def __init__(self,
                  dataset_meta: Optional[Dict] = None,
                  dist_collect_mode: str = 'unzip',
-                 dist_backend: Optional[str] = None):
+                 dist_backend: Optional[str] = None,
+                 prefix: Optional[str] = None) -> None:
         self.dataset_meta = dataset_meta
         assert dist_collect_mode in ('cat', 'unzip')
         self.dist_collect_mode = dist_collect_mode
         self.dist_comm = get_dist_backend(dist_backend)
         self._results: List[Any] = []
+
+        self.prefix = prefix or self.default_prefix
+        if self.prefix is None:
+            warnings.warn('The prefix is not set in metric class '
+                          f'{self.__class__.__name__}.')
 
     @property
     def dataset_meta(self) -> Optional[Dict]:
