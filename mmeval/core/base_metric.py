@@ -32,6 +32,10 @@ class BaseMetric(metaclass=ABCMeta):
             backend, you can get all the backend names through
             ``mmeval.core.list_all_backends()``.
             If None, use the default backend. Defaults to None.
+        prefix (str, optional): The prefix that will be added in the metric
+            names to disambiguate homonymous metrics of different evaluators.
+            If prefix is not provided in the argument, self.default_prefix
+            will be used instead. Defaults to None.
 
     Example to implement an accuracy metric:
 
