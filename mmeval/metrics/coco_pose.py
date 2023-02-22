@@ -37,52 +37,56 @@ class COCOKeyPointDetection(BaseMetric):
         use_area (bool): Whether to use ``'area'`` message in the annotations.
             If the ground truth annotations (e.g. CrowdPose, AIC) do not have
             the field ``'area'``, please set ``use_area=False``.
-            Defaults to ``True``.
-        iou_type (str): The same parameter as `iouType` in
-            :class:`xtcocotools.COCOeval`, which can be ``'keypoints'``, or
-            ``'keypoints_crowd'`` (used in CrowdPose dataset).
-            Defaults to ``'keypoints'``.
-        score_mode (str): The mode to score the prediction results which
+            Defaults to True.
+        iou_type (str): The same parameter as ``iouType`` in
+            :class:`xtcocotools.COCOeval`, which
             should be one of the following options:
 
-                - ``'bbox'``: Take the score of bbox as the score of the
-                    prediction results.
-                - ``'bbox_keypoint'``: Use keypoint score to rescore the
-                    prediction results.
-                - ``'bbox_rle'``: Use rle_score to rescore the
-                    prediction results.
+            - ``'keypoints'``.
+            - ``'keypoints_crowd'`` (used in CrowdPose dataset).
 
-            Defaults to ``'bbox_keypoint'`
+            Defaults to ``'keypoints'``.
+        score_mode (str): The mode to score the prediction results, which
+            should be one of the following options:
+
+            - ``'bbox'``: Take the score of bbox as the score of the
+              prediction results.
+            - ``'bbox_keypoint'``: Use keypoint score to rescore the
+              prediction results.
+            - ``'bbox_rle'``: Use rle_score to rescore the
+              prediction results.
+
+            Defaults to ``'bbox_keypoint'``.
         keypoint_score_thr (float): The threshold of keypoint score. The
             keypoints with score lower than it will not be included to
             rescore the prediction results. Valid only when ``score_mode`` is
-            ``bbox_keypoint``. Defaults to ``0.2``
+            ``bbox_keypoint``. Defaults to 0.2.
         nms_mode (str): The mode to perform Non-Maximum Suppression (NMS),
             which should be one of the following options:
 
-                - ``'oks_nms'``: Use Object Keypoint Similarity (OKS) to
-                    perform NMS.
-                - ``'soft_oks_nms'``: Use Object Keypoint Similarity (OKS)
-                    to perform soft NMS.
-                - ``'none'``: Do not perform NMS. Typically for bottomup mode
-                    output.
+            - ``'oks_nms'``: Use Object Keypoint Similarity (OKS) to
+              perform NMS.
+            - ``'soft_oks_nms'``: Use Object Keypoint Similarity (OKS)
+              to perform soft NMS.
+            - ``'none'``: Do not perform NMS. Typically for bottomup mode
+              output.
 
-            Defaults to ``'oks_nms'`
+            Defaults to ``'oks_nms'``
         nms_thr (float): The Object Keypoint Similarity (OKS) threshold
             used in NMS when ``nms_mode`` is ``'oks_nms'`` or
             ``'soft_oks_nms'``. Will retain the prediction results with OKS
-            lower than ``nms_thr``. Defaults to ``0.9``
-        format_only (bool): Whether only format the output results without
+            lower than ``nms_thr``. Defaults to 0.9.
+        format_only (bool): Whether only formats the output results without
             doing quantitative evaluation. This is designed for the need of
             test submission when the ground truth annotations are absent. If
             set to ``True``, ``outfile_prefix`` should specify the path to
-            store the output results. Defaults to ``False``.
+            store the output results. Defaults to False.
         outfile_prefix (str | None): The prefix of json files. It includes
             the file path and the prefix of filename, e.g., ``'a/b/prefix'``.
             If not specified, a temp file will be created.
-            Defaults to ``None``.
+            Defaults to None.
         **kwargs: Keyword parameters passed to :class:`mmeval.BaseMetric`. Must
-            include ``dataset_meta`` in order to compute the metric.
+            include key ``'dataset_meta'`` in order to compute the metric.
 
     Examples:
         >>> import copy
@@ -108,35 +112,30 @@ class COCOKeyPointDetection(BaseMetric):
         ...     'num_keypoints': 17,
         ...     'sigmas': None,
         ... }
-        >>> def _convert_ann_to_pred_and_gt(ann_file):
-        ...     predictions = []
-        ...     groundtruths = []
-        ...     db = load(ann_file)
-        ...     for ann in db['annotations']:
-        ...         bboxes = np.array(
-        ...             ann['bbox'], dtype=np.float32).reshape(-1, 4)
-        ...         keypoints = np.array(ann['keypoints']).reshape((1, -1, 3))
-        ...         prediction = {
-        ...             'id': ann['id'],
-        ...             'img_id': ann['image_id'],
-        ...             'bboxes': bboxes,
-        ...             'keypoints': keypoints[..., :2],
-        ...             'keypoint_scores': keypoints[..., -1],
-        ...             'bbox_scores': np.ones((1, ), dtype=np.float32),
-        ...         }
-        ...         groundtruth = {
-        ...             'img_id': ann['image_id'],
-        ...             'width': 640,
-        ...             'height': 480,
-        ...             'num_keypoints': ann['num_keypoints'],
-        ...             'raw_ann_info': [copy.deepcopy(ann)],
-        ...         }
-        ...         if 'area' in ann:
-        ...             groundtruth['area'] = ann['area']
-        ...         predictions.append(prediction)
-        ...         groundtruths.append(groundtruth)
-        ...     return predictions, groundtruths
-        >>> predictions, groundtruths = _convert_ann_to_pred_and_gt(ann_file)
+        >>> predictions, groundtruths = [], []
+        >>> db = load(ann_file)
+        >>> for ann in db['annotations']:
+        ...     bboxes = np.array(
+        ...         ann['bbox'], dtype=np.float32).reshape(-1, 4)
+        ...     keypoints = np.array(ann['keypoints']).reshape((1, -1, 3))
+        ...     prediction = {
+        ...         'id': ann['id'],
+        ...         'img_id': ann['image_id'],
+        ...         'bboxes': bboxes,
+        ...         'keypoints': keypoints[..., :2],
+        ...         'keypoint_scores': keypoints[..., -1],
+        ...         'bbox_scores': np.ones((1, ), dtype=np.float32),
+        ...         'area': ann['area'],
+        ...     }
+        ...     groundtruth = {
+        ...         'img_id': ann['image_id'],
+        ...         'width': 640,
+        ...         'height': 480,
+        ...         'num_keypoints': ann['num_keypoints'],
+        ...         'raw_ann_info': [copy.deepcopy(ann)],
+        ...     }
+        ...     predictions.append(prediction)
+        ...     groundtruths.append(groundtruth)
         >>> coco_pose_metric = COCOKeyPointDetection(
         ...     ann_file=ann_file,
         ...     dataset_meta=coco_dataset_meta)
@@ -168,8 +167,9 @@ class COCOKeyPointDetection(BaseMetric):
         OrderedDict([('AP', 1.0), ('AP .5', 1.0), ('AP .75', 1.0),
         ('AP (M)', 1.0), ('AP (L)', 1.0), ('AR', 1.0), ('AR .5', 1.0),
         ('AR .75', 1.0), ('AR (M)', 1.0), ('AR (L)', 1.0)])
+        >>> coco_pose_metric = COCOKeyPointDetection(dataset_meta=coco_dataset_meta)
         >>> coco_pose_metric.add(predictions, groundtruths)
-        >>> coco_pose_metric.compute_metric(coco_pose_metric._results)
+        >>> coco_pose_metric.compute()
         Loading and preparing results...
         DONE (t=0.00s)
         creating index...
@@ -260,51 +260,58 @@ class COCOKeyPointDetection(BaseMetric):
             predictions (Sequence[dict]): A sequence of dict. Each dict
                 representing a pose estimation result for an instance, with
                 the following keys:
-                    - 'id' (int): The id of the instance
-                    - 'img_id' (int): The image_id of the instance
-                    - 'bboxes': The bounding bboxes of the instance
-                    - 'keypoints' (np.ndarray): Shape (N, K, 2).
-                        The predicted keypoints coordinates of the instance.
-                        N: number of instances, K: number of keypoint.
-                        For topdown-style output, N is usually 1, while
-                        for bottomup-style output, N is the number of instances
-                        in the image.
-                    - 'keypoint_scores' (np.ndarray): Shape (N, K).
-                        The scores for all keypoints of all instances.
-                    - 'bbox_scores' (np.ndarray): Shape (N, ).
-                        The predicted scores of the bounding boxes.
+
+                - id (int): the id of the instance
+                - img_id (int): the image_id of the instance
+                - bboxes: the bounding bboxes of the instance
+                - keypoints (np.ndarray): the predicted keypoints coordinates
+                  of the instance with shape (N, K, 2), where N is the number
+                  of instances and K is the number of keypoints. For
+                  topdown-style output, N is usually 1, while for
+                  bottomup-style output, N is the number of instances in the
+                  image.
+                - keypoint_scores (np.ndarray): the scores for all keypoints of
+                  all instances with shape (N, K)
+                - bbox_scores (np.ndarray): the predicted scores of the
+                  bounding boxes with shape (N, )
 
             groundtruths (Sequence[dict]): A sequence of dict. If load from
-                `ann_file`, the dict inside can be empty. Else, each dict
+                ``ann_file``, the dict inside can be empty. Else, each dict
                 represents a groundtruths for an instance, with the following
                 keys:
-                    - 'img_id' (int): The image_id of the instance
-                    - 'width' (int): The width of the image.
-                    - 'height' (int): The height of the image.
-                    - 'crowd_index' (float, optional): Measure the crowding
-                        level of an image, defined in CrowdPose dataset
-                    - `raw_ann_info` (dict): The raw annotation information
-                        of the instances. It is worth mentioning that, to
-                        compute `COCOKeyPointDetection`, there are some
-                        required keys in the `raw_ann_info`:
-                            - `id`: the id to distinguish different annotations
-                            - `image_id`: the image id of this annotation
-                            - `category_id`: the category of the instance.
-                            - `bbox`: the bounding box of the instance
-                            - `keypoints`: the keypoints cooridinates with
-                                their visibilities. It need to be aligned
-                                with the official COCO format, e.g., a list
-                                with length N * 3, in which N is the number of
-                                keypoints. And each triplet represent the
-                                [x, y, visible] of the keypoint.
-                            - `iscrowd`: indicating whether the annotation is
-                                a crowd. It is useful when matching the
-                                detection results to the ground truth.
-                        There are some optional keys as well:
-                            - `area`: it is necessary when `self.use_area` is
-                                `True`
-                            - `num_keypoints`: it is necessary when
-                                `self.iou_type` is set as `keypoints_crowd`.
+
+                - img_id (int): the image_id of the instance
+                - width (int): the width of the image
+                - height (int): the height of the image
+                - crowd_index (float, optional): measures the crowding
+                  level of an image defined in CrowdPose dataset
+                - raw_ann_info (dict): the raw annotation information
+                  of the instances, detailed below
+
+                It is worth mentioning that, to compute
+                    ``COCOKeyPointDetection``, there are some required keys in
+                    the ``raw_ann_info``:
+
+                - id: the id to distinguish different annotations
+                - image_id: the image id of this annotation
+                - category_id: the category of the instance
+                - bbox: the bounding box of the instance
+                - keypoints: the keypoints cooridinates with
+                    their visibilities. It need to be aligned
+                    with the official COCO format, e.g., a list
+                    with length N * 3, in which N is the number of
+                    keypoints, and each triplet represent the
+                    [x, y, visible] of the keypoint.
+                - iscrowd: indicating whether the annotation is
+                    a crowd. It is useful when matching the
+                    detection results to the ground truth.
+
+                There are some optional keys as well:
+
+                - area: it is necessary when ``self.use_area`` is
+                    ``True``
+                - num_keypoints: it is necessary when
+                    ``self.iou_type`` is set as ``'keypoints_crowd'``
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             assert isinstance(prediction, dict), 'The prediciton should be ' \
@@ -320,36 +327,46 @@ class COCOKeyPointDetection(BaseMetric):
         Args:
             gt_dicts (Sequence[dict]): Ground truth of the dataset. Each dict
                 contains the ground truth information about the data sample.
-                Required keys for each `gt_dict` in `gt_dicts`:
-                    - `img_id`: image id of the data sample
-                    - `width`: original image width
-                    - `height`: original image height
-                    - `raw_ann_info`: the raw annotation information,
-                        detailed below
+                Required keys for each ``gt_dict`` in ``gt_dicts``:
+
+                - img_id: image id of the data sample
+                - width: original image width
+                - height: original image height
+                - raw_ann_info: the raw annotation information,
+                  detailed below
+
                 Optional keys:
-                    - `crowd_index`: measure the crowding level of an image,
-                        defined in CrowdPose dataset
-                It is worth mentioning that, in order to compute `CocoMetric`,
-                there are some required keys in the `raw_ann_info`:
-                    - `id`: the id to distinguish different annotations
-                    - `image_id`: the image id of this annotation
-                    - `category_id`: the category of the instance.
-                    - `bbox`: the object bounding box
-                    - `keypoints`: the keypoints cooridinates along with their
-                        visibilities. Note that it need to be aligned
-                        with the official COCO format, e.g., a list with length
-                        N * 3, in which N is the number of keypoints. And each
-                        triplet represent the [x, y, visible] of the keypoint.
-                    - `iscrowd`: indicating whether the annotation is a crowd.
-                        It is useful when matching the detection results to
-                        the ground truth.
+
+                - crowd_index: measure the crowding level of an image,
+                  defined in CrowdPose dataset
+
+                It is worth mentioning that, in order to compute
+                ``CocoMetric``, there are some required keys in the
+                ``raw_ann_info``:
+
+                - id: the id to distinguish different annotations
+                - image_id: the image id of this annotation
+                - category_id: the category of the instance
+                - bbox: the object bounding box
+                - keypoints: the keypoints cooridinates along with their
+                  visibilities. Note that it need to be aligned.
+                  with the official COCO format, e.g., a list with length
+                  N * 3, in which N is the number of keypoints, and each
+                  triplet represent the [x, y, visible] of the keypoint.
+                - iscrowd: indicating whether the annotation is a crowd.
+                  It is useful when matching the detection results to
+                  the ground truth.
+
                 There are some optional keys as well:
-                    - `area`: it is necessary when `self.use_area` is `True`
-                    - `num_keypoints`: it is necessary when `self.iou_type`
-                        is set as `keypoints_crowd`.
+
+                - area: it is necessary when ``self.use_area`` is ``True``
+                - num_keypoints: it is necessary when ``self.iou_type``
+                  is set as ``'keypoints_crowd'``
+
             outfile_prefix (str): The filename prefix of the json files. If the
                 prefix is "somepath/xxx", the json file will be named
                 "somepath/xxx.gt.json".
+
         Returns:
             str: The filename of the json file.
         """
@@ -419,7 +436,7 @@ class COCOKeyPointDetection(BaseMetric):
 
         Returns:
             Dict[str, float]: The computed metrics. The keys are the names of
-            the metrics, and the values are corresponding results.
+                the metrics, and the values are corresponding results.
         """
         # split prediction and gt list
         preds, gts = zip(*results)
@@ -544,10 +561,7 @@ class COCOKeyPointDetection(BaseMetric):
                 of the dataset.
             outfile_prefix (str): The filename prefix of the json files. If the
                 prefix is "somepath/xxx", the json files will be named
-                "somepath/xxx.keypoints.json",
-
-        Returns:
-            str: The json file name of keypoint results.
+                "somepath/xxx.keypoints.json".
         """
         # the results with 'category_id'
         cat_results = []
@@ -582,7 +596,7 @@ class COCOKeyPointDetection(BaseMetric):
 
         Returns:
             list: a list of tuples. Each tuple contains the evaluation stats
-            name and corresponding stats value.
+                name and corresponding stats value.
         """
         res_file = f'{outfile_prefix}.keypoints.json'
         coco_det = self.coco.loadRes(res_file)
@@ -623,7 +637,7 @@ class COCOKeyPointDetection(BaseMetric):
                 See the argument ``key`` for details.
             key (str): The key name in each person prediction results. The
                 corresponding value will be used for sorting the results.
-                Default: ``'id'``.
+                Defaults to ``'id'``.
 
         Returns:
             Dict[int, list]: The sorted keypoint detection results.
