@@ -12,6 +12,7 @@ from .end_point_error import EndPointError
 from .f1_score import F1Score
 from .gradient_error import GradientError
 from .hmean_iou import HmeanIoU
+from .instance_seg import InstanceSeg
 from .mae import MeanAbsoluteError
 from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
@@ -34,7 +35,7 @@ __all__ = [
     'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
     'PeakSignalNoiseRatio', 'MeanAbsoluteError', 'MeanSquaredError',
     'StructuralSimilarity', 'SignalNoiseRatio', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
+    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'InstanceSeg', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE'
 ]
