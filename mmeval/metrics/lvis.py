@@ -22,7 +22,7 @@ class LVISDetection(COCODetection):
     detection and instance segmentation.
 
     Args:
-        ann_file (str, optional): Path to the LVIS dataset annotation file.
+        ann_file (str): Path to the LVIS dataset annotation file.
         metric (str | List[str]): Metrics to be evaluated. Valid metrics
             include 'bbox', 'segm', and 'proposal'. Defaults to 'bbox'.
         iou_thrs (float | List[float], optional): IoU threshold to compute AP
