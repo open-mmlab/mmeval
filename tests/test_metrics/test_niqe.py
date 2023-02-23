@@ -49,5 +49,5 @@ def test_niqe():
         channel_order='bgr')
     niqe.add(predictions)
     niqe.add(predictions)
-    result = niqe.compute_metric()
+    result = niqe.compute()
     np.testing.assert_almost_equal(result['niqe'], 5.73155, decimal=5)
