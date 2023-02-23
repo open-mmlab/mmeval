@@ -64,7 +64,9 @@ class NaturalImageQualityEvaluator(BaseMetric):
         """Add NIQE score of batch to ``self._results``
 
         Args:
-            predictions (Sequence[np.ndarray]): Predictions of the model.
+            predictions (Sequence[np.ndarray]): Predictions of the model. Each
+                prediction should be a 4D (as a video, not batches of images)
+                or 3D (as an image) array.
             channel_order (Optional[str]): The channel order of the input
                 samples. If not passed, will set as :attr:`self.channel_order`.
                 Defaults to None.

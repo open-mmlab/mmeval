@@ -41,3 +41,13 @@ def test_niqe():
 
     with pytest.raises(AssertionError):
         niqe = NaturalImageQualityEvaluator(convert_to='a')
+
+    niqe = NaturalImageQualityEvaluator(
+        crop_border=0,
+        input_order='HWC',
+        convert_to='gray',
+        channel_order='bgr')
+    niqe.add(predictions)
+    niqe.add(predictions)
+    result = niqe.compute_metric()
+    np.testing.assert_almost_equal(result['niqe'], 5.73155, decimal=5)
