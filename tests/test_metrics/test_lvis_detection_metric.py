@@ -199,7 +199,7 @@ def _gen_groundtruth(num_gt=10,
             'metric_items': ['AP', 'AP50']
         },
         {
-            'proposal_nums': [10, 30, 100]
+            'proposal_nums': 30
         },
     ])
 def test_box_metric_interface(metric_kwargs):
@@ -215,13 +215,16 @@ def test_box_metric_interface(metric_kwargs):
     fake_dataset_metas = {
         'classes': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = LVISDetection(ann_file=fake_json_file,
-        metric=metric, dataset_meta=fake_dataset_metas, **metric_kwargs)
+    coco_det_metric = LVISDetection(
+        ann_file=fake_json_file,
+        metric=metric,
+        dataset_meta=fake_dataset_metas,
+        **metric_kwargs)
     assert isinstance(coco_det_metric, BaseMetric)
 
-    metric_results = coco_det_metric(predictions=[_create_dummy_results()],
+    metric_results = coco_det_metric(
+        predictions=[_create_dummy_results()],
         groundtruths=[dict()],
-
     )
     assert isinstance(metric_results, dict)
     assert 'bbox_AP' in metric_results
@@ -243,7 +246,7 @@ def test_box_metric_interface(metric_kwargs):
             'metric_items': ['AP', 'AP50']
         },
         {
-            'proposal_nums': [10, 30, 100]
+            'proposal_nums': 30
         },
     ])
 def test_segm_metric_interface(metric_kwargs):
@@ -259,8 +262,11 @@ def test_segm_metric_interface(metric_kwargs):
     fake_dataset_metas = {
         'classes': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = LVISDetection(ann_file=fake_json_file,
-        metric=metric, dataset_meta=fake_dataset_metas, **metric_kwargs)
+    coco_det_metric = LVISDetection(
+        ann_file=fake_json_file,
+        metric=metric,
+        dataset_meta=fake_dataset_metas,
+        **metric_kwargs)
     assert isinstance(coco_det_metric, BaseMetric)
 
     metric_results = coco_det_metric(
@@ -269,26 +275,34 @@ def test_segm_metric_interface(metric_kwargs):
     )
     assert isinstance(metric_results, dict)
     assert 'segm_AP' in metric_results
+    tmp_dir.cleanup()
 
 
 @pytest.mark.skipif(
     coco_wrapper is None, reason='coco_wrapper is not available!')
 def test_metric_invalid_usage():
+    tmp_dir = tempfile.TemporaryDirectory()
+
+    # create dummy data
+    fake_json_file = osp.join(tmp_dir.name, 'fake_data.json')
+    _create_dummy_coco_json(fake_json_file)
+
     with pytest.raises(KeyError):
-        LVISDetection(metric='xxx')
+        LVISDetection(ann_file=fake_json_file, metric='xxx')
 
     with pytest.raises(TypeError):
-        LVISDetection(iou_thrs=1)
+        LVISDetection(ann_file=fake_json_file, iou_thrs=1)
 
     with pytest.raises(AssertionError):
-        LVISDetection(format_only=True)
+        LVISDetection(ann_file=fake_json_file, format_only=True)
 
     num_classes = 2
     # Avoid some potential error
     fake_dataset_metas = {
         'classes': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = LVISDetection(dataset_meta=fake_dataset_metas)
+    coco_det_metric = LVISDetection(
+        ann_file=fake_json_file, dataset_meta=fake_dataset_metas)
 
     with pytest.raises(KeyError):
         prediction = _gen_prediction(num_classes=num_classes)
@@ -300,6 +314,7 @@ def test_metric_invalid_usage():
         prediction = _gen_prediction(num_classes=num_classes)
         groundtruth = _gen_groundtruth(num_classes=num_classes)
         coco_det_metric(prediction, groundtruth)
+    tmp_dir.cleanup()
 
 
 @pytest.mark.skipif(
@@ -333,7 +348,8 @@ def test_compute_metric():
     }
 
     eval_results.pop('bbox_result')
-    assert eval_results == target
+    results = {k: round(v, 4) for k, v in eval_results.items()}
+    assert results == target
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
 
     # test box and segm coco dataset evaluation
@@ -366,7 +382,8 @@ def test_compute_metric():
     }
     eval_results.pop('bbox_result')
     eval_results.pop('segm_result')
-    assert eval_results == target
+    results = {k: round(v, 4) for k, v in eval_results.items()}
+    assert results == target
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
     assert osp.isfile(osp.join(tmp_dir.name, 'test.segm.json'))
 

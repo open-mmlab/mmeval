@@ -1,14 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import itertools
+import numpy as np
 import os.path as osp
 import tempfile
-import warnings
 from collections import OrderedDict
 from typing import Dict, List, Optional, Sequence, Union
 
-import numpy as np
-from .coco_detection import COCODetection
 from mmeval.fileio import get_local_path
+from .coco_detection import COCODetection
 
 try:
     from lvis import LVIS, LVISEval, LVISResults
@@ -24,9 +22,7 @@ class LVISDetection(COCODetection):
     detection and instance segmentation.
 
     Args:
-        ann_file (str, optional): Path to the coco lvis format annotation file.
-            If not specified, ground truth annotations from the dataset will
-            be converted to coco lvis format. Defaults to None.
+        ann_file (str, optional): Path to the LVIS dataset annotation file.
         metric (str | List[str]): Metrics to be evaluated. Valid metrics
             include 'bbox', 'segm', and 'proposal'. Defaults to 'bbox'.
         iou_thrs (float | List[float], optional): IoU threshold to compute AP
@@ -34,8 +30,8 @@ class LVISDetection(COCODetection):
             Defaults to None.
         classwise (bool): Whether to return the computed  results of each
             class. Defaults to False.
-        proposal_nums (Sequence[int]): Numbers of proposals to be evaluated.
-            Defaults to (100, 300, 1000).
+        proposal_nums (int): Numbers of proposals to be evaluated.
+            Defaults to 300.
         metric_items (List[str], optional): Metric result names to be
             recorded in the evaluation result. Defaults to None.
         format_only (bool): Format the output results without perform
@@ -59,10 +55,11 @@ class LVISDetection(COCODetection):
         >>>
         >>> num_classes = 4
         >>> fake_dataset_metas = {
-        ...     'CLASSES': tuple([str(i) for i in range(num_classes)])
+        ...     'classes': tuple([str(i) for i in range(num_classes)])
         ... }
         >>>
         >>> lvis_det_metric = LVISDetection(
+        ...     ann_file='data/lvis_v1/annotations/lvis_v1_train.json'
         ...     dataset_meta=fake_dataset_metas,
         ...     metric=['bbox', 'segm']
         ... )
@@ -135,10 +132,10 @@ class LVISDetection(COCODetection):
     """
 
     def __init__(self,
-                 ann_file: Optional[str] = None,
+                 ann_file: str,
                  metric: Union[str, List[str]] = 'bbox',
                  classwise: bool = False,
-                 proposal_nums: Sequence[int] = (100, 300, 1000),
+                 proposal_nums: int = 300,
                  iou_thrs: Optional[Union[float, Sequence[float]]] = None,
                  metric_items: Optional[Sequence[str]] = None,
                  format_only: bool = False,
@@ -150,33 +147,19 @@ class LVISDetection(COCODetection):
                 'Package lvis is not installed. Please run "pip install '
                 'git+https://github.com/lvis-dataset/lvis-api.git".')
         super().__init__(
-            metric=metric, 
+            metric=metric,
             classwise=classwise,
-            proposal_nums=proposal_nums,
             iou_thrs=iou_thrs,
             metric_items=metric_items,
             format_only=format_only,
             outfile_prefix=outfile_prefix,
             backend_args=backend_args,
             **kwargs)
-        # if ann_file is not specified,
-        # initialize lvis api with the converted dataset
-        self._lvis_api: Optional[LVIS]  # type: ignore
-        if ann_file is not None:
-            with get_local_path(
-                    filepath=ann_file,
-                    backend_args=backend_args) as local_path:
-                self._lvis_api = LVIS(local_path)
-        else:
-            self._lvis_api = None
+        self.proposal_nums = proposal_nums  # type: ignore
 
-    # @property
-    # def _coco_api(self):
-    #     return self._lvis_api
-    
-    # @_coco_api.setter
-    # def _coco_api(self, _coco_api):
-    #     self._lvis_api = _coco_api
+        with get_local_path(
+                filepath=ann_file, backend_args=backend_args) as local_path:
+            self._lvis_api = LVIS(local_path)
 
     def add_predictions(self, predictions: Sequence[Dict]) -> None:
         """Add predictions only.
@@ -214,7 +197,7 @@ class LVISDetection(COCODetection):
         return metric_result
 
     def compute_metric(self, results: list) -> Dict[str, float]:
-        """Compute the COCO metrics.
+        """Compute the LVIS metrics.
 
         Args:
             results (List[tuple]): A list of tuple. Each tuple is the
@@ -231,16 +214,9 @@ class LVISDetection(COCODetection):
             outfile_prefix = osp.join(tmp_dir.name, 'results')
         else:
             outfile_prefix = self.outfile_prefix
-        
+
         # split gt and prediction list
         preds, gts = zip(*results)
-
-        if self._lvis_api is None:
-            # use converted gt json file to initialize coco api
-            print('Converting ground truth to coco lvis format...')
-            coco_json_path = self.gt_to_coco_json(
-                gt_dicts=gts, outfile_prefix=outfile_prefix)
-            self._lvis_api = LVIS(coco_json_path)
 
         # handle lazy init
         if len(self.cat_ids) == 0:
@@ -254,7 +230,7 @@ class LVISDetection(COCODetection):
         eval_results: OrderedDict = OrderedDict()
         if self.format_only:
             print('results are saved in '
-                        f'{osp.dirname(outfile_prefix)}')
+                  f'{osp.dirname(outfile_prefix)}')
             return eval_results
 
         lvis_gt = self._lvis_api
@@ -265,8 +241,7 @@ class LVISDetection(COCODetection):
             try:
                 lvis_dt = LVISResults(lvis_gt, result_files[metric])
             except IndexError:
-                print(
-                    'The testing results of the whole dataset is empty.')
+                print('The testing results of the whole dataset is empty.')
                 break
 
             iou_type = 'bbox' if metric == 'proposal' else metric
@@ -274,16 +249,21 @@ class LVISDetection(COCODetection):
             lvis_eval.params.imgIds = self.img_ids
             metric_items = self.metric_items
             if metric == 'proposal':
-                lvis_eval.params.useCats = 0
-                lvis_eval.params.maxDets = list(self.proposal_nums)
+                lvis_eval.params.use_cats = 0
+                lvis_eval.params.max_dets = self.proposal_nums
                 lvis_eval.evaluate()
                 lvis_eval.accumulate()
                 lvis_eval.summarize()
                 if metric_items is None:
-                    metric_items = ['AR@300', 'ARs@300', 'ARm@300', 'ARl@300']
+                    metric_items = [
+                        f'AR@{self.proposal_nums}',
+                        f'ARs@{self.proposal_nums}',
+                        f'ARm@{self.proposal_nums}',
+                        f'ARl@{self.proposal_nums}'
+                    ]
                 for k, v in lvis_eval.get_results().items():
                     if k in metric_items:
-                        val = float('{:.3f}'.format(float(v)))
+                        val = float(f'{float(v):.3f}')
                         eval_results[k] = val
 
             else:
@@ -291,6 +271,22 @@ class LVISDetection(COCODetection):
                 lvis_eval.accumulate()
                 lvis_eval.summarize()
                 lvis_results = lvis_eval.get_results()
+
+                if metric_items is None:
+                    metric_items = [
+                        'AP', 'AP50', 'AP75', 'APs', 'APm', 'APl', 'APr',
+                        'APc', 'APf'
+                    ]
+
+                results_list = []
+                for metric_item, v in lvis_results.items():
+                    if metric_item in metric_items:
+                        key = f'{metric}_{metric_item}'
+                        val = float(v)
+                        results_list.append(f'{round(val * 100, 2)}')
+                        eval_results[key] = val
+                eval_results[f'{metric}_result'] = results_list
+
                 if self.classwise:  # Compute per-category AP
                     # Compute per-category AP
                     # from https://github.com/facebookresearch/detectron2/
@@ -312,25 +308,11 @@ class LVISDetection(COCODetection):
                         else:
                             ap = float('nan')
                         results_per_category.append(
-                            (f'{nm["name"]}', f'{float(ap):0.3f}'))
-                        eval_results[f'{metric}_{nm["name"]}_precision'] = round(ap, 3)
-                    
+                            (f'{nm["name"]}', f'{round(ap * 100, 2)}'))
+                        eval_results[f'{metric}_{nm["name"]}_precision'] = ap
+
                     eval_results[f'{metric}_classwise_result'] = \
                         results_per_category
-                if metric_items is None:
-                    metric_items = [
-                        'AP', 'AP50', 'AP75', 'APs', 'APm', 'APl', 'APr',
-                        'APc', 'APf'
-                    ]
-
-                results_list = []
-                for metric_item, v in lvis_results.items():
-                    if metric_item in metric_items:
-                        key = f'{metric}_{metric_item}'
-                        val = float('{:.3f}'.format(float(v)))
-                        results_list.append(f'{round(v, 3) * 100:.1f}')
-                        eval_results[key] = val
-                eval_results[f'{metric}_result'] = results_list
 
             lvis_eval.print_results()
         if tmp_dir is not None:
