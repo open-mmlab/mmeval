@@ -65,7 +65,7 @@ class KeypointEndPointError(BaseMetric):
         >>> groundtruths = [{'coords': target, 'mask': keypoints_visible}]
         >>> epe_metric = KeypointEndPointError()
         >>> epe_metric(predictions, groundtruths)
-        OrderedDict([('EPE', 11.535533905029297)])
+        {'EPE': 11.535533905029297}
     """
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
@@ -113,7 +113,4 @@ class KeypointEndPointError(BaseMetric):
 
         epe = keypoint_epe_accuracy(pred_coords, gt_coords, mask)
 
-        metric_results: OrderedDict = OrderedDict()
-        metric_results['EPE'] = epe
-
-        return metric_results
+        return {'EPE': epe}

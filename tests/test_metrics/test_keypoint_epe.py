@@ -5,7 +5,7 @@ from unittest import TestCase
 from mmeval.metrics import KeypointEndPointError
 
 
-class TestKeypointAUCandEPE(TestCase):
+class TestKeypointEndPointError(TestCase):
 
     def setUp(self):
         """Setup some variables which are used in every test method.
