@@ -5,7 +5,7 @@ from unittest import TestCase
 from mmeval.metrics import KeypointAUC
 
 
-class TestKeypointAUCandEPE(TestCase):
+class TestKeypointAUC(TestCase):
 
     def setUp(self):
         """Setup some variables which are used in every test method.

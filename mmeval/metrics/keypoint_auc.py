@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import logging
 import numpy as np
-from collections import OrderedDict
 from typing import Dict, List
 
 from mmeval.core.base_metric import BaseMetric
@@ -144,7 +143,4 @@ class KeypointAUC(BaseMetric):
         auc = keypoint_auc_accuracy(pred_coords, gt_coords, mask,
                                     self.norm_factor, self.num_thrs)
 
-        metric_results: OrderedDict = OrderedDict()
-        metric_results[f'AUC@{self.num_thrs}'] = auc
-
-        return metric_results
+        return {f'AUC@{self.num_thrs}': auc}
