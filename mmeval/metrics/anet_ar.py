@@ -2,7 +2,7 @@
 import logging
 import numpy as np
 from collections import OrderedDict
-from typing import Dict, List, Sequence, Union, Tuple
+from typing import Dict, List, Sequence, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
 
@@ -255,7 +255,7 @@ class ActivityNetAR(BaseMetric):
                 t_start, t_end = ann['segment']
                 label = ann['label']
                 ground_truth.append([t_start, t_end, label])
-            pred['ground_truth'] = ground_truth
+            pred['ground_truth'] = np.array(ground_truth)
             self._results.append(pred)
 
     def compute_metric(self, results: Sequence[dict]) -> dict:
@@ -303,13 +303,11 @@ class ActivityNetAR(BaseMetric):
             proposals[video_name] = np.array(this_video_proposals)
         return proposals, num_proposals
 
-
     @staticmethod
     def _import_ground_truth(results: Sequence[dict]) -> dict:
         """Read ground_truth from results."""
         ground_truth = {}
         for result in results:
             video_name = result['video_name']
-            ground_truth[video_name] = result[ground_truth]
+            ground_truth[video_name] = result['ground_truth']
         return ground_truth
-
