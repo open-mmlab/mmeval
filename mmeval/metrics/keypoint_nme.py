@@ -10,7 +10,8 @@ from .utils import calc_distances
 logger = logging.getLogger(__name__)
 
 
-def keypoint_nme_accuracy(pred: np.ndarray, gt: np.ndarray, mask: np.ndarray,
+def keypoint_nme_accuracy(prediction: np.ndarray, groundtruth: np.ndarray,
+                          mask: np.ndarray,
                           normalize_factor: np.ndarray) -> float:
     """Calculate the normalized mean error (NME).
 
@@ -19,8 +20,8 @@ def keypoint_nme_accuracy(pred: np.ndarray, gt: np.ndarray, mask: np.ndarray,
         - keypoint number: K
 
     Args:
-        pred (np.ndarray[N, K, 2]): Predicted keypoint location.
-        gt (np.ndarray[N, K, 2]): Groundtruth keypoint location.
+        prediction (np.ndarray[N, K, 2]): Predicted keypoint location.
+        groundtruth (np.ndarray[N, K, 2]): Groundtruth keypoint location.
         mask (np.ndarray[N, K]): Visibility of the target. False for invisible
             joints, and True for visible. Invisible joints will be ignored for
             accuracy calculation.
@@ -29,7 +30,7 @@ def keypoint_nme_accuracy(pred: np.ndarray, gt: np.ndarray, mask: np.ndarray,
     Returns:
         float: normalized mean error
     """
-    distances = calc_distances(pred, gt, mask, normalize_factor)
+    distances = calc_distances(prediction, groundtruth, mask, normalize_factor)
     distance_valid = distances[distances != -1]
     return distance_valid.sum() / max(1, len(distance_valid))
 
