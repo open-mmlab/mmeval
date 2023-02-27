@@ -50,3 +50,4 @@ Metrics
    ROUGE
    Perplexity
    KeypointEndPointError
+   KeypointAUC
