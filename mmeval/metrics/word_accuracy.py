@@ -6,15 +6,17 @@ from mmeval.core import BaseMetric
 
 
 class WordAccuracy(BaseMetric):
-    """Calculate the word level accuracy.
+    r"""Calculate the word level accuracy.
 
     Args:
         mode (str or list[str]): Options are:
+
             - 'exact': Accuracy at word level.
             - 'ignore_case': Accuracy at word level, ignoring letter
               case.
             - 'ignore_case_symbol': Accuracy at word level, ignoring
               letter case and symbol. (Default metric for academic evaluation)
+
             If mode is a list, then metrics in mode will be calculated
             separately. Defaults to 'ignore_case_symbol'.
         valid_symbol (str): Valid characters. Defaults to
@@ -79,6 +81,7 @@ class WordAccuracy(BaseMetric):
 
         Returns:
             dict[str, float]: Nested dicts as results. Provided keys are:
+
             - accuracy (float): Accuracy at word level.
             - ignore_case_accuracy (float): Accuracy at word level, ignoring
                 letter case.
