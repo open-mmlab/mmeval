@@ -1,5 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import contextlib
 import datetime
+import io
 import numpy as np
 import os.path as osp
 import tempfile
@@ -323,9 +325,20 @@ class COCODetection(BaseMetric):
             'not affect the overall AP, but leads to different '
             'small/medium/large AP results.')
 
+        if self.dataset_meta and 'classes' in self.dataset_meta:
+            classes = self.dataset_meta['classes']
+        elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
+            classes = self.dataset_meta['CLASSES']
+            warnings.warn(
+                'DeprecationWarning: The `CLASSES` in `dataset_meta` is '
+                'deprecated, use `classes` instead!')
+        else:
+            raise RuntimeError(
+                f'Do not found `classes` in dataset_meta: {self.dataset_meta}')
+
         categories = [
-            dict(id=id, name=name) for id, name in enumerate(
-                self.dataset_meta['classes'])  # type:ignore
+            dict(id=id, name=name)
+            for id, name in enumerate(classes)  # type:ignore
         ]
         image_infos: list = []
         annotations: list = []
@@ -499,10 +512,21 @@ class COCODetection(BaseMetric):
                 gt_dicts=gts, outfile_prefix=outfile_prefix)
             self._coco_api = COCO(coco_json_path)
 
+        if self.dataset_meta and 'classes' in self.dataset_meta:
+            classes = self.dataset_meta['classes']
+        elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
+            classes = self.dataset_meta['CLASSES']
+            warnings.warn(
+                'DeprecationWarning: The `CLASSES` in `dataset_meta` is '
+                'deprecated, use `classes` instead!')
+        else:
+            raise RuntimeError(
+                f'Do not found `classes` in dataset_meta: {self.dataset_meta}')
+
         # handle lazy init
         if len(self.cat_ids) == 0:
             self.cat_ids = self._coco_api.get_cat_ids(
-                cat_names=self.dataset_meta['classes'])  # type: ignore
+                cat_names=classes)  # type: ignore
         if len(self.img_ids) == 0:
             self.img_ids = self._coco_api.get_img_ids()
 
@@ -572,7 +596,10 @@ class COCODetection(BaseMetric):
                 coco_eval.params.useCats = 0
                 coco_eval.evaluate()
                 coco_eval.accumulate()
-                coco_eval.summarize()
+                redirect_string = io.StringIO()
+                with contextlib.redirect_stdout(redirect_string):
+                    coco_eval.summarize()
+                eval_results[f'{metric}_log'] = redirect_string
                 if metric_items is None:
                     metric_items = [
                         f'AR@{self.proposal_nums[0]}',
@@ -592,7 +619,11 @@ class COCODetection(BaseMetric):
             else:
                 coco_eval.evaluate()
                 coco_eval.accumulate()
-                coco_eval.summarize()
+                # Save coco summarize print information to logger
+                redirect_string = io.StringIO()
+                with contextlib.redirect_stdout(redirect_string):
+                    coco_eval.summarize()
+                eval_results[f'{metric}_log'] = redirect_string
                 if metric_items is None:
                     metric_items = [
                         'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'

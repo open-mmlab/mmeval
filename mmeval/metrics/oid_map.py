@@ -154,7 +154,7 @@ class OIDMeanAP(VOCMeanAP):
         ...     'image_level_labels': np.random.randint(0, num_classes, size=(10, )),  # noqa: E501
         ... }
         >>> oid_map(predictions=[prediction, ], groundtruths=[groundtruth, ])  # doctest: +ELLIPSIS  # noqa: E501
-        {'mAP@0.5': ..., 'mAP': ...}
+        {'AP@50': ..., 'mAP': ...}
     """
 
     def __init__(self,

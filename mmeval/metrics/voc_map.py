@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
+import warnings
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
@@ -133,7 +134,7 @@ class VOCMeanAP(BaseMetric):
         ...     'labels_ignore': np.random.randint(0, num_classes, size=(5, ))
         ... }
         >>> voc_map(predictions=[prediction, ], groundtruths=[groundtruth, ])  # doctest: +ELLIPSIS  # noqa: E501
-        {'mAP@0.5': ..., 'mAP': ...}
+        {'AP50': ..., 'mAP': ...}
     """
 
     def __init__(self,
@@ -200,6 +201,11 @@ class VOCMeanAP(BaseMetric):
             return self._num_classes
         if self.dataset_meta and 'classes' in self.dataset_meta:
             self._num_classes = len(self.dataset_meta['classes'])
+        elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
+            self._num_classes = len(self.dataset_meta['CLASSES'])
+            warnings.warn(
+                'DeprecationWarning: The `CLASSES` in `dataset_meta` is '
+                'deprecated, use `classes` instead!')
         else:
             raise RuntimeError(
                 "The `num_claases` is required, and also not found 'classes' "
@@ -466,7 +472,7 @@ class VOCMeanAP(BaseMetric):
             dict: The computed metric, with the following keys:
 
             - mAP, the averaged across all IoU thresholds and all class.
-            - mAP@{IoU}, the mAP of the specified IoU threshold.
+            - AP{IoU}, the mAP of the specified IoU threshold.
             - mAP@{scale_range}, the mAP of the specified scale range.
             - classwise, the evaluation results of each class.
               This would be returned if ``self.classwise`` is True.
@@ -526,12 +532,12 @@ class VOCMeanAP(BaseMetric):
             dict: The aggregated metric results, with the following keys:
 
             - mAP, the averaged across all IoU thresholds and all class.
-            - mAP@{IoU}, the mAP of the specified IoU threshold.
+            - AP{IoU}, the mAP of the specified IoU threshold.
             - mAP@{scale_range}, the mAP of the specified scale range.
         """
         eval_results = {}
 
-        # Calculate `mAP@{iou_thr}` (while scale_range is None) for each
+        # Calculate `AP{iou_thr}` (while scale_range is None) for each
         # `iou_thrs`.
         for i, iou_thr in enumerate(self.iou_thrs):
             for j, scale_range in enumerate(self.scale_ranges):
@@ -541,7 +547,8 @@ class VOCMeanAP(BaseMetric):
                     res['ap'][i][j] for res in results_per_class
                     if res['num_gts'][i][j] > 0 or not self.drop_class_ap
                 ]
-                eval_results[f'mAP@{iou_thr}'] = np.array(aps).mean().item()
+                eval_results[f'AP{round(iou_thr * 100)}'] = np.array(
+                    aps).mean().item()
 
         # Calculate `mAP@{scale_range}` and `mAP` (while scale_range is None)
         # overall `iou_thrs`.
