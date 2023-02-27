@@ -48,4 +48,5 @@ Metrics
    ConnectivityError
    DOTAMeanAP
    ROUGE
+   Perplexity
    KeypointEndPointError
