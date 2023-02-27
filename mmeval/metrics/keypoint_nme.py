@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import logging
 import numpy as np
-from collections import OrderedDict
 from typing import Dict, Optional, Sequence
 
 from mmeval.core.base_metric import BaseMetric
@@ -11,8 +10,7 @@ logger = logging.getLogger(__name__)
 
 
 def keypoint_nme_accuracy(prediction: np.ndarray, groundtruth: np.ndarray,
-                          mask: np.ndarray,
-                          normalize_factor: np.ndarray) -> float:
+                          mask: np.ndarray, norm_factor: np.ndarray) -> float:
     """Calculate the normalized mean error (NME).
 
     Note:
@@ -25,12 +23,12 @@ def keypoint_nme_accuracy(prediction: np.ndarray, groundtruth: np.ndarray,
         mask (np.ndarray[N, K]): Visibility of the target. False for invisible
             joints, and True for visible. Invisible joints will be ignored for
             accuracy calculation.
-        normalize_factor (np.ndarray[N, 2]): Normalization factor.
+        norm_factor (np.ndarray[N, 2]): Normalization factor.
 
     Returns:
         float: normalized mean error
     """
-    distances = calc_distances(prediction, groundtruth, mask, normalize_factor)
+    distances = calc_distances(prediction, groundtruth, mask, norm_factor)
     distance_valid = distances[distances != -1]
     return distance_valid.sum() / max(1, len(distance_valid))
 
@@ -181,15 +179,14 @@ class KeypointNME(BaseMetric):
         # mask: [N, K]
         mask = np.concatenate([gt['mask'] for gt in gts])
 
-        metric_results: OrderedDict = OrderedDict()
+        metric_results = {}
 
         if self.norm_mode == 'use_norm_item':
-            normalize_factor_ = np.concatenate(
-                [gt[self.norm_item] for gt in gts])
-            # normalize_factor: [N, 2]
-            normalize_factor = np.tile(normalize_factor_, [1, 2])
+            norm_factor_ = np.concatenate([gt[self.norm_item] for gt in gts])
+            # norm_factor: [N, 2]
+            norm_factor = np.tile(norm_factor_, [1, 2])
             nme = keypoint_nme_accuracy(pred_coords, gt_coords, mask,
-                                        normalize_factor)
+                                        norm_factor)
             metric_results['NME'] = nme
         else:
             assert self.dataset_meta is not None, 'When `norm_mode` is '\
@@ -214,18 +211,18 @@ class KeypointNME(BaseMetric):
                     assert idx in keypoint_id2name, f'The {dataset_name} '\
                         f'dataset does not contain the required '\
                         f'{idx}-th keypoint.'
-            # normalize_factor: [N, 2]
-            normalize_factor = self._get_normalize_factor(gt_coords=gt_coords)
+            # norm_factor: [N, 2]
+            norm_factor = self._get_norm_factor(gt_coords=gt_coords)
             nme = keypoint_nme_accuracy(pred_coords, gt_coords, mask,
-                                        normalize_factor)
+                                        norm_factor)
             metric_results['NME'] = nme
 
         return metric_results
 
-    def _get_normalize_factor(self, gt_coords: np.ndarray) -> np.ndarray:
-        """Get the normalize factor. generally inter-ocular distance measured
-        as the Euclidean distance between the outer corners of the eyes is
-        used.
+    def _get_norm_factor(self, gt_coords: np.ndarray) -> np.ndarray:
+        """Get the normalization factor. Generally inter-ocular distance
+        measured as the Euclidean distance between the outer corners of the
+        eyes is used.
 
         Args:
             gt_coords (np.ndarray[N, K, 2]): Groundtruth keypoint coordinates.
