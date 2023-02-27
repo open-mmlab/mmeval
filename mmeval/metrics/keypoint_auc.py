@@ -9,8 +9,8 @@ from .pck_accuracy import keypoint_pck_accuracy
 logger = logging.getLogger(__name__)
 
 
-def keypoint_auc_accuracy(pred: np.ndarray,
-                          gt: np.ndarray,
+def keypoint_auc_accuracy(prediction: np.ndarray,
+                          groundtruth: np.ndarray,
                           mask: np.ndarray,
                           norm_factor: np.ndarray,
                           num_thrs: int = 20) -> float:
@@ -21,8 +21,8 @@ def keypoint_auc_accuracy(pred: np.ndarray,
         - keypoint number: K
 
     Args:
-        pred (np.ndarray[N, K, 2]): Predicted keypoint location.
-        gt (np.ndarray[N, K, 2]): Groundtruth keypoint location.
+        prediction (np.ndarray[N, K, 2]): Predicted keypoint location.
+        groundtruth (np.ndarray[N, K, 2]): Groundtruth keypoint location.
         mask (np.ndarray[N, K]): Visibility of the target. False for invisible
             joints, and True for visible. Invisible joints will be ignored for
             accuracy calculation.
@@ -32,11 +32,13 @@ def keypoint_auc_accuracy(pred: np.ndarray,
     Returns:
         float: Area under curve (AUC) of keypoint PCK accuracy.
     """
-    nor = np.tile(np.array([[norm_factor, norm_factor]]), (pred.shape[0], 1))
+    nor = np.tile(
+        np.array([[norm_factor, norm_factor]]), (prediction.shape[0], 1))
     thrs = [1.0 * i / num_thrs for i in range(num_thrs)]
     avg_accs = []
     for thr in thrs:
-        _, avg_acc, _ = keypoint_pck_accuracy(pred, gt, mask, thr, nor)
+        _, avg_acc, _ = keypoint_pck_accuracy(prediction, groundtruth, mask,
+                                              thr, nor)
         avg_accs.append(avg_acc)
 
     auc = 0
