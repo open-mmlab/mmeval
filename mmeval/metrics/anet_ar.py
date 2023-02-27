@@ -2,16 +2,15 @@
 import logging
 import numpy as np
 from collections import OrderedDict
-from typing import Dict, List, Sequence, Union
+from typing import Dict, List, Sequence, Union, Tuple
 
 from mmeval.core.base_metric import BaseMetric
 
 logger = logging.getLogger(__name__)
 
 
-def pairwise_temporal_iou(candidate_segments,
-                          target_segments,
-                          calculate_overlap_self=False):
+def pairwise_temporal_iou(candidate_segments: np.ndarray,
+                          target_segments: np.ndarray) -> np.ndarray:
     """Compute intersection over union between segments.
 
     Args:
@@ -19,18 +18,16 @@ def pairwise_temporal_iou(candidate_segments,
             ``[init, end]/[m x 2:=[init, end]]``.
         target_segments (np.ndarray): 2-dim array in format
             ``[n x 2:=[init, end]]``.
-        calculate_overlap_self (bool): Whether to calculate overlap_self
-            (union / candidate_length) or not. Default: False.
+
     Returns:
         t_iou (np.ndarray): 1-dim array [n] /
             2-dim array [n x m] with IoU ratio.
-        t_overlap_self (np.ndarray, optional): 1-dim array [n] /
-            2-dim array [n x m] with overlap_self, returns when
-            calculate_overlap_self is True.
     """
     candidate_segments_ndim = candidate_segments.ndim
-    if target_segments.ndim != 2 or candidate_segments_ndim not in [1, 2]:
-        raise ValueError('Dimension of arguments is incorrect')
+    if target_segments.ndim != 2:
+        raise ValueError('Dimension of target segments is incorrect')
+    if candidate_segments_ndim not in [1, 2]:
+        raise ValueError('Dimension of candidate segments is incorrect')
 
     if candidate_segments_ndim == 1:
         candidate_segments = candidate_segments[np.newaxis, :]
@@ -38,9 +35,6 @@ def pairwise_temporal_iou(candidate_segments,
     num_targets = target_segments.shape[0]
     num_candidates = candidate_segments.shape[0]
     t_iou = np.empty((num_targets, num_candidates), dtype=np.float32)
-    if calculate_overlap_self:
-        t_overlap_self = np.empty((num_targets, num_candidates),
-                                  dtype=np.float32)
 
     for i in range(num_candidates):
         candidate_segment = candidate_segments[i, :]
@@ -55,17 +49,9 @@ def pairwise_temporal_iou(candidate_segments,
         # Compute overlap as the ratio of the intersection
         # over union of two segments.
         t_iou[:, i] = (segments_intersection.astype(float) / segments_union)
-        if calculate_overlap_self:
-            candidate_length = candidate_segment[1] - candidate_segment[0]
-            t_overlap_self[:, i] = (
-                segments_intersection.astype(float) / candidate_length)
 
     if candidate_segments_ndim == 1:
         t_iou = np.squeeze(t_iou, axis=1)
-    if calculate_overlap_self:
-        if candidate_segments_ndim == 1:
-            t_overlap_self = np.squeeze(t_overlap_self, axis=1)
-        return t_iou, t_overlap_self
 
     return t_iou
 
@@ -84,20 +70,20 @@ def average_recall_at_avg_proposals(ground_truth,
         proposals (dict): Dict containing the proposal instances.
         total_num_proposals (int): Total number of proposals in the
             proposal dict.
-        max_avg_proposals (int | None): Max number of proposals for one video.
-            Default: None.
+        max_avg_proposals (int or None): Max number of proposals for one video.
+            Defaults to None.
         temporal_iou_thresholds (np.ndarray): 1D array with temporal_iou
-            thresholds. Default: ``np.linspace(0.5, 0.95, 10)``.
+            thresholds. Defaults to ``np.linspace(0.5, 0.95, 10)``.
     Returns:
         tuple([np.ndarray, np.ndarray, np.ndarray, float]):
-            (recall, average_recall, proposals_per_video, auc)
-            In recall, ``recall[i,j]`` is recall at i-th temporal_iou threshold
-            at the j-th average number (percentile) of average number of
-            proposals per video. The average_recall is recall averaged
-            over a list of temporal_iou threshold (1D array). This is
-            equivalent to ``recall.mean(axis=0)``. The ``proposals_per_video``
-            is the average number of proposals per video. The auc is the area
-            under ``AR@AN`` curve.
+        (recall, average_recall, proposals_per_video, auc)
+        In recall, ``recall[i,j]`` is recall at i-th temporal_iou threshold
+        at the j-th average number (percentile) of average number of
+        proposals per video. The average_recall is recall averaged
+        over a list of temporal_iou threshold (1D array). This is
+        equivalent to ``recall.mean(axis=0)``. The ``proposals_per_video``
+        is the average number of proposals per video. The auc is the area
+        under ``AR@AN`` curve.
     """
 
     total_num_videos = len(ground_truth)
@@ -256,7 +242,6 @@ class ActivityNetAR(BaseMetric):
                 contains the following keys:
 
                 - `video_name`: The name of the video, e.g., `v_--1DO2V4K74`.
-                   The name should be of the format of `v_{video_id}`.
                 - `annotations`: A list of annotations. Each annotation is a
                   dict with keys `segment` and `label`. The value of `segment`
                   is `[start, end]`. The value of `label` is an int label.
@@ -265,20 +250,20 @@ class ActivityNetAR(BaseMetric):
                   is `[start, end]`. The value of `score` is a float number.
         """
         for pred in predictions:
-            self._results.append(pred)
-            video_id = pred['video_name'][2:]
             ground_truth = []
             for ann in pred['annotations']:
                 t_start, t_end = ann['segment']
                 label = ann['label']
                 ground_truth.append([t_start, t_end, label])
-            self.ground_truth[video_id] = np.array(ground_truth)
+            pred['ground_truth'] = ground_truth
+            self._results.append(pred)
 
-    def compute_metric(self, results: list) -> dict:
+    def compute_metric(self, results: Sequence[dict]) -> dict:
         """Compute the metrics from processed results.
 
         Args:
             results (list): The processed results of each batch.
+
         Returns:
             dict: The computed metrics. The keys are the names of the metrics,
             and the values are corresponding results.
@@ -286,9 +271,10 @@ class ActivityNetAR(BaseMetric):
 
         eval_results = OrderedDict()
         proposal, num_proposals = self._import_proposals(results)
+        ground_truth = self._import_ground_truth(results)
 
         recall, _, _, auc = average_recall_at_avg_proposals(
-            self.ground_truth,
+            ground_truth,
             proposal,
             num_proposals,
             max_avg_proposals=self.max_avg_proposals,
@@ -302,17 +288,28 @@ class ActivityNetAR(BaseMetric):
         return eval_results
 
     @staticmethod
-    def _import_proposals(results):
+    def _import_proposals(results: Sequence[dict]) -> Tuple[dict, int]:
         """Read predictions from results."""
         proposals = {}
         num_proposals = 0
         for result in results:
-            video_id = result['video_name'][2:]
+            video_name = result['video_name']
             this_video_proposals = []
             for proposal in result['proposal_list']:
                 t_start, t_end = proposal['segment']
                 score = proposal['score']
                 this_video_proposals.append([t_start, t_end, score])
                 num_proposals += 1
-            proposals[video_id] = np.array(this_video_proposals)
+            proposals[video_name] = np.array(this_video_proposals)
         return proposals, num_proposals
+
+
+    @staticmethod
+    def _import_ground_truth(results: Sequence[dict]) -> dict:
+        """Read ground_truth from results."""
+        ground_truth = {}
+        for result in results:
+            video_name = result['video_name']
+            ground_truth[video_name] = result[ground_truth]
+        return ground_truth
+
