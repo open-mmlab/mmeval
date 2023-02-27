@@ -14,15 +14,17 @@ else:
 
 
 class OneMinusNormEditDistance(BaseMetric):
-    """One minus NED metric for text recognition task.
+    r"""One minus NED metric for text recognition task.
 
     Args:
         letter_case (str): There are three options to alter the letter cases
+
             - unchanged: Do not change prediction texts and labels.
             - upper: Convert prediction texts and labels into uppercase
                      characters.
             - lower: Convert prediction texts and labels into lowercase
                      characters.
+
             Usually, it only works for English characters. Defaults to
             'unchanged'.
         valid_symbol (str): A regular expression to filter out invalid or
