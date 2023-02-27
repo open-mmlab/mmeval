@@ -49,3 +49,4 @@ Metrics
    DOTAMeanAP
    ROUGE
    Perplexity
+   KeypointEndPointError
