@@ -13,6 +13,7 @@ from .f1_score import F1Score
 from .gradient_error import GradientError
 from .hmean_iou import HmeanIoU
 from .keypoint_auc import KeypointAUC
+from .keypoint_epe import KeypointEndPointError
 from .mae import MeanAbsoluteError
 from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
@@ -20,6 +21,7 @@ from .mse import MeanSquaredError
 from .multi_label import AveragePrecision, MultiLabelMetric
 from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
+from .perplexity import Perplexity
 from .proposal_recall import ProposalRecall
 from .psnr import PeakSignalNoiseRatio
 from .rouge import ROUGE
@@ -37,7 +39,8 @@ __all__ = [
     'StructuralSimilarity', 'SignalNoiseRatio', 'MultiLabelMetric',
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
-    'ConnectivityError', 'ROUGE', 'KeypointAUC'
+    'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
+    'KeypointAUC'
 ]
 
 _deprecated_msg = (
