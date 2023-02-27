@@ -483,7 +483,8 @@ class COCODetection(BaseMetric):
 
         return metric_result
 
-    def compute_metric(self, results: list) -> Dict[str, float]:
+    def compute_metric(self, results: list) -> \
+            Dict[str, Union[float, list, io.StringIO]]:
         """Compute the COCO metrics.
 
         Args:
@@ -492,8 +493,9 @@ class COCODetection(BaseMetric):
                 been synced across all ranks.
 
         Returns:
-            dict: The computed metric. The keys are the names of
-            the metrics, and the values are corresponding results.
+            dict: The computed metric and corresponding log information.
+            The keys are the names of the metrics, and the values are
+            corresponding results.
         """
         tmp_dir = None
         if self.outfile_prefix is None:
