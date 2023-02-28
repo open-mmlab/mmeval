@@ -502,7 +502,7 @@ class COCODetection(BaseMetric):
                 been synced across all ranks.
 
         Returns:
-            dict: The computed metric and corresponding log information.
+            dict: The computed metric.
             The keys are the names of the metrics, and the values are
             corresponding results.
         """
