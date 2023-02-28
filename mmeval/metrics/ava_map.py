@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import csv
-import logging
 import numpy as np
 import os
 from collections import defaultdict
@@ -10,8 +9,6 @@ from typing import List, Optional, Sequence
 from mmeval.core.base_metric import BaseMetric
 from ._vendor.ava_evaluation import object_detection_evaluation as det_eval
 from ._vendor.ava_evaluation import standard_fields
-
-logger = logging.getLogger(__name__)
 
 
 class AVAMeanAP(BaseMetric):
@@ -227,7 +224,7 @@ class AVAMeanAP(BaseMetric):
             labels[image_key] = [x[1] for x in entry]
             scores[image_key] = [x[0] for x in entry]
 
-        logger.info('read file ' + csv_file)
+        self.logger.info('read file ' + csv_file)
         return boxes, labels, scores
 
     def read_exclusions(self, exclude_file: str) -> set:
@@ -269,7 +266,7 @@ class AVAMeanAP(BaseMetric):
         gt_boxes, gt_labels, _ = self.read_csv(
             self.ann_file, class_whitelist=class_whitelist)
         if self.verbose:
-            logger.info('Reading detection results')
+            self.logger.info('Reading detection results')
 
         if self.exclude_file is not None:
             excluded_keys = self.read_exclusions(self.exclude_file)
@@ -278,7 +275,7 @@ class AVAMeanAP(BaseMetric):
 
         boxes, labels, scores = self.read_csv(result_file, class_whitelist)
         if self.verbose:
-            logger.info('Reading detection results')
+            self.logger.info('Reading detection results')
 
         # Evaluation for mAP
         pascal_evaluator = det_eval.PascalDetectionEvaluator(categories)
@@ -286,7 +283,7 @@ class AVAMeanAP(BaseMetric):
         for image_key in gt_boxes:
             if image_key in excluded_keys:
                 if self.verbose:
-                    logging.info(
+                    self.logger.info(
                         'Found excluded timestamp in detections: %s.'
                         'It will be ignored.', image_key)
                 continue
@@ -298,11 +295,11 @@ class AVAMeanAP(BaseMetric):
                     np.array(gt_labels[image_key], dtype=int)
                 })
         if self.verbose:
-            logger.info('Convert groundtruth')
+            self.logger.info('Convert groundtruth')
 
         for image_key in boxes:
             if self.verbose and image_key in excluded_keys:
-                logging.info(
+                self.logger.info(
                     'Found excluded timestamp in detections: %s.'
                     'It will be ignored.', image_key)
                 continue
@@ -316,13 +313,13 @@ class AVAMeanAP(BaseMetric):
                     np.array(scores[image_key], dtype=float)
                 })
         if self.verbose:
-            logger.info('convert detections')
+            self.logger.info('convert detections')
 
         metrics = pascal_evaluator.evaluate()
         if self.verbose:
-            logger.info('run_evaluator')
+            self.logger.info('run_evaluator')
         for display_name in metrics:
-            logger.info(f'{display_name}=\t{metrics[display_name]}')
+            self.logger.info(f'{display_name}=\t{metrics[display_name]}')
         return {
             display_name: metrics[display_name]
             for display_name in metrics if 'ByCategory' not in display_name

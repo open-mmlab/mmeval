@@ -56,7 +56,7 @@ if sys.version_info.major >= 3 and sys.version_info.minor <= 6:
 else:
     from typing import ForwardRef
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('mmeval')
 
 
 def _singleton_patch() -> None:

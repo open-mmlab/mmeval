@@ -1,13 +1,10 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import logging
 import numpy as np
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from .utils.bbox_overlaps_rotated import (calculate_bboxes_area_rotated,
                                           qbox_to_rbox)
 from .voc_map import VOCMeanAP
-
-logger = logging.getLogger(__name__)
 
 try:
     # we prefer to use `bbox_iou_rotated` in mmcv to calculate ious
@@ -17,8 +14,6 @@ try:
 except Exception as e:  # noqa F841
     from .utils.bbox_overlaps_rotated import calculate_overlaps_rotated
     HAS_MMCV = False
-    logger.debug(
-        'mmcv is not installed, calculating IoU of rotated bbox with OpenCV.')
 
 
 def filter_by_bboxes_area_rotated(bboxes: np.ndarray,
@@ -125,6 +120,9 @@ class DOTAMeanAP(VOCMeanAP):
             drop_class_ap=drop_class_ap,
             classwise=classwise,
             **kwargs)
+        if not HAS_MMCV:
+            self.logger.debug('mmcv is not installed, calculating IoU of '
+                              'rotated bbox with OpenCV.')
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
