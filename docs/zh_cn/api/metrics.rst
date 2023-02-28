@@ -51,3 +51,4 @@ Metrics
    Perplexity
    KeypointEndPointError
    KeypointAUC
+   KeypointNME
