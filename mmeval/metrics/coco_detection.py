@@ -660,7 +660,7 @@ class COCODetection(BaseMetric):
         return eval_results
 
     def _get_classes(self) -> None:
-        """Get classes from self.d."""
+        """Get classes from self.dataset_meta."""
         if self.dataset_meta and 'classes' in self.dataset_meta:
             self.classes = self.dataset_meta['classes']
         elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
