@@ -82,23 +82,31 @@ class SignalNoiseRatio(BaseMetric):
         """
         channel_order = self.channel_order \
             if channel_order is None else channel_order
-        for pred, gt in zip(predictions, groundtruths):
-            assert gt.shape == pred.shape, (
-                f'Image shapes are different: {gt.shape}, {pred.shape}.')
-            gt = reorder_and_crop(
-                gt,
+        for prediction, groundtruth in zip(predictions, groundtruths):
+            assert groundtruth.shape == prediction.shape, (
+                f'Image shapes are different: \
+                    {groundtruth.shape}, {prediction.shape}.')
+            groundtruth = reorder_and_crop(
+                groundtruth,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
-            pred = reorder_and_crop(
-                pred,
+                channel_order=channel_order)
+            prediction = reorder_and_crop(
+                prediction,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
+                channel_order=channel_order)
 
-            self._results.append(self.compute_snr(pred, gt))
+            if len(prediction.shape) == 3:
+                prediction = np.expand_dims(prediction, axis=0)
+                groundtruth = np.expand_dims(groundtruth, axis=0)
+            _snr_score = []
+            for i in range(prediction.shape[0]):
+                _snr_score.append(
+                    self.compute_snr(prediction[i], groundtruth[i]))
+            self._results.append(np.array(_snr_score).mean())
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
         """Compute the SignalNoiseRatio metric.
