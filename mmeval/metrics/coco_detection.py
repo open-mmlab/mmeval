@@ -223,16 +223,7 @@ class COCODetection(BaseMetric):
         self.cat_ids: list = []
         self.img_ids: list = []
 
-        if self.dataset_meta and 'classes' in self.dataset_meta:
-            self.classes = self.dataset_meta['classes']
-        elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
-            self.classes = self.dataset_meta['CLASSES']
-            warnings.warn(
-                'DeprecationWarning: The `CLASSES` in `dataset_meta` is '
-                'deprecated, use `classes` instead!')
-        else:
-            raise RuntimeError('Could not find `classes` in dataset_meta: '
-                               f'{self.dataset_meta}')
+        self.classes = None
         self.logger = default_logger if logger is None else logger
 
     def xyxy2xywh(self, bbox: np.ndarray) -> list:
@@ -347,7 +338,7 @@ class COCODetection(BaseMetric):
             'small/medium/large AP results.')
 
         categories = [
-            dict(id=id, name=name)
+            dict(id=id, name=name)  # type: ignore # yapf: disable # noqa: E501
             for id, name in enumerate(self.classes)  # type:ignore
         ]
         image_infos: list = []
@@ -513,6 +504,8 @@ class COCODetection(BaseMetric):
         else:
             outfile_prefix = self.outfile_prefix
 
+        if self.classes is None:
+            self._get_classes()
         # split gt and prediction list
         preds, gts = zip(*results)
 
@@ -665,6 +658,19 @@ class COCODetection(BaseMetric):
         if tmp_dir is not None:
             tmp_dir.cleanup()
         return eval_results
+
+    def _get_classes(self) -> None:
+        """Get classes from self.d."""
+        if self.dataset_meta and 'classes' in self.dataset_meta:
+            self.classes = self.dataset_meta['classes']
+        elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
+            self.classes = self.dataset_meta['CLASSES']
+            warnings.warn(
+                'DeprecationWarning: The `CLASSES` in `dataset_meta` is '
+                'deprecated, use `classes` instead!')
+        else:
+            raise RuntimeError('Could not find `classes` in dataset_meta: '
+                               f'{self.dataset_meta}')
 
 
 # Keep the deprecated metric name as an alias.
