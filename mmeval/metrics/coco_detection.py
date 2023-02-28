@@ -231,8 +231,8 @@ class COCODetection(BaseMetric):
                 'DeprecationWarning: The `CLASSES` in `dataset_meta` is '
                 'deprecated, use `classes` instead!')
         else:
-            raise RuntimeError(
-                f'Do not found `classes` in dataset_meta: {self.dataset_meta}')
+            raise RuntimeError('Could not find `classes` in dataset_meta: '
+                               f'{self.dataset_meta}')
         self.logger = default_logger if logger is None else logger
 
     def xyxy2xywh(self, bbox: np.ndarray) -> list:
