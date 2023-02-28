@@ -232,7 +232,7 @@ class COCODetection(BaseMetric):
                 'deprecated, use `classes` instead!')
         else:
             raise RuntimeError(
-                f'Could not find `classes` in dataset_meta: {self.dataset_meta}')
+                f'Do not found `classes` in dataset_meta: {self.dataset_meta}')
         self.logger = default_logger if logger is None else logger
 
     def xyxy2xywh(self, bbox: np.ndarray) -> list:
@@ -600,7 +600,7 @@ class COCODetection(BaseMetric):
                 redirect_string = io.StringIO()
                 with contextlib.redirect_stdout(redirect_string):
                     coco_eval.summarize()
-                    self.logger.info('\n' + redirect_string.getvalue())
+                self.logger.info('\n' + redirect_string.getvalue())
                 if metric_items is None:
                     metric_items = [
                         f'AR@{self.proposal_nums[0]}',
