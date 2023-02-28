@@ -20,7 +20,7 @@ class CharRecallPrecision(BaseMetric):
 
             Usually, it only works for English characters. Defaults to
             'unchanged'.
-        valid_symbol (str): A regular expression to filter out invalid or
+        invalid_symbol (str): A regular expression to filter out invalid or
             not cared characters. Defaults to '[^A-Z^a-z^0-9^\u4e00-\u9fa5]'.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
@@ -36,12 +36,12 @@ class CharRecallPrecision(BaseMetric):
 
     def __init__(self,
                  letter_case: str = 'unchanged',
-                 valid_symbol: str = '[^A-Z^a-z^0-9^\u4e00-\u9fa5]',
+                 invalid_symbol: str = '[^A-Z^a-z^0-9^\u4e00-\u9fa5]',
                  **kwargs):
         super().__init__(**kwargs)
         assert letter_case in ['unchanged', 'upper', 'lower']
         self.letter_case = letter_case
-        self.valid_symbol = re.compile(valid_symbol)
+        self.invalid_symbol = re.compile(invalid_symbol)
 
     def add(self, predictions: Sequence[str], labels: Sequence[str]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Process one batch of data and predictions.
@@ -54,8 +54,8 @@ class CharRecallPrecision(BaseMetric):
             if self.letter_case in ['upper', 'lower']:
                 pred = getattr(pred, self.letter_case)()
                 label = getattr(label, self.letter_case)()
-            valid_label = self.valid_symbol.sub('', label)
-            valid_pred = self.valid_symbol.sub('', pred)
+            valid_label = self.invalid_symbol.sub('', label)
+            valid_pred = self.invalid_symbol.sub('', pred)
             # number to calculate char level recall & precision
             true_positive_char_num = self._cal_true_positive_char(
                 valid_pred, valid_label)
