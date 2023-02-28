@@ -571,8 +571,8 @@ class COCODetection(BaseMetric):
                 coco_dt = self._coco_api.loadRes(predictions)
 
             except IndexError:
-                self.logger.info('The testing results of the '
-                                 'whole dataset is empty.')
+                self.logger.warning('The testing results of the '
+                                    'whole dataset is empty.')
                 break
 
             coco_eval = COCOeval(self._coco_api, coco_dt, iou_type)
