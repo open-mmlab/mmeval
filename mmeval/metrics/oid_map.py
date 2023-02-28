@@ -3,6 +3,7 @@ import copy
 import csv
 import json
 import numpy as np
+import warnings
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
@@ -197,6 +198,11 @@ class OIDMeanAP(VOCMeanAP):
             return self._class_relation_matrix
         if self.dataset_meta and 'relation_matrix' in self.dataset_meta:
             self._class_relation_matrix = self.dataset_meta['relation_matrix']
+        elif self.dataset_meta and 'RELATION_MATRIX' in self.dataset_meta:
+            self._class_relation_matrix = self.dataset_meta['RELATION_MATRIX']
+            warnings.warn(
+                'DeprecationWarning: The `RELATION_MATRIX` in `dataset_meta` '
+                'is deprecated, use `relation_matrix` instead!')
         else:
             raise RuntimeError(
                 'The `class_relation_matrix` is required, and also not found'
