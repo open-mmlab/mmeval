@@ -23,7 +23,7 @@ except ImportError:
     HAS_COCOAPI = False
 
 default_logger = logging.getLogger(__name__)
-default_logger.setLevel(logging.DEBUG)
+default_logger.setLevel(logging.INFO)
 
 
 class COCODetection(BaseMetric):
