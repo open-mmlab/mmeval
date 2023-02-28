@@ -1,8 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import contextlib
+import io
+import logging
 import numpy as np
 import os.path as osp
 import tempfile
 from collections import OrderedDict
+from logging import Logger
 from typing import Dict, List, Optional, Sequence, Union
 
 from mmeval.fileio import get_local_path
@@ -141,6 +145,7 @@ class LVISDetection(COCODetection):
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  backend_args: Optional[dict] = None,
+                 logger: Optional[Logger] = None,
                  **kwargs) -> None:
         if not HAS_LVISAPI:
             raise RuntimeError(
@@ -160,6 +165,8 @@ class LVISDetection(COCODetection):
         with get_local_path(
                 filepath=ann_file, backend_args=backend_args) as local_path:
             self._lvis_api = LVIS(local_path)
+
+        self.logger = logging.getLogger(__name__) if logger is None else logger
 
     def add_predictions(self, predictions: Sequence[Dict]) -> None:
         """Add predictions only.
@@ -196,7 +203,7 @@ class LVISDetection(COCODetection):
 
         return metric_result
 
-    def compute_metric(self, results: list) -> Dict[str, float]:
+    def compute_metric(self, results: list) -> Dict[str, Union[float, list]]:
         """Compute the LVIS metrics.
 
         Args:
@@ -229,19 +236,20 @@ class LVISDetection(COCODetection):
 
         eval_results: OrderedDict = OrderedDict()
         if self.format_only:
-            print('results are saved in '
-                  f'{osp.dirname(outfile_prefix)}')
+            self.logger.info('results are saved in '
+                             f'{osp.dirname(outfile_prefix)}')
             return eval_results
 
         lvis_gt = self._lvis_api
 
         for metric in self.metrics:
-            print(f'Evaluating {metric}...')
+            self.logger.info(f'Evaluating {metric}...')
 
             try:
                 lvis_dt = LVISResults(lvis_gt, result_files[metric])
             except IndexError:
-                print('The testing results of the whole dataset is empty.')
+                self.logger.warning(
+                    'The testing results of the whole dataset is empty.')
                 break
 
             iou_type = 'bbox' if metric == 'proposal' else metric
@@ -313,8 +321,11 @@ class LVISDetection(COCODetection):
 
                     eval_results[f'{metric}_classwise_result'] = \
                         results_per_category
-
-            lvis_eval.print_results()
+            # Save coco summarize print information to logger
+            redirect_string = io.StringIO()
+            with contextlib.redirect_stdout(redirect_string):
+                lvis_eval.print_results()
+            self.logger.info('\n' + redirect_string.getvalue())
         if tmp_dir is not None:
             tmp_dir.cleanup()
         return eval_results
