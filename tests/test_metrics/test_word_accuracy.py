@@ -20,3 +20,11 @@ def test_word_accuracy():
     assert abs(res['accuracy'] - 1. / 3) < 1e-7
     assert abs(res['ignore_case_accuracy'] - 2. / 3) < 1e-7
     assert abs(res['ignore_case_symbol_accuracy'] - 1.0) < 1e-7
+    metric.reset()
+    for pred, label in zip(['hello', 'hello', 'hello'],
+                           ['hello', 'HELLO', '$HELLO$']):
+        metric.add([pred], [label])
+    res = metric.compute()
+    assert abs(res['accuracy'] - 1. / 3) < 1e-7
+    assert abs(res['ignore_case_accuracy'] - 2. / 3) < 1e-7
+    assert abs(res['ignore_case_symbol_accuracy'] - 1.0) < 1e-7
