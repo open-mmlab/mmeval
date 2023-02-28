@@ -2,12 +2,14 @@
 import contextlib
 import datetime
 import io
+import logging
 import numpy as np
 import os.path as osp
 import tempfile
 import warnings
 from collections import OrderedDict
 from json import dump
+from logging import Logger
 from typing import Dict, List, Optional, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
@@ -19,6 +21,9 @@ try:
     HAS_COCOAPI = True
 except ImportError:
     HAS_COCOAPI = False
+
+default_logger = logging.getLogger(__name__)
+default_logger.setLevel(logging.DEBUG)
 
 
 class COCODetection(BaseMetric):
@@ -56,6 +61,8 @@ class COCODetection(BaseMetric):
             ann_file. Defaults to True.
         backend_args (dict, optional): Arguments to instantiate the
             preifx of uri corresponding backend. Defaults to None.
+        logger (Logger, optional): logger used to record messages.
+            Defaults to None.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -154,6 +161,7 @@ class COCODetection(BaseMetric):
                  outfile_prefix: Optional[str] = None,
                  gt_mask_area: bool = True,
                  backend_args: Optional[dict] = None,
+                 logger: Optional[Logger] = None,
                  **kwargs) -> None:
         if not HAS_COCOAPI:
             raise RuntimeError('Failed to import `COCO` and `COCOeval` from '
@@ -213,6 +221,8 @@ class COCODetection(BaseMetric):
         # handle dataset lazy init
         self.cat_ids: list = []
         self.img_ids: list = []
+
+        self.logger = default_logger if logger is None else logger
 
     def xyxy2xywh(self, bbox: np.ndarray) -> list:
         """Convert ``xyxy`` style bounding boxes to ``xywh`` style for COCO
@@ -483,8 +493,7 @@ class COCODetection(BaseMetric):
 
         return metric_result
 
-    def compute_metric(self, results: list) -> \
-            Dict[str, Union[float, list, io.StringIO]]:
+    def compute_metric(self, results: list) -> Dict[str, Union[float, list]]:
         """Compute the COCO metrics.
 
         Args:
@@ -509,7 +518,7 @@ class COCODetection(BaseMetric):
 
         if self._coco_api is None:
             # use converted gt json file to initialize coco api
-            print('Converting ground truth to coco format...')
+            self.logger.info('Converting ground truth to coco format...')
             coco_json_path = self.gt_to_coco_json(
                 gt_dicts=gts, outfile_prefix=outfile_prefix)
             self._coco_api = COCO(coco_json_path)
@@ -537,12 +546,12 @@ class COCODetection(BaseMetric):
 
         eval_results: OrderedDict = OrderedDict()
         if self.format_only:
-            print('results are saved in '
-                  f'{osp.dirname(outfile_prefix)}')
+            self.logger.info(
+                f'Results are saved in {osp.dirname(outfile_prefix)}')
             return eval_results
 
         for metric in self.metrics:
-            print(f'Evaluating {metric}...')
+            self.logger.info(f'Evaluating {metric}...')
 
             # evaluate proposal, bbox and segm
             iou_type = 'bbox' if metric == 'proposal' else metric
@@ -562,7 +571,8 @@ class COCODetection(BaseMetric):
                 coco_dt = self._coco_api.loadRes(predictions)
 
             except IndexError:
-                print('The testing results of the whole dataset is empty.')
+                self.logger.info('The testing results of the '
+                                 'whole dataset is empty.')
                 break
 
             coco_eval = COCOeval(self._coco_api, coco_dt, iou_type)
@@ -601,7 +611,7 @@ class COCODetection(BaseMetric):
                 redirect_string = io.StringIO()
                 with contextlib.redirect_stdout(redirect_string):
                     coco_eval.summarize()
-                eval_results[f'{metric}_log'] = redirect_string
+                    self.logger.info('\n' + redirect_string.getvalue())
                 if metric_items is None:
                     metric_items = [
                         f'AR@{self.proposal_nums[0]}',
@@ -625,7 +635,7 @@ class COCODetection(BaseMetric):
                 redirect_string = io.StringIO()
                 with contextlib.redirect_stdout(redirect_string):
                     coco_eval.summarize()
-                eval_results[f'{metric}_log'] = redirect_string
+                self.logger.info('\n' + redirect_string.getvalue())
                 if metric_items is None:
                     metric_items = [
                         'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'

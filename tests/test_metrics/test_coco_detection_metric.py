@@ -356,7 +356,6 @@ def test_compute_metric():
         'bbox_mAP_l': 1.0,
     }
     eval_results.pop('bbox_result')
-    eval_results.pop('bbox_log')
     results = {k: round(v, 4) for k, v in eval_results.items()}
     assert results == target
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
@@ -384,9 +383,7 @@ def test_compute_metric():
         'segm_mAP_l': 1.0,
     }
     eval_results.pop('bbox_result')
-    eval_results.pop('bbox_log')
     eval_results.pop('segm_result')
-    eval_results.pop('segm_log')
     results = {k: round(v, 4) for k, v in eval_results.items()}
     assert results == target
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
@@ -411,7 +408,6 @@ def test_compute_metric():
     }
     eval_results.pop('bbox_result')
     eval_results.pop('bbox_classwise_result')
-    eval_results.pop('bbox_log')
     results = {k: round(v, 4) for k, v in eval_results.items()}
     assert results == target
 
@@ -432,7 +428,6 @@ def test_compute_metric():
         'AR_l@100': 1.0
     }
     eval_results.pop('proposal_result')
-    eval_results.pop('proposal_log')
     results = {k: round(v, 4) for k, v in eval_results.items()}
     assert results == target
 
@@ -484,8 +479,6 @@ def test_compute_metric():
     eval_results = coco_det_metric([dummy_pred], [dummy_gt])
     eval_results.pop('bbox_result')
     eval_results.pop('segm_result')
-    eval_results.pop('bbox_log')
-    eval_results.pop('segm_log')
     results = {k: round(v, 4) for k, v in eval_results.items()}
     assert results == target
 
@@ -514,8 +507,6 @@ def test_compute_metric():
     eval_results = coco_det_metric([dummy_pred], [dummy_gt])
     eval_results.pop('bbox_result')
     eval_results.pop('segm_result')
-    eval_results.pop('bbox_log')
-    eval_results.pop('segm_log')
     results = {k: round(v, 4) for k, v in eval_results.items()}
     assert results == target
     tmp_dir.cleanup()
