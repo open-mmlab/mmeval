@@ -504,6 +504,9 @@ class COCODetection(BaseMetric):
         else:
             outfile_prefix = self.outfile_prefix
 
+        # get classes from self.dataset_meta, self.dataset_meta may
+        # be updated after initialization, so it is not recommended
+        # to handle it in initialization
         if self.classes is None:
             self._get_classes()
         # split gt and prediction list
