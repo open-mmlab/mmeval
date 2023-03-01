@@ -70,8 +70,8 @@ def average_recall_at_avg_proposals(ground_truth,
         proposals (dict): Dict containing the proposal instances.
         total_num_proposals (int): Total number of proposals in the
             proposal dict.
-        max_avg_proposals (int, optional): Max number of proposals for one video.
-            Defaults to None.
+        max_avg_proposals (int, optional): Max number of proposals for one
+            video. Defaults to None.
         temporal_iou_thresholds (np.ndarray): 1D array with temporal_iou
             thresholds. Defaults to ``np.linspace(0.5, 0.95, 10)``.
     Returns:
@@ -238,24 +238,20 @@ class ActivityNetAR(BaseMetric):
         self.max_avg_proposals = max_avg_proposals
         self.ground_truth: Dict[str, np.array] = {}
 
-    def add(self, predictions: Sequence[list], 
-            annotations: Sequence[list]) -> None:  # type: ignore
+    def add(self, predictions: Sequence, annotations: Sequence) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add detection results to the results list.
 
         Args:
-            predictions (Sequence[dict]): A list of predictions. Each prediction is
-                a list of proposals. A proposal is `[start, end, score]`.
+            predictions (Sequence): A list of predictions. Each prediction
+                is a list of proposals. A proposal is `[start, end, score]`.
 
-            annotations (Sequence[list]): A list of annotations. The length of `annotations`
-                should equal to the length of `predictions`. Each annotation is a list
-                of ground truth segments. A segment is a `[start, end]`.
-
+            annotations (Sequence): A list of annotations. The length of
+                `annotations` should equal to the length of `predictions`. Each
+                annotation is a list of ground truth segments. A segment is
+                `[start, end]`.
         """
         for prediction, annotation in zip(predictions, annotations):
-            result = {
-               'proposal_list': prediction,
-               'ground_truth': annotation
-            }
+            result = {'proposal_list': prediction, 'ground_truth': annotation}
             self._results.append(result)
 
     def compute_metric(self, results: Sequence[dict]) -> dict:
@@ -287,8 +283,8 @@ class ActivityNetAR(BaseMetric):
         return eval_results
 
     @staticmethod
-    def _import_proposals(results: Sequence[dict]) -> Tuple[dict, int]:
-        """Read predictions from results."""
+    def _import_proposals(results: Sequence[dict]) -> Tuple[dict, int, dict]:
+        """Read predictions and ground_truths from results."""
         all_proposals = {}
         all_ground_truths = {}
         num_proposals = 0
@@ -297,4 +293,3 @@ class ActivityNetAR(BaseMetric):
             all_proposals[idx] = np.array(result['proposal_list'])
             num_proposals += all_proposals[idx].shape[0]
         return all_proposals, num_proposals, all_ground_truths
-
