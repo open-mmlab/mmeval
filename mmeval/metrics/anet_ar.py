@@ -70,7 +70,7 @@ def average_recall_at_avg_proposals(ground_truth,
         proposals (dict): Dict containing the proposal instances.
         total_num_proposals (int): Total number of proposals in the
             proposal dict.
-        max_avg_proposals (int or None): Max number of proposals for one video.
+        max_avg_proposals (int, optional): Max number of proposals for one video.
             Defaults to None.
         temporal_iou_thresholds (np.ndarray): 1D array with temporal_iou
             thresholds. Defaults to ``np.linspace(0.5, 0.95, 10)``.
@@ -96,7 +96,7 @@ def average_recall_at_avg_proposals(ground_truth,
     # For each video, compute temporal_iou scores among the retrieved proposals
     score_list = []
     total_num_retrieved_proposals = 0
-    for video_id in ground_truth:
+    for video_id in ground_truth.keys():
         # Get proposals for this video.
         proposals_video_id = proposals[video_id]
         this_video_proposals = proposals_video_id[:, :2]
@@ -197,29 +197,33 @@ class ActivityNetAR(BaseMetric):
         >>> from mmeval import ActivityNetAR
         >>> anet_metric = ActivityNetAR()
         >>> predictions = [
-        >>>                {'video_name': 'v_--1DO2V4K74',
-        >>>                 'annotations': [
-        >>>                     {'segment': [30.02, 180], 'label': 1}],
-        >>>                 'proposal_list': [
-        >>>                     {'segment': [53, 68], 'score': 0.21},
-        >>>                     {'segment': [38, 110], 'score': 0.54},
-        >>>                     {'segment': [65, 128], 'score': 0.95},
-        >>>                     {'segment': [69, 93], 'score': 0.98},
-        >>>                     {'segment': [99, 147], 'score': 0.84},
-        >>>                     {'segment': [28, 96], 'score': 0.84},
-        >>>                     {'segment': [18, 92], 'score': 0.22},
-        >>>                     {'segment': [40, 66], 'score': 0.36},
-        >>>                     {'segment': [14, 29], 'score': 0.75},
-        >>>                     {'segment': [67, 105], 'score': 0.25},
-        >>>                     {'segment': [2, 7], 'score': 0.94},
-        >>>                     {'segment': [25, 112], 'score': 0.49},
-        >>>                     {'segment': [7, 83], 'score': 0.9},
-        >>>                     {'segment': [75, 159], 'score': 0.42},
-        >>>                     {'segment': [99, 176], 'score': 0.62},
-        >>>                     {'segment': [89, 186], 'score': 0.56},
-        >>>                     {'segment': [50, 200], 'score': 0.5}]
-        >>>                 }]
-        >>> anet_metric(predictions)
+        >>>     [
+        >>>      [53,  68, 0.21],
+        >>>      [38, 110, 0.54],
+        >>>      [65, 128, 0.95],
+        >>>      [69,  93, 0.98],
+        >>>      [99, 147, 0.84],
+        >>>      [28,  96, 0.84],
+        >>>      [18,  92, 0.22],
+        >>>      [40,  66, 0.36],
+        >>>      [14,  29, 0.75],
+        >>>      [67, 105, 0.25],
+        >>>      [ 2,   7, 0.94],
+        >>>      [25, 112, 0.49],
+        >>>      [ 7,  83, 0.9 ],
+        >>>      [75, 159, 0.42],
+        >>>      [99, 176, 0.62],
+        >>>      [89, 186, 0.56],
+        >>>      [50, 200, 0.5 ],
+        >>>     ],
+        >>>   ]
+
+        >>> annotations = [
+        >>>     [
+        >>>      [30.02, 180],
+        >>>     ]
+        >>>   ]
+        >>> anet_metric(predictions, annotations)
         OrderedDict([('auc', 54.2), ('AR@1', 0.0), ('AR@5', 0.0),
                      ('AR@10', 0.2), ('AR@100', 0.6)])
     """
@@ -234,29 +238,25 @@ class ActivityNetAR(BaseMetric):
         self.max_avg_proposals = max_avg_proposals
         self.ground_truth: Dict[str, np.array] = {}
 
-    def add(self, predictions: Sequence[dict]) -> None:  # type: ignore
+    def add(self, predictions: Sequence[list], 
+            annotations: Sequence[list]) -> None:  # type: ignore
         """Add detection results to the results list.
 
         Args:
-            predictions (Sequence[dict]): A list of prediction dict which
-                contains the following keys:
+            predictions (Sequence[dict]): A list of predictions. Each prediction is
+                a list of proposals. A proposal is `[start, end, score]`.
 
-                - `video_name`: The name of the video, e.g., `v_--1DO2V4K74`.
-                - `annotations`: A list of annotations. Each annotation is a
-                  dict with keys `segment` and `label`. The value of `segment`
-                  is `[start, end]`. The value of `label` is an int label.
-                - `proposal_list`: A list of proposals. Each proposal is a
-                  dict with keys `segment` and `score`. The value of `segment`
-                  is `[start, end]`. The value of `score` is a float number.
+            annotations (Sequence[list]): A list of annotations. The length of `annotations`
+                should equal to the length of `predictions`. Each annotation is a list
+                of ground truth segments. A segment is a `[start, end]`.
+
         """
-        for pred in predictions:
-            ground_truth = []
-            for ann in pred['annotations']:
-                t_start, t_end = ann['segment']
-                label = ann['label']
-                ground_truth.append([t_start, t_end, label])
-            pred['ground_truth'] = np.array(ground_truth)
-            self._results.append(pred)
+        for prediction, annotation in zip(predictions, annotations):
+            result = {
+               'proposal_list': prediction,
+               'ground_truth': annotation
+            }
+            self._results.append(result)
 
     def compute_metric(self, results: Sequence[dict]) -> dict:
         """Compute the metrics from processed results.
@@ -270,8 +270,7 @@ class ActivityNetAR(BaseMetric):
         """
 
         eval_results = OrderedDict()
-        proposal, num_proposals = self._import_proposals(results)
-        ground_truth = self._import_ground_truth(results)
+        proposal, num_proposals, ground_truth = self._import_proposals(results)
 
         recall, _, _, auc = average_recall_at_avg_proposals(
             ground_truth,
@@ -290,24 +289,12 @@ class ActivityNetAR(BaseMetric):
     @staticmethod
     def _import_proposals(results: Sequence[dict]) -> Tuple[dict, int]:
         """Read predictions from results."""
-        proposals = {}
+        all_proposals = {}
+        all_ground_truths = {}
         num_proposals = 0
-        for result in results:
-            video_name = result['video_name']
-            this_video_proposals = []
-            for proposal in result['proposal_list']:
-                t_start, t_end = proposal['segment']
-                score = proposal['score']
-                this_video_proposals.append([t_start, t_end, score])
-                num_proposals += 1
-            proposals[video_name] = np.array(this_video_proposals)
-        return proposals, num_proposals
+        for idx, result in enumerate(results):
+            all_ground_truths[idx] = np.array(result['ground_truth'])
+            all_proposals[idx] = np.array(result['proposal_list'])
+            num_proposals += all_proposals[idx].shape[0]
+        return all_proposals, num_proposals, all_ground_truths
 
-    @staticmethod
-    def _import_ground_truth(results: Sequence[dict]) -> dict:
-        """Read ground_truth from results."""
-        ground_truth = {}
-        for result in results:
-            video_name = result['video_name']
-            ground_truth[video_name] = result['ground_truth']
-        return ground_truth

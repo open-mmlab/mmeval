@@ -3,192 +3,45 @@ from numpy.testing import assert_array_almost_equal
 
 from mmeval.metrics import ActivityNetAR
 
-prediction1 = [{
-    'video_name':
-    'v_--1DO2V4K74',
-    'annotations': [{
-        'segment': [30.02, 180],
-        'label': 1
-    }],
-    'proposal_list': [{
-        'segment': [53, 68],
-        'score': 0.21
-    }, {
-        'segment': [38, 110],
-        'score': 0.54
-    }, {
-        'segment': [65, 128],
-        'score': 0.95
-    }, {
-        'segment': [69, 93],
-        'score': 0.98
-    }, {
-        'segment': [99, 147],
-        'score': 0.84
-    }, {
-        'segment': [28, 96],
-        'score': 0.84
-    }, {
-        'segment': [18, 92],
-        'score': 0.22
-    }, {
-        'segment': [40, 66],
-        'score': 0.36
-    }, {
-        'segment': [14, 29],
-        'score': 0.75
-    }, {
-        'segment': [67, 105],
-        'score': 0.25
-    }, {
-        'segment': [2, 7],
-        'score': 0.94
-    }, {
-        'segment': [25, 112],
-        'score': 0.49
-    }, {
-        'segment': [7, 83],
-        'score': 0.9
-    }, {
-        'segment': [75, 159],
-        'score': 0.42
-    }, {
-        'segment': [99, 176],
-        'score': 0.62
-    }, {
-        'segment': [89, 186],
-        'score': 0.56
-    }, {
-        'segment': [50, 200],
-        'score': 0.5
-    }]
-}]
 
-prediction2 = [{
-    'video_name':
-    'v_--6bJUbfpnQ',
-    'annotations': [{
-        'segment': [2.57, 24.91],
-        'label': 2
-    }],
-    'proposal_list': [{
-        'segment': [53, 68],
-        'score': 0.21
-    }, {
-        'segment': [38, 110],
-        'score': 0.54
-    }, {
-        'segment': [65, 128],
-        'score': 0.95
-    }, {
-        'segment': [69, 93],
-        'score': 0.98
-    }, {
-        'segment': [99, 147],
-        'score': 0.84
-    }, {
-        'segment': [28, 96],
-        'score': 0.84
-    }, {
-        'segment': [4, 26],
-        'score': 0.42
-    }, {
-        'segment': [40, 66],
-        'score': 0.36
-    }, {
-        'segment': [14, 29],
-        'score': 0.75
-    }, {
-        'segment': [67, 105],
-        'score': 0.25
-    }, {
-        'segment': [2, 7],
-        'score': 0.94
-    }, {
-        'segment': [25, 112],
-        'score': 0.49
-    }, {
-        'segment': [7, 83],
-        'score': 0.9
-    }, {
-        'segment': [75, 159],
-        'score': 0.42
-    }, {
-        'segment': [99, 176],
-        'score': 0.62
-    }, {
-        'segment': [89, 186],
-        'score': 0.56
-    }, {
-        'segment': [50, 200],
-        'score': 0.5
-    }]
-}, {
-    'video_name':
-    'v_--cdisBubfr',
-    'annotations': [{
-        'segment': [38.2, 110.35],
-        'label': 3
-    }],
-    'proposal_list': [{
-        'segment': [53, 68],
-        'score': 0.21
-    }, {
-        'segment': [38, 110],
-        'score': 0.54
-    }, {
-        'segment': [65, 128],
-        'score': 0.95
-    }, {
-        'segment': [69, 93],
-        'score': 0.98
-    }, {
-        'segment': [99, 147],
-        'score': 0.84
-    }, {
-        'segment': [28, 96],
-        'score': 0.84
-    }, {
-        'segment': [4, 26],
-        'score': 0.42
-    }, {
-        'segment': [40, 66],
-        'score': 0.36
-    }, {
-        'segment': [14, 29],
-        'score': 0.75
-    }, {
-        'segment': [67, 105],
-        'score': 0.25
-    }, {
-        'segment': [2, 7],
-        'score': 0.94
-    }, {
-        'segment': [25, 112],
-        'score': 0.49
-    }, {
-        'segment': [7, 83],
-        'score': 0.9
-    }, {
-        'segment': [75, 159],
-        'score': 0.42
-    }, {
-        'segment': [99, 176],
-        'score': 0.62
-    }, {
-        'segment': [89, 186],
-        'score': 0.56
-    }, {
-        'segment': [50, 200],
-        'score': 0.5
-    }]
-}]
+prediction1 = [
+    [[53, 68, 0.21], [38, 110, 0.54], [65, 128, 0.95], [69, 93, 0.98], [99, 147, 0.84], 
+     [28, 96, 0.84], 
+     [18, 92, 0.22], 
+     [40, 66, 0.36], 
+     [14, 29, 0.75], 
+     [67, 105, 0.25], 
+     [2, 7, 0.94], 
+     [25, 112, 0.49], 
+     [7, 83, 0.9], 
+     [75, 159, 0.42], 
+     [99, 176, 0.62], 
+     [89, 186, 0.56], 
+     [50, 200, 0.5]
+     ],
+    ]
+
+annotation1 = [
+      [[30.02, 180],]
+    ]
+
+
+prediction2 = [
+   [[53, 68, 0.21], [38, 110, 0.54], [65, 128, 0.95], [69, 93, 0.98], [99, 147, 0.84], [28, 96, 0.84], [4, 26, 0.42], [40, 66, 0.36], [14, 29, 0.75], [67, 105, 0.25], [2, 7, 0.94], [25, 112, 0.49], [7, 83, 0.9], [75, 159, 0.42], [99, 176, 0.62], [89, 186, 0.56], [50, 200, 0.5]],
+   [[45, 88, 0.31], [34, 83, 0.54], [76, 113, 0.95], [34, 85, 0.88], [99, 147, 0.84], [28, 96, 0.84], [4, 26, 0.42], [40, 66, 0.36], [14, 29, 0.75], [67, 105, 0.25], [2, 7, 0.94], [25, 112, 0.49], [7, 83, 0.9], [75, 159, 0.42], [99, 176, 0.62], [89, 186, 0.56], [50, 200, 0.5]]
+]
+
+
+annotation2 = [
+      [[38.2, 110.35],],
+      [[38.2, 110.35], [40, 66]]
+    ]
 
 
 def test_activitynet_ar():
     # stateless
     anet_metric = ActivityNetAR()
-    output = anet_metric(prediction1)
+    output = anet_metric(prediction1, annotation1)
     assert 'auc' in output
     assert_array_almost_equal(output['auc'], 54.2)
     for k in 1, 5, 10, 100:
@@ -197,11 +50,11 @@ def test_activitynet_ar():
 
     # statefull
     anet_metric = ActivityNetAR()
-    anet_metric.add(prediction1)
-    anet_metric.add(prediction2)
+    anet_metric.add(prediction1, annotation1)
+    anet_metric.add(prediction2, annotation2)
     output = anet_metric.compute()
     assert 'auc' in output
-    assert_array_almost_equal(output['auc'], 72.5)
+    assert_array_almost_equal(output['auc'], 74.9625)
     for k in 1, 5, 10, 100:
         assert f'AR@{k}' in output
         assert 0 <= output[f'AR@{k}'] <= 1

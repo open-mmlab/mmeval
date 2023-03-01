@@ -42,7 +42,7 @@ __all__ = [
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
-    'KeypointAUC', 'KeypointNME'
+    'KeypointAUC', 'KeypointNME', 'ActivityNetAR'
 ]
 
 _deprecated_msg = (
