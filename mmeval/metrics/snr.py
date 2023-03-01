@@ -6,14 +6,15 @@ from mmeval.core import BaseMetric
 from .utils import reorder_and_crop
 
 
-class SNR(BaseMetric):
+class SignalNoiseRatio(BaseMetric):
     """Signal-to-Noise Ratio.
 
     Ref: https://en.wikipedia.org/wiki/Signal-to-noise_ratio
 
     Args:
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the PSNR calculation. Defaults to 0.
+            pixels are not involved in the PeakSignalNoiseRatio calculation.
+            Defaults to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             Defaults to 'HWC'.
         convert_to (str, optional): Whether to convert the images to other
@@ -26,21 +27,21 @@ class SNR(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import SNR
+        >>> from mmeval import SignalNoiseRatio
         >>> import numpy as np
         >>>
-        >>> snr = SNR(crop_border=1, input_order='CHW',
-        ...           convert_to='Y', channel_order='rgb')
+        >>> snr = SignalNoiseRatio(crop_border=1, input_order='CHW',
+        ...                        convert_to='Y', channel_order='rgb')
         >>> gts = np.random.randint(0, 255, size=(3, 32, 32))
         >>> preds = np.random.randint(0, 255, size=(3, 32, 32))
         >>> snr(preds, gts)  # doctest: +ELLIPSIS
         {'snr': ...}
 
-    Calculate SNR between 2 images:
+    Calculate SignalNoiseRatio between 2 images:
 
         >>> gts = np.ones((3, 32, 32)) * 2
         >>> preds = np.ones((3, 32, 32))
-        >>> SNR.compute_snr(preds, gts)
+        >>> SignalNoiseRatio.compute_snr(preds, gts)
         6.020599913279624
     """
 
@@ -70,7 +71,7 @@ class SNR(BaseMetric):
         self.convert_to = convert_to
 
     def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:   # type: ignore # yapf: disable # noqa: E501
-        """Add SNR score of batch to ``self._results``
+        """Add SignalNoiseRatio score of batch to ``self._results``
 
         Args:
             predictions (Sequence[np.ndarray]): Predictions of the model.
@@ -81,36 +82,45 @@ class SNR(BaseMetric):
         """
         channel_order = self.channel_order \
             if channel_order is None else channel_order
-        for pred, gt in zip(predictions, groundtruths):
-            assert gt.shape == pred.shape, (
-                f'Image shapes are different: {gt.shape}, {pred.shape}.')
-            gt = reorder_and_crop(
-                gt,
+        for prediction, groundtruth in zip(predictions, groundtruths):
+            assert groundtruth.shape == prediction.shape, (
+                f'Image shapes are different: \
+                    {groundtruth.shape}, {prediction.shape}.')
+            groundtruth = reorder_and_crop(
+                groundtruth,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
-            pred = reorder_and_crop(
-                pred,
+                channel_order=channel_order)
+            prediction = reorder_and_crop(
+                prediction,
                 crop_border=self.crop_border,
                 input_order=self.input_order,
                 convert_to=self.convert_to,
-                channel_order=self.channel_order)
+                channel_order=channel_order)
 
-            self._results.append(self.compute_snr(pred, gt))
+            if len(prediction.shape) == 3:
+                prediction = np.expand_dims(prediction, axis=0)
+                groundtruth = np.expand_dims(groundtruth, axis=0)
+            _snr_score = []
+            for i in range(prediction.shape[0]):
+                _snr_score.append(
+                    self.compute_snr(prediction[i], groundtruth[i]))
+            self._results.append(np.array(_snr_score).mean())
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
-        """Compute the SNR metric.
+        """Compute the SignalNoiseRatio metric.
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
 
         Args:
-            results (List[np.float64]): A list that consisting the SNR score.
-                This list has already been synced across all ranks.
+            results (List[np.float64]): A list that consisting the
+                SignalNoiseRatio score. This list has already been
+                synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed SNR metric.
+            Dict[str, float]: The computed SignalNoiseRatio metric.
         """
 
         return {'snr': float(np.array(results).mean())}
@@ -118,7 +128,7 @@ class SNR(BaseMetric):
     @staticmethod
     def compute_snr(prediction: np.ndarray,
                     groundtruth: np.ndarray) -> np.float64:
-        """Calculate SNR (Signal-to-Noise Ratio).
+        """Calculate SignalNoiseRatio (Signal-to-Noise Ratio).
 
         Ref: https://en.wikipedia.org/wiki/Signal-to-noise_ratio
 
@@ -127,7 +137,7 @@ class SNR(BaseMetric):
             groundtruth (np.ndarray): Images with range [0, 255].
 
         Returns:
-            np.float64: SNR result.
+            np.float64: SignalNoiseRatio result.
         """
         signal = (groundtruth**2).mean()
         noise = ((groundtruth - prediction)**2).mean()
@@ -135,3 +145,8 @@ class SNR(BaseMetric):
         result = 10. * np.log10(signal / noise)
 
         return result
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+SNR = SignalNoiseRatio

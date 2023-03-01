@@ -12,8 +12,8 @@ else:
     cv2 = try_import('cv2')
 
 
-class SSIM(BaseMetric):
-    """Calculate SSIM (structural similarity).
+class StructuralSimilarity(BaseMetric):
+    """Calculate StructuralSimilarity (structural similarity).
 
     Ref:
     Image quality assessment: From error visibility to structural similarity
@@ -21,12 +21,13 @@ class SSIM(BaseMetric):
     The results are the same as that of the official released MATLAB code in
     https://ece.uwaterloo.ca/~z70wang/research/ssim/.
 
-    For three-channel images, SSIM is calculated for each channel and then
-    averaged.
+    For three-channel images, StructuralSimilarity is calculated for each
+    channel and then averaged.
 
     Args:
         crop_border (int): Cropped pixels in each edges of an image. These
-            pixels are not involved in the PSNR calculation. Defaults to 0.
+            pixels are not involved in the PeakSignalNoiseRatio calculation.
+            Defaults to 0.
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             Defaults to 'HWC'.
         convert_to (str, optional): Whether to convert the images to other
@@ -39,7 +40,7 @@ class SSIM(BaseMetric):
 
     Examples:
 
-        >>> from mmeval import SSIM
+        >>> from mmeval import StructuralSimilarity as SSIM
         >>> import numpy as np
         >>>
         >>> ssim = SSIM(input_order='CHW', convert_to='Y', channel_order='rgb')
@@ -48,7 +49,7 @@ class SSIM(BaseMetric):
         >>> ssim(preds, gts)  # doctest: +ELLIPSIS
         {'ssim': ...}
 
-    Calculate SSIM between 2 single channel images:
+    Calculate StructuralSimilarity between 2 single channel images:
 
         >>> img1 = np.ones((32, 32)) * 2
         >>> img2 = np.ones((32, 32))
@@ -63,6 +64,10 @@ class SSIM(BaseMetric):
                  channel_order: str = 'rgb',
                  **kwargs) -> None:
         super().__init__(**kwargs)
+
+        if cv2 is None:
+            raise ImportError(f'For availability of {self.__class__.__name__},'
+                              ' please install opencv-python first.')
 
         assert input_order.upper() in [
             'CHW', 'HWC'
@@ -82,10 +87,11 @@ class SSIM(BaseMetric):
         self.convert_to = convert_to
 
     def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:   # type: ignore # yapf: disable # noqa: E501
-        """Add the SSIM score of the batch to ``self._results``.
+        """Add the StructuralSimilarity score of the batch to
+        ``self._results``.
 
-        For three-channel images, SSIM is calculated for each channel and then
-        averaged.
+        For three-channel images, StructuralSimilarity is calculated for
+        each channel and then averaged.
 
         Args:
             predictions (Sequence[np.ndarray]): Predictions of the model.
@@ -113,31 +119,37 @@ class SSIM(BaseMetric):
                 convert_to=self.convert_to,
                 channel_order=channel_order)
 
+            if len(pred.shape) == 3:
+                pred = np.expand_dims(pred, axis=0)
+                gt = np.expand_dims(gt, axis=0)
             _ssim_score = []
-            for i in range(pred.shape[2]):
-                _ssim_score.append(self.compute_ssim(pred[..., i], gt[..., i]))
+            for i in range(pred.shape[0]):
+                for j in range(pred.shape[3]):
+                    _ssim_score.append(
+                        self.compute_ssim(pred[i][..., j], gt[i][..., j]))
             self._results.append(np.array(_ssim_score).mean())
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
-        """Compute the SSIM metric.
+        """Compute the StructuralSimilarity metric.
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
 
         Args:
-            results (List[np.float64]): A list that consisting the SSIM scores.
-                This list has already been synced across all ranks.
+            results (List[np.float64]): A list that consisting the
+                StructuralSimilarity scores. This list has already been
+                synced across all ranks.
 
         Returns:
-            Dict[str, float]: The computed SSIM metric.
+            Dict[str, float]: The computed StructuralSimilarity metric.
         """
 
         return {'ssim': float(np.array(results).mean())}
 
     @staticmethod
     def compute_ssim(img1: np.ndarray, img2: np.ndarray) -> np.float64:
-        """Calculate SSIM (structural similarity) between two single channel
-        image.
+        """Calculate StructuralSimilarity (structural similarity) between two
+        single channel image.
 
         Ref:
         Image quality assessment: From error visibility to structural
@@ -151,7 +163,7 @@ class SSIM(BaseMetric):
             img2 (np.ndarray): Single channels Images with range [0, 255].
 
         Returns:
-            np.float64: SSIM result.
+            np.float64: StructuralSimilarity result.
         """
 
         C1 = (0.01 * 255)**2
@@ -174,3 +186,8 @@ class SSIM(BaseMetric):
                                            (sigma1_sq + sigma2_sq + C2))
 
         return ssim_map.mean()
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+SSIM = StructuralSimilarity
