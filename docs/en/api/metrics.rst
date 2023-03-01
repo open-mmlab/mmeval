@@ -52,3 +52,4 @@ Metrics
    KeypointEndPointError
    KeypointAUC
    KeypointNME
+   SacreBLEU
