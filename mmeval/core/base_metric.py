@@ -7,8 +7,8 @@ from typing import Any, Dict, List, Optional
 
 from mmeval.core.dist import get_dist_backend
 
-default_logger = logging.getLogger('mmeval')
-default_logger.setLevel(logging.INFO)
+DEFAULT_LOGGER = logging.getLogger('mmeval')
+DEFAULT_LOGGER.setLevel(logging.INFO)
 
 
 class BaseMetric(metaclass=ABCMeta):
@@ -79,7 +79,7 @@ class BaseMetric(metaclass=ABCMeta):
         assert dist_collect_mode in ('cat', 'unzip')
         self.dist_collect_mode = dist_collect_mode
         self.dist_comm = get_dist_backend(dist_backend)
-        self.logger = logger or default_logger
+        self.logger = logger or DEFAULT_LOGGER
         self._results: List[Any] = []
 
     @property
