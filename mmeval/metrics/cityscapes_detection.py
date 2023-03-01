@@ -151,8 +151,8 @@ class CityScapesDetection(BaseMetric):
         assert outfile_prefix is not None, 'outfile_prefix must be not None'
 
         if format_only:
-            assert keep_results and keep_gt_json, '`keep_results` and '
-            '`keep_gt_json` must be True when `format_only` is True'
+            assert keep_results, '`keep_results` must be True when '
+            '`format_only` is True'
         else:
             assert seg_prefix is not None, '`seg_prefix` is necessary when '
             'computing the CityScapes metrics'
