@@ -31,13 +31,6 @@ def test_bleu():
     assert isinstance(bleu_results, dict)
     np.testing.assert_almost_equal(bleu_results['bleu'], 0.4250477)
 
-    predictions = ['猫坐在垫子上', '公园旁边有棵树']
-    references = [['猫在那边的垫子'], ['一棵树长在公园旁边']]
-    metric = BLEU()
-    metric.add(predictions, references)
-    bleu_results = metric.compute()
-    np.testing.assert_almost_equal(bleu_results['bleu'], 0.2576968)
-
 
 @pytest.mark.parametrize('n_gram', [1, 2, 3, 4])
 def test_bleu_ngram(n_gram):

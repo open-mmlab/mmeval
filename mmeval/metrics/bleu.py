@@ -3,10 +3,10 @@
 # <https://github.com/Lightning-AI/metrics/blob/master/src/torchmetrics/text/bleu.py>`_.
 import numpy as np
 from collections import Counter
-from typing import Callable, List, Optional, Sequence, Tuple, Union
+from typing import Callable, List, Optional, Sequence, Tuple
 
 from mmeval import BaseMetric
-from mmeval.metrics.utils import get_n_gram, get_tokenizer, infer_language
+from mmeval.metrics.utils import get_n_gram
 
 
 def _get_brevity_penalty(pred_len: np.array,
@@ -40,7 +40,7 @@ class BLEU(BaseMetric):
         ngram_weights (Sequence[float], optional): Weights used
             for unigrams, bigrams, etc. to calculate BLEU score.
             If not provided, uniform weights are used. Defaults to None.
-        tokenizer_fn (Union[Callable, str, None]): A user's own tokenizer function.
+        tokenizer_fn (Callable, optional): A user's own tokenizer function.
             Defaults to None.
             New in version 0.3.0.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
@@ -66,7 +66,7 @@ class BLEU(BaseMetric):
                  n_gram: int = 4,
                  smooth: bool = False,
                  ngram_weights: Optional[Sequence[float]] = None,
-                 tokenizer_fn: Union[Callable, str, None] = None,
+                 tokenizer_fn: Callable = None,
                  **kwargs) -> None:
         super().__init__(**kwargs)
         self.n_gram = n_gram
@@ -78,19 +78,10 @@ class BLEU(BaseMetric):
         if ngram_weights is None:
             ngram_weights = [1.0 / n_gram] * n_gram
         self.ngram_weights = ngram_weights
-
-        # Select tokenizer according to the entered value.
-        self.tokenizer_fn = None
         if callable(tokenizer_fn):
             self.tokenizer_fn = tokenizer_fn
-        elif isinstance(tokenizer_fn, str):
-            self.tokenizer_fn = get_tokenizer(tokenizer_fn)
-            if self.tokenizer_fn is None:
-                raise ValueError('Right now, `tokenizer_fn` only supports '
-                                 "pre-defined 'en' or 'cn'.")
         else:
-            assert tokenizer_fn is None, \
-                f'`tokenizer_fn` supports Callable, str or None, but not `{type(tokenizer_fn)}`'  # noqa: E501
+            self.tokenizer_fn = str.split
 
     def add(self, predictions: Sequence[str], references: Sequence[Sequence[str]]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
@@ -100,9 +91,6 @@ class BLEU(BaseMetric):
              references (Sequence[Sequence[str]): An iterable of
                  referenced sentences.
         """
-        if self.tokenizer_fn is None:
-            language = infer_language(predictions[0])
-            self.tokenizer_fn = get_tokenizer(language)
         references_token: Sequence[Sequence[Sequence[str]]] = [
             [self.tokenizer_fn(line) for line in r] for r in references
         ]

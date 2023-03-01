@@ -26,6 +26,7 @@ from .perplexity import Perplexity
 from .proposal_recall import ProposalRecall
 from .psnr import PeakSignalNoiseRatio
 from .rouge import ROUGE
+from .sacre_bleu import SacreBLEU
 from .sad import SumAbsoluteDifferences
 from .single_label import SingleLabelMetric
 from .snr import SignalNoiseRatio
@@ -41,7 +42,7 @@ __all__ = [
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
-    'KeypointAUC', 'KeypointNME'
+    'KeypointAUC', 'KeypointNME', 'SacreBLEU'
 ]
 
 _deprecated_msg = (
