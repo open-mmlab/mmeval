@@ -27,9 +27,6 @@ from mmeval.metrics import SacreBLEU
             'bleu': 0.4181
         }),
         ({
-            'bleu': 0.4181
-        }),
-        ({
             'lowercase': False,
             'tokenizer_fn': 'char'
         }, {
@@ -51,9 +48,6 @@ from mmeval.metrics import SacreBLEU
             'lowercase': True,
             'tokenizer_fn': '13a'
         }, {
-            'bleu': 0.4405397
-        }),
-        ({
             'bleu': 0.4405397
         }),
         ({
