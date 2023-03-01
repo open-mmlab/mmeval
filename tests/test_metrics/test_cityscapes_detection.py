@@ -91,7 +91,7 @@ def test_compute_metric():
     os.makedirs(seg_prefix, exist_ok=True)
     predictions, groundtruths = _gen_fake_datasamples(seg_prefix)
 
-    # test single coco dataset evaluation
+    # test single cityscapes dataset evaluation
     cityscapes_det_metric = CityScapesDetection(
         dataset_meta=dataset_metas,
         outfile_prefix=osp.join(tmp_dir.name, 'test'),
