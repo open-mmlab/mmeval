@@ -6,6 +6,7 @@ from .accuracy import Accuracy
 from .ava_map import AVAMeanAP
 from .bleu import BLEU
 from .coco_detection import COCODetection
+from .coco_panoptic import CocoPanoptic
 from .connectivity_error import ConnectivityError
 from .dota_map import DOTAMeanAP
 from .end_point_error import EndPointError
@@ -41,7 +42,7 @@ __all__ = [
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
-    'KeypointAUC', 'KeypointNME'
+    'KeypointAUC', 'KeypointNME', 'CocoPanoptic'
 ]
 
 _deprecated_msg = (
