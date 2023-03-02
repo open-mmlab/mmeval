@@ -1,0 +1,26 @@
+# IMPORTANT:
+# This file is ONLY used to subscribe for notifications for PRs
+# related to a specific file path, and each line is a file pattern followed by
+# one or more owners.
+
+# Order is important; the last matching pattern takes the most
+# precedence.
+
+# These owners will be the default owners for everything in
+# the repo. Unless a later match takes precedence,
+# @global-owner1 and @global-owner2 will be requested for
+# review when someone opens a pull request.
+* @zhouzaida @C1rN09
+
+# Docs
+/docs/ @C1rN09
+
+# mmeval file
+/mmeval/ @C1rN09
+
+# fileio
+/mmeval/fileio/ @zhouzaida
+
+
+# unit test
+/tests/ @C1rN09
