@@ -60,6 +60,13 @@ class NaturalImageQualityEvaluator(BaseMetric):
         self.convert_to = convert_to
         self.channel_order = channel_order
 
+        # we use the official params estimated from the pristine dataset.
+        niqe_pris_params = np.load(
+            os.path.join(os.path.dirname(__file__), 'niqe_pris_params.npz'))
+        self.mu_pris_param = niqe_pris_params['mu_pris_param']
+        self.cov_pris_param = niqe_pris_params['cov_pris_param']
+        self.gaussian_window = niqe_pris_params['gaussian_window']
+
     def add(self, predictions: Sequence[np.ndarray], channel_order: Optional[str] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add NIQE score of batch to ``self._results``
 
@@ -72,13 +79,6 @@ class NaturalImageQualityEvaluator(BaseMetric):
                 Defaults to None.
         """
 
-        # we use the official params estimated from the pristine dataset.
-        niqe_pris_params = np.load(
-            os.path.join(os.path.dirname(__file__), 'niqe_pris_params.npz'))
-        mu_pris_param = niqe_pris_params['mu_pris_param']
-        cov_pris_param = niqe_pris_params['cov_pris_param']
-        gaussian_window = niqe_pris_params['gaussian_window']
-
         if channel_order is None:
             channel_order = self.channel_order
 
@@ -86,16 +86,17 @@ class NaturalImageQualityEvaluator(BaseMetric):
 
             if len(prediction.shape) <= 3:
                 result = self.compute_niqe(prediction, channel_order,
-                                           mu_pris_param, cov_pris_param,
-                                           gaussian_window)
+                                           self.mu_pris_param,
+                                           self.cov_pris_param,
+                                           self.gaussian_window)
             else:
                 result_sum = 0
                 for i in range(prediction.shape[0]):
                     result_sum += self.compute_niqe(prediction[i],
                                                     channel_order,
-                                                    mu_pris_param,
-                                                    cov_pris_param,
-                                                    gaussian_window)
+                                                    self.mu_pris_param,
+                                                    self.cov_pris_param,
+                                                    self.gaussian_window)
                 result = result_sum / prediction.shape[0]
 
             self._results.append(result)
