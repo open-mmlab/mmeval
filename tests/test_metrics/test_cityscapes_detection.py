@@ -10,7 +10,6 @@ from mmeval.metrics import CityScapesDetection
 from mmeval.utils import try_import
 
 cityscapesscripts = try_import('cityscapesscripts')
-mmcv = try_import('mmcv')
 
 
 def _gen_fake_datasamples(seg_prefix):
@@ -57,8 +56,7 @@ def _gen_fake_datasamples(seg_prefix):
 
 
 @pytest.mark.skipif(
-    cityscapesscripts is None or mmcv is None,
-    reason='cityscapesscriptsr is not available!')
+    cityscapesscripts is None, reason='cityscapesscriptsr is not available!')
 def test_metric_invalid_usage():
     with pytest.raises(AssertionError):
         CityScapesDetection(outfile_prefix=None)
@@ -79,8 +77,7 @@ def test_metric_invalid_usage():
 
 
 @pytest.mark.skipif(
-    cityscapesscripts is None or mmcv is None,
-    reason='cityscapesscriptsr is not available!')
+    cityscapesscripts is None, reason='cityscapesscriptsr is not available!')
 def test_compute_metric():
     tmp_dir = tempfile.TemporaryDirectory()
 

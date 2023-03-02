@@ -5,6 +5,7 @@ import os.path as osp
 import shutil
 import warnings
 from collections import OrderedDict
+from PIL import Image
 from typing import Dict, Optional, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
@@ -142,10 +143,6 @@ class CityScapesDetection(BaseMetric):
                                'Please try to install official '
                                'cityscapesscripts by '
                                '"pip install cityscapesscripts"')
-        if not HAS_MMCV:
-            raise RuntimeError('Failed to import `mmcv`.'
-                               'Please try to install official '
-                               'mmcv by `pip install "mmcv>=2.0.0rc4"`')
         super().__init__(**kwargs)
 
         assert outfile_prefix is not None, 'outfile_prefix must be not None'
@@ -305,7 +302,13 @@ class CityScapesDetection(BaseMetric):
                 class_id = CSLabels.name2label[class_name].id
                 png_filename = osp.join(self.outfile_prefix,
                                         basename + f'_{i}_{class_name}.png')
-                imwrite(mask, png_filename)
+                if HAS_MMCV:
+                    imwrite(mask, png_filename)
+                else:
+                    # write the image by using Pillow,
+                    # may slow down saving speed
+                    pil_mask = Image.fromarray(mask)
+                    pil_mask.save(png_filename)
                 f.write(f'{osp.basename(png_filename)} '
                         f'{class_id} {mask_score}\n')
         return pred
