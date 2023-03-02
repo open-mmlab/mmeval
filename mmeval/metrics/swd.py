@@ -19,7 +19,9 @@ class SlicedWassersteinDistance(BaseMetric):
     channel, and reshape them so that we can use these descriptors to represent
     the distribution of real/fake images. And we can calculate the sliced
     Wasserstein distance of the real and fake descriptors as the SWD of the
-    real and fake images.
+    real and fake images. Note that, as with the official implementation, we
+    multiply the result by 10 to prevent the value from being too small and to
+    facilitate comparison.
 
     Ref: https://github.com/tkarras/progressive_growing_of_gans/blob/master/metrics/sliced_wasserstein.py # noqa
 
@@ -83,9 +85,11 @@ class SlicedWassersteinDistance(BaseMetric):
 
         Args:
             predictions (Sequence[np.ndarray]): Predictions of the model.
-                The input range in [0, 255].
+                The channel order of each element in Sequence should align with
+                `self.input_order` and the range should be [0, 255].
             groundtruths (Sequence[np.ndarray]): The ground truth images.
-                The input range in [0, 255].
+                The channel order of each element in Sequence should align with
+                `self.input_order` and the range should be [0, 255].
         """
         if self.input_order == 'HWC':
             predictions = [pred.transpose(2, 0, 1) for pred in predictions]
@@ -141,7 +145,8 @@ class SlicedWassersteinDistance(BaseMetric):
         ]
         del real_descs
         del fake_descs
-        distance = [d * 1e3 for d in distance]  # multiply by 10^3
+        # multiply by 10^3 refers to https://github.com/tkarras/progressive_growing_of_gans/blob/2504c3f3cb98ca58751610ad61fa1097313152bd/metrics/sliced_wasserstein.py#L132  # noqa
+        distance = [d * 1e3 for d in distance]
         result = distance + [np.mean(distance)]
         return {
             f'SWD/{resolution}': d

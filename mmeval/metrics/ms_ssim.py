@@ -32,7 +32,7 @@ class MultiScaleStructureSimilarity(BaseMetric):
             Defaults to 'HWC'.
         max_val (int): the dynamic range of the images (i.e., the difference
             between the maximum the and minimum allowed values).
-            Default to 255.
+            Defaults to 255.
         filter_size (int): Size of blur kernel to use (will be reduced for
             small images). Default to 11.
         filter_sigma (float): Standard deviation for Gaussian blur kernel (will
@@ -87,8 +87,10 @@ class MultiScaleStructureSimilarity(BaseMetric):
         """Add PSNR score of batch to ``self._results``
 
         Args:
-            predictions (Sequence[np.ndarray]): Predictions of the model.
-                Input range should be [0, 255].
+            predictions (Sequence[np.ndarray]): Predictions of the model. The
+                number of elements in the Sequence must be divisible by 2.
+                The channel order of each element should align with
+                `self.input_order` and the range should be [0, 255].
         """
 
         num_samples = len(predictions)
