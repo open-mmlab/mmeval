@@ -62,7 +62,9 @@ class NaturalImageQualityEvaluator(BaseMetric):
 
         # we use the official params estimated from the pristine dataset.
         niqe_pris_params = np.load(
-            os.path.join(os.path.dirname(__file__), 'niqe_pris_params.npz'))
+            os.path.join(
+                os.path.dirname(__file__),
+                '../extra_data/niqe_pris_params.npz'))
         self.mu_pris_param = niqe_pris_params['mu_pris_param']
         self.cov_pris_param = niqe_pris_params['cov_pris_param']
         self.gaussian_window = niqe_pris_params['gaussian_window']
