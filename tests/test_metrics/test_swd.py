@@ -23,3 +23,9 @@ def test_swd(init_kwargs, preds, gts, results):
         np.testing.assert_almost_equal(out / 100, res / 100, decimal=1)
     swd.reset()
     assert swd._results == []
+
+    swd.add(preds[:50], gts[:50])
+    swd.add(preds[50:], gts[50:])
+    swd_results = swd.compute()
+    for out, res in zip(swd_results.values(), results):
+        np.testing.assert_almost_equal(out / 100, res / 100, decimal=1)
