@@ -37,7 +37,7 @@ class LVISDetection(COCODetection):
         proposal_nums (int): Numbers of proposals to be evaluated.
             Defaults to 300.
         metric_items (List[str], optional): Metric result names to be
-            recorded in the evaluation result. If None, default configurations 
+            recorded in the evaluation result. If None, default configurations
             in LVIS will be used.Defaults to None.
         format_only (bool): Format the output results without performing
             evaluation. It is useful when you want to format the result
@@ -172,7 +172,8 @@ class LVISDetection(COCODetection):
 
         return metric_result
 
-    def compute_metric(self, results: list) -> Dict[str, Union[float, list]]:  # type: ignore
+    def compute_metric(  # type: ignore
+            self, results: list) -> Dict[str, Union[float, list]]:
         """Compute the LVIS metrics.
 
         Args:
