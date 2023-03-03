@@ -39,7 +39,7 @@ def test_niqe():
     result = niqe(predictions)
     np.testing.assert_almost_equal(result['niqe'], 6.10088, decimal=5)
 
-    with pytest.raises(AssertionError):
+    with pytest.raises(ValueError):
         niqe = NaturalImageQualityEvaluator(convert_to='a')
 
     niqe = NaturalImageQualityEvaluator(
