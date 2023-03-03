@@ -250,7 +250,7 @@ class CocoPanoptic(BaseMetric):
         classwise_results = pq_results.get('classwise')
         if classwise_results is not None:
             for k, v in zip(self.classes, classwise_results.values()):  # type: ignore # yapf: disable # noqa: E501
-                eval_results[f'{k}_PQ'] = v
+                eval_results[f'{k}_PQ'] = v['pq']
 
         # remove result files to save storage space and make dir again
         # to avoid potential error
@@ -637,10 +637,12 @@ class CocoPanoptic(BaseMetric):
             classwise_table_title = ' Classsiwe Panoptic Results'
             classwise_results = pq_results.get('classwise', None)
             assert classwise_results is not None
+            assert len(classwise_results) == len(self.classes)  # type: ignore
             class_metrics = [
-                (name, ) + tuple(f'{round(metrics[k] * 100, 3)}:0.3f'
-                                 for k in ['pq', 'sq', 'rq'])
-                for name, metrics in classwise_results.items()
+                (self.classes[i], ) +  # type: ignore
+                tuple(f'{round(metrics[k] * 100, 3):0.3f}'
+                      for k in ['pq', 'sq', 'rq'])
+                for i, metrics in enumerate(classwise_results.values())
             ]
             num_columns = min(8, len(class_metrics) * 4)
             results_flatten = list(itertools.chain(*class_metrics))
