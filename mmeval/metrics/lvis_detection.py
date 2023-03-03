@@ -22,7 +22,7 @@ except ImportError:
 class LVISDetection(COCODetection):
     """LVIS evaluation metric.
 
-    Evaluate AR, AP, and mAP for detection tasks including proposal/box
+    Evaluate AR, AP for detection tasks on LVIS dataset including proposal/box
     detection and instance segmentation.
 
     Args:
@@ -32,13 +32,14 @@ class LVISDetection(COCODetection):
         iou_thrs (float | List[float], optional): IoU threshold to compute AP
             and AR. If not specified, IoUs from 0.5 to 0.95 will be used.
             Defaults to None.
-        classwise (bool): Whether to return the computed  results of each
+        classwise (bool): Whether to return the computed results of each
             class. Defaults to False.
         proposal_nums (int): Numbers of proposals to be evaluated.
             Defaults to 300.
         metric_items (List[str], optional): Metric result names to be
-            recorded in the evaluation result. Defaults to None.
-        format_only (bool): Format the output results without perform
+            recorded in the evaluation result. If None, default configurations 
+            in LVIS will be used.Defaults to None.
+        format_only (bool): Format the output results without performing
             evaluation. It is useful when you want to format the result
             to a specific format and submit it to the test server.
             Defaults to False.
@@ -67,72 +68,9 @@ class LVISDetection(COCODetection):
         ...     dataset_meta=fake_dataset_metas,
         ...     metric=['bbox', 'segm']
         ... )
-        >>> def _gen_bboxes(num_bboxes, img_w=256, img_h=256):
-        ...     # random generate bounding boxes in 'xyxy' formart.
-        ...     x = np.random.rand(num_bboxes, ) * img_w
-        ...     y = np.random.rand(num_bboxes, ) * img_h
-        ...     w = np.random.rand(num_bboxes, ) * (img_w - x)
-        ...     h = np.random.rand(num_bboxes, ) * (img_h - y)
-        ...     return np.stack([x, y, x + w, y + h], axis=1)
-        >>>
-        >>> def _gen_masks(bboxes, img_w=256, img_h=256):
-        ...     if mask_util is None:
-        ...         raise ImportError(
-        ...             'Please try to install official pycocotools by '
-        ...             '"pip install pycocotools"')
-        ...     masks = []
-        ...     for i, bbox in enumerate(bboxes):
-        ...         mask = np.zeros((img_h, img_w))
-        ...         bbox = bbox.astype(np.int32)
-        ...         box_mask = (np.random.rand(
-        ...             bbox[3] - bbox[1],
-        ...             bbox[2] - bbox[0]) > 0.3).astype(np.int32)
-        ...         mask[bbox[1]:bbox[3], bbox[0]:bbox[2]] = box_mask
-        ...         masks.append(
-        ...             mask_util.encode(
-        ...                 np.array(mask[:, :, np.newaxis], order='F',
-        ...                          dtype='uint8'))[0])  # encoded with RLE
-        ...     return masks
-        >>>
-        >>> img_id = 1
-        >>> img_w, img_h = 256, 256
-        >>> num_bboxes = 10
-        >>> pred_boxes = _gen_bboxes(
-        ...     num_bboxes=num_bboxes,
-        ...     img_w=img_w,
-        ...     img_h=img_h)
-        >>> pred_masks = _gen_masks(
-        ...     bboxes=pred_boxes,
-        ...     img_w=img_w,
-        ...     img_h=img_h)
-        >>> prediction = {
-        ...     'img_id': img_id,
-        ...     'bboxes': pred_boxes,
-        ...     'scores': np.random.rand(num_bboxes, ),
-        ...     'labels': np.random.randint(0, num_classes, size=(num_bboxes, )),
-        ...     'masks': pred_masks
-        ... }
-        >>> gt_boxes = _gen_bboxes(
-        ...     num_bboxes=num_bboxes,
-        ...     img_w=img_w,
-        ...     img_h=img_h)
-        >>> gt_masks = _gen_masks(
-        ...     bboxes=pred_boxes,
-        ...     img_w=img_w,
-        ...     img_h=img_h)
-        >>> groundtruth = {
-        ...     'img_id': img_id,
-        ...     'width': img_w,
-        ...     'height': img_h,
-        ...     'bboxes': gt_boxes,
-        ...     'labels': np.random.randint(0, num_classes, size=(num_bboxes, )),
-        ...     'masks': gt_masks,
-        ...     'ignore_flags': np.zeros(num_bboxes)
-        ... }
-        >>> lvis_det_metric(predictions=[prediction, ], groundtruths=[groundtruth, ])  # doctest: +ELLIPSIS  # noqa: E501
-        {'bbox_mAP': ..., 'bbox_mAP_50': ..., ...,
-         'segm_mAP': ..., 'segm_mAP_50': ..., ...,
-         'bbox_result': ..., 'segm_result': ..., ...}
+        >>> lvis_det_metric(predictions=predictions)  # doctest: +ELLIPSIS  # noqa: E501
+        {'bbox_AP': ..., 'bbox_AP50': ..., ...,
+         'segm_AP': ..., 'segm_AP50': ..., ...,}
     """
 
     def __init__(self,
@@ -169,18 +107,49 @@ class LVISDetection(COCODetection):
         self.logger = logging.getLogger(__name__) if logger is None else logger
 
     def add_predictions(self, predictions: Sequence[Dict]) -> None:
-        """Add predictions only.
-
-        If the `ann_file` has been passed, we can add predictions only.
+        """Add predictions to `self._results`.
 
         Args:
-            predictions (Sequence[dict]): Refer to
-                :class:`LVISDetection.add`.
+            predictions (Sequence[dict]): A sequence of dict. Each dict
+                representing a detection result for an image, with the
+                following keys:
+
+                - img_id (int): Image id.
+                - bboxes (numpy.ndarray): Shape (N, 4), the predicted
+                  bounding bboxes of this image, in 'xyxy' foramrt.
+                - scores (numpy.ndarray): Shape (N, ), the predicted scores
+                  of bounding boxes.
+                - labels (numpy.ndarray): Shape (N, ), the predicted labels
+                  of bounding boxes.
+                - masks (list[RLE], optional): The predicted masks.
+                - mask_scores (np.array, optional): Shape (N, ), the predicted
+                  scores of masks.
         """
-        assert self._lvis_api is not None, 'The `ann_file` should be ' \
-            'passesd when use the `LVISDetection.add_predictions` ' \
-            'method, otherwisw use the `LVISDetection.add` instead!'
-        self.add(predictions, groundtruths=[{}] * len(predictions))
+        self.add(predictions)
+
+    def add(self, predictions: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
+        """Add the intermediate results to `self._results`.
+
+        Args:
+            predictions (Sequence[dict]): A sequence of dict. Each dict
+                representing a detection result for an image, with the
+                following keys:
+
+                - img_id (int): Image id.
+                - bboxes (numpy.ndarray): Shape (N, 4), the predicted
+                  bounding bboxes of this image, in 'xyxy' foramrt.
+                - scores (numpy.ndarray): Shape (N, ), the predicted scores
+                  of bounding boxes.
+                - labels (numpy.ndarray): Shape (N, ), the predicted labels
+                  of bounding boxes.
+                - masks (list[RLE], optional): The predicted masks.
+                - mask_scores (np.array, optional): Shape (N, ), the predicted
+                  scores of masks.
+        """
+        for prediction in predictions:
+            assert isinstance(prediction, dict), 'The prediciton should be ' \
+                f'a sequence of dict, but got a sequence of {type(prediction)}.'  # noqa: E501
+            self._results.append(prediction)
 
     def __call__(self, *args, **kwargs) -> Dict:
         """Stateless call for a metric compute."""
@@ -203,7 +172,7 @@ class LVISDetection(COCODetection):
 
         return metric_result
 
-    def compute_metric(self, results: list) -> Dict[str, Union[float, list]]:
+    def compute_metric(self, results: list) -> Dict[str, Union[float, list]]:  # type: ignore
         """Compute the LVIS metrics.
 
         Args:
@@ -222,9 +191,6 @@ class LVISDetection(COCODetection):
         else:
             outfile_prefix = self.outfile_prefix
 
-        # split gt and prediction list
-        preds, gts = zip(*results)
-
         # handle lazy init
         if len(self.cat_ids) == 0:
             self.cat_ids = self._lvis_api.get_cat_ids()
@@ -232,7 +198,7 @@ class LVISDetection(COCODetection):
             self.img_ids = self._lvis_api.get_img_ids()
 
         # convert predictions to coco format and dump to json file
-        result_files = self.results2json(preds, outfile_prefix)
+        result_files = self.results2json(results, outfile_prefix)
 
         eval_results: OrderedDict = OrderedDict()
         if self.format_only:
@@ -321,7 +287,7 @@ class LVISDetection(COCODetection):
 
                     eval_results[f'{metric}_classwise_result'] = \
                         results_per_category
-            # Save coco summarize print information to logger
+            # Save lvis summarize print information to logger
             redirect_string = io.StringIO()
             with contextlib.redirect_stdout(redirect_string):
                 lvis_eval.print_results()

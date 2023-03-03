@@ -12,7 +12,7 @@ from mmeval.utils import try_import
 coco_wrapper = try_import('mmeval.metrics.utils.coco_wrapper')
 
 
-def _create_dummy_coco_json(json_name):
+def create_dummy_lvis_json(json_name):
     dummy_mask = np.zeros((10, 10), order='F', dtype=np.uint8)
     dummy_mask[:5, :5] = 1
     rle_mask = coco_wrapper.mask_util.encode(dummy_mask)
@@ -207,7 +207,7 @@ def test_box_metric_interface(metric_kwargs):
 
     # create dummy data
     fake_json_file = osp.join(tmp_dir.name, 'fake_data.json')
-    _create_dummy_coco_json(fake_json_file)
+    create_dummy_lvis_json(fake_json_file)
 
     num_classes = 2
     metric = ['bbox']
@@ -215,17 +215,14 @@ def test_box_metric_interface(metric_kwargs):
     fake_dataset_metas = {
         'classes': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = LVISDetection(
+    lvis_det_metric = LVISDetection(
         ann_file=fake_json_file,
         metric=metric,
         dataset_meta=fake_dataset_metas,
         **metric_kwargs)
-    assert isinstance(coco_det_metric, BaseMetric)
+    assert isinstance(lvis_det_metric, BaseMetric)
 
-    metric_results = coco_det_metric(
-        predictions=[_create_dummy_results()],
-        groundtruths=[dict()],
-    )
+    metric_results = lvis_det_metric(predictions=[_create_dummy_results()])
     assert isinstance(metric_results, dict)
     assert 'bbox_AP' in metric_results
 
@@ -254,7 +251,7 @@ def test_segm_metric_interface(metric_kwargs):
 
     # create dummy data
     fake_json_file = osp.join(tmp_dir.name, 'fake_data.json')
-    _create_dummy_coco_json(fake_json_file)
+    create_dummy_lvis_json(fake_json_file)
 
     num_classes = 2
     metric = ['segm']
@@ -262,17 +259,14 @@ def test_segm_metric_interface(metric_kwargs):
     fake_dataset_metas = {
         'classes': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = LVISDetection(
+    lvis_det_metric = LVISDetection(
         ann_file=fake_json_file,
         metric=metric,
         dataset_meta=fake_dataset_metas,
         **metric_kwargs)
-    assert isinstance(coco_det_metric, BaseMetric)
+    assert isinstance(lvis_det_metric, BaseMetric)
 
-    metric_results = coco_det_metric(
-        predictions=[_create_dummy_results()],
-        groundtruths=[dict()],
-    )
+    metric_results = lvis_det_metric(predictions=[_create_dummy_results()])
     assert isinstance(metric_results, dict)
     assert 'segm_AP' in metric_results
     tmp_dir.cleanup()
@@ -285,7 +279,7 @@ def test_metric_invalid_usage():
 
     # create dummy data
     fake_json_file = osp.join(tmp_dir.name, 'fake_data.json')
-    _create_dummy_coco_json(fake_json_file)
+    create_dummy_lvis_json(fake_json_file)
 
     with pytest.raises(KeyError):
         LVISDetection(ann_file=fake_json_file, metric='xxx')
@@ -301,19 +295,17 @@ def test_metric_invalid_usage():
     fake_dataset_metas = {
         'classes': tuple([str(i) for i in range(num_classes)])
     }
-    coco_det_metric = LVISDetection(
+    lvis_det_metric = LVISDetection(
         ann_file=fake_json_file, dataset_meta=fake_dataset_metas)
 
     with pytest.raises(KeyError):
         prediction = _gen_prediction(num_classes=num_classes)
-        groundtruth = _gen_groundtruth(num_classes=num_classes)
         del prediction['bboxes']
-        coco_det_metric([prediction], [groundtruth])
+        lvis_det_metric([prediction])
 
     with pytest.raises(AssertionError):
         prediction = _gen_prediction(num_classes=num_classes)
-        groundtruth = _gen_groundtruth(num_classes=num_classes)
-        coco_det_metric(prediction, groundtruth)
+        lvis_det_metric(prediction)
     tmp_dir.cleanup()
 
 
@@ -324,17 +316,17 @@ def test_compute_metric():
 
     # create dummy data
     fake_json_file = osp.join(tmp_dir.name, 'fake_data.json')
-    _create_dummy_coco_json(fake_json_file)
+    create_dummy_lvis_json(fake_json_file)
     dummy_pred = _create_dummy_results()
     fake_dataset_metas = dict(classes=['car', 'bicycle'])
 
     # test single coco dataset evaluation
-    coco_det_metric = LVISDetection(
+    lvis_det_metric = LVISDetection(
         ann_file=fake_json_file,
         classwise=False,
         outfile_prefix=f'{tmp_dir.name}/test',
         dataset_meta=fake_dataset_metas)
-    eval_results = coco_det_metric([dummy_pred], [dict()])
+    eval_results = lvis_det_metric([dummy_pred])
     target = {
         'bbox_AP': 1.0,
         'bbox_AP50': 1.0,
@@ -353,13 +345,13 @@ def test_compute_metric():
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
 
     # test box and segm coco dataset evaluation
-    coco_det_metric = LVISDetection(
+    lvis_det_metric = LVISDetection(
         ann_file=fake_json_file,
         classwise=False,
         metric=['bbox', 'segm'],
         outfile_prefix=f'{tmp_dir.name}/test',
         dataset_meta=fake_dataset_metas)
-    eval_results = coco_det_metric([dummy_pred], [dict()])
+    eval_results = lvis_det_metric([dummy_pred])
     target = {
         'bbox_AP': 1.0,
         'bbox_AP50': 1.0,
@@ -388,13 +380,13 @@ def test_compute_metric():
     assert osp.isfile(osp.join(tmp_dir.name, 'test.segm.json'))
 
     # test format only evaluation
-    coco_det_metric = LVISDetection(
+    lvis_det_metric = LVISDetection(
         ann_file=fake_json_file,
         classwise=False,
         format_only=True,
         outfile_prefix=f'{tmp_dir.name}/test',
         dataset_meta=fake_dataset_metas)
-    eval_results = coco_det_metric([dummy_pred], [dict()])
+    eval_results = lvis_det_metric([dummy_pred])
     assert osp.exists(f'{tmp_dir.name}/test.bbox.json')
     assert eval_results == dict()
     tmp_dir.cleanup()
