@@ -224,7 +224,6 @@ class LVISDetection(COCODetection):
             lvis_eval.params.imgIds = self.img_ids
             metric_items = self.metric_items
             if metric == 'proposal':
-                lvis_eval.params.use_cats = 0
                 lvis_eval.params.max_dets = self.proposal_nums
                 lvis_eval.evaluate()
                 lvis_eval.accumulate()
