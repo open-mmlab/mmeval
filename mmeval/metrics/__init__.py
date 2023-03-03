@@ -3,6 +3,7 @@
 import warnings
 
 from .accuracy import Accuracy
+from .anet_ar import ActivityNetAR
 from .ava_map import AVAMeanAP
 from .bleu import BLEU
 from .coco_detection import COCODetection
@@ -42,7 +43,7 @@ __all__ = [
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
-    'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator'
+    'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator', 'ActivityNetAR'
 ]
 
 _deprecated_msg = (
