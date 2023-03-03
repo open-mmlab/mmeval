@@ -21,7 +21,7 @@ try:
     from panopticapi.evaluation import OFFSET, VOID, PQStat
     from panopticapi.utils import id2rgb, rgb2id
 
-    from mmeval.metrics.utils.coco_wrapper import COCOPanoptic
+    from mmeval.metrics.utils.coco_wrapper import COCOPanoptic as PanopticAPI
     HAS_PANOPTICAPI = True
 except ImportError:
     HAS_PANOPTICAPI = False
@@ -117,9 +117,9 @@ class CocoPanoptic(BaseMetric):
             self.tmp_dir = tempfile.TemporaryDirectory()
             self.outfile_prefix = osp.join(self.tmp_dir.name, 'results')
         else:
-            # make dir to avoid potential error
             # the directory to save predicted panoptic segmentation mask
             self.outfile_prefix = osp.join(self.outfile_prefix, 'results')  # type: ignore # yapf: disable # noqa: E501
+            # make dir to avoid potential error
             dir_name = osp.expanduser(self.outfile_prefix)
             os.makedirs(dir_name, exist_ok=True)
 
@@ -129,13 +129,13 @@ class CocoPanoptic(BaseMetric):
 
         # if ann_file is not specified,
         # initialize coco api with the converted dataset
-        self._coco_api: Optional[COCOPanoptic]  # type: ignore
+        self._coco_api: Optional[PanopticAPI]  # type: ignore
 
         if ann_file is not None:
             with get_local_path(
                     filepath=ann_file,
                     backend_args=backend_args) as local_path:
-                self._coco_api = COCOPanoptic(annotation_file=local_path)
+                self._coco_api = PanopticAPI(annotation_file=local_path)
             self.categories = self._coco_api.cats
         else:
             self._coco_api = None
@@ -144,9 +144,12 @@ class CocoPanoptic(BaseMetric):
         self.backend_args = backend_args
         self.keep_results = keep_results
         self.direct_compute = direct_compute
-        # TODO: update
+        # TODO: update after logger is supported in BaseMetric
         self.logger = default_logger if logger is None else logger
-        # necessary argmentations
+
+        # necessary arguments, which can be obtained from self.dataset_meta.
+        # Note that they cannot be force set during initialization, because
+        # self.dataset_meta may be updated after build Metric.
         self.label2cat = None
         self.classes = None
         self.thing_classes = None
@@ -159,32 +162,22 @@ class CocoPanoptic(BaseMetric):
                 representing a detection result for an image, with the
                 following keys:
 
-                - img_id (int): Image id.
-                - bboxes (numpy.ndarray): Shape (N, 4), the predicted
-                  bounding bboxes of this image, in 'xyxy' foramrt.
-                - scores (numpy.ndarray): Shape (N, ), the predicted scores
-                  of bounding boxes.
-                - labels (numpy.ndarray): Shape (N, ), the predicted labels
-                  of bounding boxes.
-                - masks (list[RLE], optional): The predicted masks.
-                - mask_scores (np.array, optional): Shape (N, ), the predicted
-                  scores of masks.
+                - image_id (int): Image id.
+                - sem_seg (numpy.ndarray): The prediction of semantic
+                  segmentation.
+                - segm_file (str): Segmentation file name.
 
             groundtruths (Sequence[dict]): A sequence of dict. If load from
                 `ann_file`, the dict inside can be empty. Else, each dict
                 represents a groundtruths for an image, with the following
                 keys:
 
-                - img_id (int): Image id.
+                - image_id (int): Image id.
+                - segm_file (str): Segmentation file name.
                 - width (int): The width of the image.
                 - height (int): The height of the image.
-                - bboxes (numpy.ndarray): Shape (K, 4), the ground truth
-                  bounding bboxes of this image, in 'xyxy' foramrt.
-                - labels (numpy.ndarray): Shape (K, ), the ground truth
-                  labels of bounding boxes.
-                - masks (list[RLE], optional): The predicted masks.
-                - ignore_flags (numpy.ndarray, optional): Shape (K, ),
-                  the ignore flags.
+                - segments_info (list, optional): groundtruth information
+                  list. Is necessary if self._coco_api is None.
         """
         for prediction, groundtruth in zip(predictions, groundtruths):
             assert isinstance(prediction, dict), 'The prediciton should be ' \
@@ -201,14 +194,17 @@ class CocoPanoptic(BaseMetric):
             else:
                 self._results.append((prediction, groundtruth))
 
-    def compute_metric(self, results: list) -> Dict[str, float]:
-        """
+    def compute_metric(self, results: list) -> dict:
+        """Compute the CocoPanoptic metric.
 
         Args:
-            results:
+            results (List[tuple] | List[PQStat]): If self.direct_compute is
+                True, it is a list of PQStat, else a list of tuple, each
+                tuple is the prediction and ground truth of an image.
+                The list has already been synced across all ranks.
 
         Returns:
-
+            dict: The computed Panoptic Quality metric.
         """
         eval_results: OrderedDict = OrderedDict()
 
@@ -222,7 +218,8 @@ class CocoPanoptic(BaseMetric):
         if self.direct_compute:
             pq_stat_results = results
         else:
-            pq_stat_results = self._compute_multi_pq_stats(results)
+            pq_stat_results = self._compute_multi_pq_stats(
+                results)  # type: ignore
 
         # aggregate the results generated in process
         pq_stat = PQStat()
@@ -264,15 +261,30 @@ class CocoPanoptic(BaseMetric):
                 os.makedirs(dir_name, exist_ok=True)  # type: ignore # yapf: disable # noqa: E501
         return eval_results
 
-    def __del__(self):
+    def __del__(self) -> None:
         """Clean up the results if necessary."""
         if self.tmp_dir is not None:
             self.tmp_dir.cleanup()
         elif (not self.dist_comm.is_initialized or self.dist_comm.world_size
               == 1 or self.dist_comm.rank == 0) and not self.keep_results:
-            shutil.rmtree(self.outfile_prefix)
+            shutil.rmtree(self.outfile_prefix)  # type: ignore
 
-    def _process_prediction(self, prediction) -> dict:
+    def _process_prediction(self, prediction: dict) -> dict:
+        """Process panoptic segmentation predictions.
+
+        Args:
+            predictions (Sequence[dict]): A sequence of dict. Each dict
+                representing a detection result for an image, with the
+                following keys:
+
+                - image_id (int): Image id.
+                - sem_seg (numpy.ndarray): The prediction of semantic
+                  segmentation.
+                - segm_file (str): Segmentation file name.
+
+        Returns:
+            dict: The processed predictions.
+        """
         if self.classes is None:
             self._get_classes()
 
@@ -316,13 +328,29 @@ class CocoPanoptic(BaseMetric):
         return prediction
 
     @staticmethod
-    def _compute_pq_stats(prediction,
-                          groundtruth,
-                          categories,
-                          seg_prefix,
-                          outfile_prefix,
-                          backend_args,
-                          coco_api=None):
+    def _compute_pq_stats(prediction: dict,
+                          groundtruth: dict,
+                          categories: dict,
+                          seg_prefix: str,
+                          outfile_prefix: str,
+                          backend_args: Optional[dict] = None,
+                          coco_api: Optional[PanopticAPI] = None) -> PQStat:
+        """The function to compute the metric of Panoptic Segmentation.
+
+        Args:
+            prediction (dict): Same as :class:`CocoPanoptic.add`.
+            groundtruth (dict): Same as :class:`CocoPanoptic.add`.
+            categories (dict): The categories of the dataset.
+            seg_prefix (str): Same as :class:`CocoPanoptic.seg_prefix`.
+            outfile_prefix (str): Same as :class:`CocoPanoptic.outfile_prefix`.
+            backend_args (dict, optional): Same as
+                :class:`CocoPanoptic.backend_args`.
+            coco_api (PanopticAPI, optional): PanopticAPI wrapper.
+                Defaults to None.
+
+        Returns:
+            PQStat: The metric results of Panoptic Segmentation.
+        """
         # get panoptic groundtruth and prediction
         gt_seg_map_path = osp.join(seg_prefix, groundtruth['segm_file'])
         pred_seg_map_path = osp.join(outfile_prefix, prediction['segm_file'])
@@ -469,7 +497,18 @@ class CocoPanoptic(BaseMetric):
 
         return pq_stat
 
-    def _compute_single_pq_stats(self, prediction, groundtruth):
+    def _compute_single_pq_stats(self, prediction: dict,
+                                 groundtruth: dict) -> PQStat:
+        """Compute single image of the Panoptic Segmentation metric. Used when
+        self.direct_compute is True.
+
+        Args:
+            prediction (dict): Same as :class:`CocoPanoptic.add`.
+            groundtruth (dict): Same as :class:`CocoPanoptic.add`.
+
+        Returns:
+            PQStat: The metric results of Panoptic Segmentation.
+        """
         if self.classes is None:
             self._get_classes()
         if self.thing_classes is None:
@@ -480,15 +519,27 @@ class CocoPanoptic(BaseMetric):
         pq_stat = self._compute_pq_stats(
             prediction=prediction,
             groundtruth=groundtruth,
-            categories=self.categories,
-            seg_prefix=self.seg_prefix,
-            outfile_prefix=self.outfile_prefix,
+            categories=self.categories,  # type: ignore
+            seg_prefix=self.seg_prefix,  # type: ignore
+            outfile_prefix=self.outfile_prefix,  # type: ignore
             backend_args=self.backend_args,
             coco_api=self._coco_api)
 
         return pq_stat
 
-    def _compute_multi_pq_stats(self, results):
+    def _compute_multi_pq_stats(self, results: list) -> list:
+        """Compute multi images of the Panoptic Segmentation metric. Used when
+        self.direct_compute is False.
+
+        Args:
+            results (List[tuple]): A list of tuple. Each tuple is the
+                prediction and ground truth of an image. This list has already
+                been synced across all ranks.
+
+        Returns:
+            List[PQStat]: A list of the metric results of Panoptic
+            Segmentation.
+        """
         predictions, groundtruths = zip(*results)
         num_images = len(predictions)
 
@@ -509,15 +560,16 @@ class CocoPanoptic(BaseMetric):
                 pq_stat = self._compute_pq_stats(
                     prediction=predictions[img_idx],
                     groundtruth=groundtruths[img_idx],
-                    categories=self.categories,
-                    seg_prefix=self.seg_prefix,
-                    outfile_prefix=self.outfile_prefix,
+                    categories=self.categories,  # type: ignore
+                    seg_prefix=self.seg_prefix,  # type: ignore
+                    outfile_prefix=self.outfile_prefix,  # type: ignore
                     backend_args=self.backend_args,
                     coco_api=self._coco_api)
                 pq_stat_results.append(pq_stat)
         return pq_stat_results
 
     def _get_label2cat(self) -> None:
+        """Get `label2cat` from `self._coco_api`."""
         cat_ids = self._coco_api.get_cat_ids(cat_names=self.classes)  # type: ignore # yapf: disable # noqa: E501
         self.label2cat = {i: cat_id for i, cat_id in enumerate(cat_ids)}  # type: ignore # yapf: disable # noqa: E501
 
@@ -548,6 +600,7 @@ class CocoPanoptic(BaseMetric):
                                f'dataset_meta: {self.dataset_meta}')
 
     def _get_categories(self) -> None:
+        """Get dataset categories."""
         if self._coco_api is None:
             if self.classes is None:
                 self._get_classes()
@@ -562,6 +615,11 @@ class CocoPanoptic(BaseMetric):
         self.categories = categories
 
     def _print_panoptic_table(self, pq_results: dict) -> None:
+        """Print the panoptic evaluation results table.
+
+        Args:
+            pq_results: The Panoptic Quality results.
+        """
         table_title = ' Panoptic Results'
         headers = ['', 'PQ', 'SQ', 'RQ', 'categories']
         data = [headers]
