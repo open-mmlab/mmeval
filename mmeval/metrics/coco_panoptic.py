@@ -1,6 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import itertools
 import logging
+import multiprocessing
 import numpy as np
 import os
 import os.path as osp
@@ -56,17 +57,23 @@ class CocoPanoptic(BaseMetric):
             evaluate. Defaults to None.
         classwise (bool): Whether to return the computed  results of each
             class. Defaults to False.
-        outfile_prefix (str, optional): The prefix of json files. It includes
-            the file path and the prefix of filename, e.g., "a/b/prefix".
-            If not specified, a temp file will be created.
-            It should be specified when format_only is True. Defaults to None.
         format_only (bool): Format the output results without perform
             evaluation. It is useful when you want to format the result
             to a specific format and submit it to the test server.
             Defaults to False.
-        nproc (int): Number of processes for panoptic quality computing.
-            Defaults to 32. When ``nproc`` exceeds the number of cpu cores,
-            the number of cpu cores is used.
+        outfile_prefix (str, optional): The prefix of json files. It includes
+            the file path and the prefix of filename, e.g., "a/b/prefix".
+            If not specified, a temp file will be created.
+            It should be specified when format_only is True. Defaults to None.
+        keep_results (bool): Whether to keep the results. When ``format_only``
+            is True, ``keep_results`` must be True. If False, the result files
+            will remove after compute the metric. Defaults to False.
+        direct_compute (bool): Whether to compute metric on each inference
+            iteration. Defaults to True.
+        nproc (int): Number of processes for panoptic quality computing. It
+            will be used when `direct_compute` is False. Defaults to 32.
+            When ``nproc`` exceeds the number of cpu cores, the number of
+            cpu cores is used.
         logger (Logger, optional): logger used to record messages. When set to
             ``None``, the default logger will be used.
             Defaults to None.
@@ -82,8 +89,8 @@ class CocoPanoptic(BaseMetric):
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  keep_results: bool = False,
-                 nproc: int = 32,
                  direct_compute: bool = True,
+                 nproc: int = 32,
                  logger: Optional[Logger] = None,
                  backend_args: Optional[dict] = None,
                  **kwargs) -> None:
@@ -308,40 +315,39 @@ class CocoPanoptic(BaseMetric):
         prediction['segments_info'] = segments_info
         return prediction
 
-    def _compute_single_pq_stats(self, prediction, groundtruth):
-        if self.classes is None:
-            self._get_classes()
-        if self.thing_classes is None:
-            self._get_thing_classes()
-        if self.categories is None:
-            self._get_categories()
-
+    @staticmethod
+    def _compute_pq_stats(prediction,
+                          groundtruth,
+                          categories,
+                          seg_prefix,
+                          outfile_prefix,
+                          backend_args,
+                          coco_api=None):
         # get panoptic groundtruth and prediction
-        gt_seg_map_path = osp.join(self.seg_prefix, groundtruth['segm_file'])
-        pred_seg_map_path = osp.join(self.outfile_prefix,
-                                     prediction['segm_file'])
+        gt_seg_map_path = osp.join(seg_prefix, groundtruth['segm_file'])
+        pred_seg_map_path = osp.join(outfile_prefix, prediction['segm_file'])
 
         if HAS_MMCV:
-            img_bytes = get(gt_seg_map_path, backend_args=self.backend_args)
+            img_bytes = get(gt_seg_map_path, backend_args=backend_args)
             pan_gt = mmcv.imfrombytes(
                 img_bytes, flag='color', channel_order='rgb')
-            img_bytes = get(pred_seg_map_path, backend_args=self.backend_args)
+            img_bytes = get(pred_seg_map_path, backend_args=backend_args)
             pan_pred = mmcv.imfrombytes(
                 img_bytes, flag='color', channel_order='rgb')
         else:
             pan_gt = imread(
                 gt_seg_map_path,
-                backend_args=self.backend_args,
+                backend_args=backend_args,
                 flag='color',
                 channel_order='rgb')
             pan_pred = imread(
                 pred_seg_map_path,
-                backend_args=self.backend_args,
+                backend_args=backend_args,
                 flag='color',
                 channel_order='rgb')
 
-        if self._coco_api is None:
-            pan_png = pan_gt.squeeze()[:, :, ::-1]
+        if coco_api is None:
+            pan_png = pan_gt.squeeze()
             pan_png = rgb2id(pan_png)
 
             gt_segments_info = []
@@ -349,7 +355,7 @@ class CocoPanoptic(BaseMetric):
                 id = segment_info['id']
                 label = segment_info['category']
                 mask = pan_png == id
-                isthing = self.categories[label]['isthing']
+                isthing = categories[label]['isthing']
                 if isthing:
                     iscrowd = 1 if not segment_info['is_thing'] else 0
                 else:
@@ -365,8 +371,7 @@ class CocoPanoptic(BaseMetric):
                 gt_segments_info.append(new_segment_info)
         else:
             # get segments_info from annotation file
-            gt_segments_info = self._coco_api.imgToAnns[
-                groundtruth['image_id']]
+            gt_segments_info = coco_api.imgToAnns[groundtruth['image_id']]
 
         # process pq
         pq_stat = PQStat()
@@ -388,7 +393,7 @@ class CocoPanoptic(BaseMetric):
                         groundtruth['image_id'], label))
             pred_segms[label]['area'] = label_cnt
             pred_labels_set.remove(label)
-            if pred_segms[label]['category_id'] not in self.categories:
+            if pred_segms[label]['category_id'] not in categories:
                 raise KeyError(
                     'In the image with ID {} segment with ID {} has '
                     'unknown category_id {}.'.format(
@@ -464,12 +469,52 @@ class CocoPanoptic(BaseMetric):
 
         return pq_stat
 
+    def _compute_single_pq_stats(self, prediction, groundtruth):
+        if self.classes is None:
+            self._get_classes()
+        if self.thing_classes is None:
+            self._get_thing_classes()
+        if self.categories is None:
+            self._get_categories()
+
+        pq_stat = self._compute_pq_stats(
+            prediction=prediction,
+            groundtruth=groundtruth,
+            categories=self.categories,
+            seg_prefix=self.seg_prefix,
+            outfile_prefix=self.outfile_prefix,
+            backend_args=self.backend_args,
+            coco_api=self._coco_api)
+
+        return pq_stat
+
     def _compute_multi_pq_stats(self, results):
         predictions, groundtruths = zip(*results)
-        pq_stat_results = []
-        for prediction, groundtruth in zip(predictions, groundtruths):
-            pq_stat = self._compute_single_pq_stats(prediction, groundtruth)
-            pq_stat_results.append(pq_stat)
+        num_images = len(predictions)
+
+        nproc = min(self.nproc, multiprocessing.cpu_count())
+        if nproc > 1:
+            pool = multiprocessing.Pool(nproc)
+            pq_stat_results = pool.starmap(
+                self._compute_pq_stats,
+                zip(predictions, groundtruths, [self.categories] * num_images,
+                    [self.seg_prefix] * num_images,
+                    [self.outfile_prefix] * num_images,
+                    [self.backend_args] * num_images,
+                    [self._coco_api] * num_images))
+            pool.close()
+        else:
+            pq_stat_results = []
+            for img_idx in range(num_images):
+                pq_stat = self._compute_pq_stats(
+                    prediction=predictions[img_idx],
+                    groundtruth=groundtruths[img_idx],
+                    categories=self.categories,
+                    seg_prefix=self.seg_prefix,
+                    outfile_prefix=self.outfile_prefix,
+                    backend_args=self.backend_args,
+                    coco_api=self._coco_api)
+                pq_stat_results.append(pq_stat)
         return pq_stat_results
 
     def _get_label2cat(self) -> None:
@@ -504,6 +549,10 @@ class CocoPanoptic(BaseMetric):
 
     def _get_categories(self) -> None:
         if self._coco_api is None:
+            if self.classes is None:
+                self._get_classes()
+            if self.thing_classes is None:
+                self._get_thing_classes()
             categories = dict()
             for id, name in enumerate(self.classes):  # type: ignore # yapf: disable # noqa: E501
                 isthing = 1 if name in self.thing_classes else 0  # type: ignore # yapf: disable # noqa: E501
