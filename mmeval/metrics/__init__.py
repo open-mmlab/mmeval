@@ -20,6 +20,7 @@ from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
 from .mse import MeanSquaredError
 from .multi_label import AveragePrecision, MultiLabelMetric
+from .niqe import NaturalImageQualityEvaluator
 from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .perplexity import Perplexity
@@ -41,7 +42,7 @@ __all__ = [
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
-    'KeypointAUC', 'KeypointNME'
+    'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator'
 ]
 
 _deprecated_msg = (
