@@ -46,14 +46,14 @@ class NaturalImageQualityEvaluator(BaseMetric):
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
-        assert input_order.upper() in [
-            'CHW', 'HWC'
-        ], (f'Wrong input_order {input_order}. Supported input_orders are '
-            '"HWC" and "CHW"')
-        assert convert_to in [
-            'y', 'gray', 'Y'
-        ], ('Only support gray image, '
-            "``convert_to`` should be selected from ['y', 'gray']")
+        if input_order.upper() not in ['CHW', 'HWC']:
+            raise ValueError(
+                f'Wrong input_order {input_order}. Supported input_orders '
+                "are 'HWC' and 'CHW'")
+        if convert_to.lower() not in ['y', 'gray']:
+            raise ValueError(
+                'Only support gray image, '
+                "``convert_to`` should be selected from ['y', 'gray']")
 
         self.crop_border = crop_border
         self.input_order = input_order
@@ -104,7 +104,7 @@ class NaturalImageQualityEvaluator(BaseMetric):
             self._results.append(result)
 
     def compute_metric(self, results: List[np.float64]) -> Dict[str, float]:
-        """Compute the NIQE metric.
+        """Compute the NaturalImageQualityEvaluator metric.
 
         This method would be invoked in ``BaseMetric.compute`` after
         distributed synchronization.
@@ -257,7 +257,7 @@ class NaturalImageQualityEvaluator(BaseMetric):
 
         Returns:
             Tuple: alpha(float), beta_l(float) and beta_r(float) for the AGGD
-                distribution (Estimating parames in Equation 7 in the paper).
+            distribution (Estimating parameters in Equation 7 in the paper).
         """
 
         block = block.flatten()
@@ -285,6 +285,7 @@ class NaturalImageQualityEvaluator(BaseMetric):
         Args:
             img (np.ndarray): The original image.
             scale (float): The scale factor of the resize operation.
+
         Returns:
             np.ndarray: The resized image.
         """
@@ -381,7 +382,7 @@ class NaturalImageQualityEvaluator(BaseMetric):
 
         Returns:
             Tuple[List[np.ndarray], List[np.ndarray]]: The weights and the
-                indices for interpolation.
+            indices for interpolation.
         """
 
         if scale < 1:  # modified kernel for antialiasing
