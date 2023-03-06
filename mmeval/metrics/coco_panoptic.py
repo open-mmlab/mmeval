@@ -5,7 +5,6 @@ import multiprocessing
 import numpy as np
 import os
 import os.path as osp
-import shutil
 import tempfile
 import warnings
 from collections import OrderedDict
@@ -14,8 +13,7 @@ from terminaltables import AsciiTable
 from typing import Dict, Optional, Sequence
 
 from mmeval.core.base_metric import BaseMetric
-from mmeval.fileio import get, get_local_path
-from .utils import imread, imwrite
+from mmeval.fileio import get_local_path
 
 try:
     from panopticapi.evaluation import OFFSET, VOID, PQStat
@@ -27,10 +25,9 @@ except ImportError:
     HAS_PANOPTICAPI = False
 
 try:
-    import mmcv
-    HAS_MMCV = True
+    from mmcv import imread, imwrite
 except ImportError:
-    HAS_MMCV = False
+    from mmeval.utils import imread, imwrite
 
 default_logger = logging.getLogger(__name__)
 default_logger.setLevel(logging.INFO)
@@ -65,15 +62,9 @@ class CocoPanoptic(BaseMetric):
             the file path and the prefix of filename, e.g., "a/b/prefix".
             If not specified, a temp file will be created.
             It should be specified when format_only is True. Defaults to None.
-        keep_results (bool): Whether to keep the results. When ``format_only``
-            is True, ``keep_results`` must be True. If False, the result files
-            will remove after compute the metric. Defaults to False.
-        direct_compute (bool): Whether to compute metric on each inference
-            iteration. Defaults to True.
-        nproc (int): Number of processes for panoptic quality computing. It
-            will be used when `direct_compute` is False. Defaults to 32.
-            When ``nproc`` exceeds the number of cpu cores, the number of
-            cpu cores is used.
+        nproc (int): Number of processes for panoptic quality computing.
+            Defaults to 32. When ``nproc`` exceeds the number of cpu cores,
+            the number of cpu cores is used.
         logger (Logger, optional): logger used to record messages. When set to
             ``None``, the default logger will be used.
             Defaults to None.
@@ -88,8 +79,6 @@ class CocoPanoptic(BaseMetric):
                  classwise: bool = False,
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
-                 keep_results: bool = False,
-                 direct_compute: bool = True,
                  nproc: int = 32,
                  logger: Optional[Logger] = None,
                  backend_args: Optional[dict] = None,
@@ -105,9 +94,6 @@ class CocoPanoptic(BaseMetric):
             assert outfile_prefix is not None, 'outfile_prefix must be not'
             'None when format_only is True, otherwise the result files will'
             'be saved to a temp directory which will be cleaned up at the end.'
-            assert keep_results, '`keep_results` must be `True` when '
-            'format_only is True, otherwise the result files will be cleaned '
-            'up at the end.'
 
         self.tmp_dir = None
         # outfile_prefix should be a prefix of a path which points to a shared
@@ -119,6 +105,7 @@ class CocoPanoptic(BaseMetric):
         else:
             # the directory to save predicted panoptic segmentation mask
             self.outfile_prefix = osp.join(self.outfile_prefix, 'results')  # type: ignore # yapf: disable # noqa: E501
+
             # make dir to avoid potential error
             dir_name = osp.expanduser(self.outfile_prefix)
             os.makedirs(dir_name, exist_ok=True)
@@ -136,23 +123,12 @@ class CocoPanoptic(BaseMetric):
                     filepath=ann_file,
                     backend_args=backend_args) as local_path:
                 self._coco_api = PanopticAPI(annotation_file=local_path)
-            self.categories = self._coco_api.cats
         else:
             self._coco_api = None
-            self.categories = None
 
         self.backend_args = backend_args
-        self.keep_results = keep_results
-        self.direct_compute = direct_compute
         # TODO: update after logger is supported in BaseMetric
         self.logger = default_logger if logger is None else logger
-
-        # necessary arguments, which can be obtained from self.dataset_meta.
-        # Note that they cannot be force set during initialization, because
-        # self.dataset_meta may be updated after build Metric.
-        self.label2cat = None
-        self.classes = None
-        self.thing_classes = None
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to `self._results`.
@@ -186,20 +162,22 @@ class CocoPanoptic(BaseMetric):
                 f'a sequence of dict, but got a sequence of {type(groundtruth)}.'  # noqa: E501
             prediction = self._process_prediction(prediction)
 
-            if self.direct_compute:
-                # Directly compute the results and put into `self._results`
+            if self.tmp_dir is None:
+                # add the prediction and groundtruth into `self._results`, and
+                # compute the results after all images have been inferenced.
+                self._results.append((prediction, groundtruth))
+            else:
+                # Directly compute the results and put into `self._results`.
                 pq_results = self._compute_single_pq_stats(
                     prediction, groundtruth)
                 self._results.append(pq_results)
-            else:
-                self._results.append((prediction, groundtruth))
 
     def compute_metric(self, results: list) -> dict:
         """Compute the CocoPanoptic metric.
 
         Args:
-            results (List[tuple] | List[PQStat]): If self.direct_compute is
-                True, it is a list of PQStat, else a list of tuple, each
+            results (List[tuple] | List[PQStat]): If self.tmp_dir is
+                None, it is a list of PQStat, else a list of tuple, each
                 tuple is the prediction and ground truth of an image.
                 The list has already been synced across all ranks.
 
@@ -209,28 +187,26 @@ class CocoPanoptic(BaseMetric):
         eval_results: OrderedDict = OrderedDict()
 
         if self.format_only:
-            self.logger.info(f'Results are saved in {osp.dirname(self.outfile_prefix)}')  # type: ignore # yapf: disable # noqa: E501
-            return eval_results
-
-        if self.classes is None:
-            self._get_classes()
-
-        if self.direct_compute:
+            self.logger.info('Results are saved in '    # type: ignore
+                             f'{osp.dirname(self.outfile_prefix)}')  # type: ignore # yapf: disable # noqa: E501
+        if self.tmp_dir:
             pq_stat_results = results
         else:
-            pq_stat_results = self._compute_multi_pq_stats(
-                results)  # type: ignore
+            pq_stat_results = self._compute_multi_pq_stats(results)
 
         # aggregate the results generated in process
         pq_stat = PQStat()
         for result in pq_stat_results:
             pq_stat += result
 
+        categories = self.categories
+        classes = self.classes
+
         metrics = [('All', None), ('Things', True), ('Stuff', False)]
         pq_results = dict()
         for name, isthing in metrics:
             pq_results[name], classwise_results = pq_stat.pq_average(
-                self.categories, isthing=isthing)
+                categories, isthing=isthing)
             if name == 'All' and self.classwise:
                 pq_results['classwise'] = classwise_results
 
@@ -249,25 +225,15 @@ class CocoPanoptic(BaseMetric):
         eval_results['RQ_st'] = pq_results['Stuff']['rq']
         classwise_results = pq_results.get('classwise')
         if classwise_results is not None:
-            for k, v in zip(self.classes, classwise_results.values()):  # type: ignore # yapf: disable # noqa: E501
+            for k, v in zip(classes, classwise_results.values()):
                 eval_results[f'{k}_PQ'] = v['pq']
 
-        # remove result files to save storage space and make dir again
-        # to avoid potential error
-        if not self.keep_results:
-            if osp.exists(self.outfile_prefix):  # type: ignore # yapf: disable # noqa: E501
-                shutil.rmtree(self.outfile_prefix)  # type: ignore # yapf: disable # noqa: E501
-                dir_name = osp.expanduser(self.outfile_prefix)  # type: ignore # yapf: disable # noqa: E501
-                os.makedirs(dir_name, exist_ok=True)  # type: ignore # yapf: disable # noqa: E501
         return eval_results
 
     def __del__(self) -> None:
         """Clean up the results if necessary."""
         if self.tmp_dir is not None:
             self.tmp_dir.cleanup()
-        elif (not self.dist_comm.is_initialized or self.dist_comm.world_size
-              == 1 or self.dist_comm.rank == 0) and not self.keep_results:
-            shutil.rmtree(self.outfile_prefix)  # type: ignore
 
     def _process_prediction(self, prediction: dict) -> dict:
         """Process panoptic segmentation predictions.
@@ -285,11 +251,11 @@ class CocoPanoptic(BaseMetric):
         Returns:
             dict: The processed predictions.
         """
-        if self.classes is None:
-            self._get_classes()
-
-        if self.label2cat is None and self._coco_api is not None:
-            self._get_label2cat()
+        classes = self.classes
+        if self._coco_api is not None:
+            label2cat = self.label2cat
+        else:
+            label2cat = None  # type: ignore # noqa: E501
 
         pan = prediction.pop('sem_seg', None)
         assert pan is not None
@@ -299,15 +265,15 @@ class CocoPanoptic(BaseMetric):
 
         for pan_label in pan_labels:
             sem_label = pan_label % INSTANCE_OFFSET
-            # We reserve the length of self.classes for VOID label
-            if sem_label == len(self.classes):  # type: ignore # yapf: disable # noqa: E501
+            # We reserve the length of classes for VOID label
+            if sem_label == len(classes):
                 continue
             mask = pan == pan_label
             area = mask.sum()
             # when ann_file provided, sem_label should be cat_id, otherwise
             # sem_label should be a continuous id, not the cat_id
             # defined in dataset
-            category_id = self.label2cat[sem_label] if self.label2cat else sem_label   # type: ignore # yapf: disable # noqa: E501
+            category_id = label2cat[sem_label] if label2cat else sem_label
             segments_info.append({
                 'id': int(pan_label),
                 'category_id': category_id,
@@ -315,15 +281,11 @@ class CocoPanoptic(BaseMetric):
             })
 
         # evaluation script uses 0 for VOID label.
-        pan[pan % INSTANCE_OFFSET == len(self.classes)] = VOID  # type: ignore # yapf: disable # noqa: E501
+        pan[pan % INSTANCE_OFFSET == len(classes)] = VOID
         pan = id2rgb(pan).astype(np.uint8)
 
         segm_file = osp.join(self.outfile_prefix, prediction['segm_file'])  # type: ignore # yapf: disable # noqa: E501
-        if HAS_MMCV:
-            mmcv.imwrite(pan[:, :, ::-1], segm_file)
-        else:
-            imwrite(pan[:, :, ::-1], segm_file)
-
+        imwrite(pan[:, :, ::-1], segm_file)
         prediction['segments_info'] = segments_info
         return prediction
 
@@ -355,24 +317,16 @@ class CocoPanoptic(BaseMetric):
         gt_seg_map_path = osp.join(seg_prefix, groundtruth['segm_file'])
         pred_seg_map_path = osp.join(outfile_prefix, prediction['segm_file'])
 
-        if HAS_MMCV:
-            img_bytes = get(gt_seg_map_path, backend_args=backend_args)
-            pan_gt = mmcv.imfrombytes(
-                img_bytes, flag='color', channel_order='rgb')
-            img_bytes = get(pred_seg_map_path, backend_args=backend_args)
-            pan_pred = mmcv.imfrombytes(
-                img_bytes, flag='color', channel_order='rgb')
-        else:
-            pan_gt = imread(
-                gt_seg_map_path,
-                backend_args=backend_args,
-                flag='color',
-                channel_order='rgb')
-            pan_pred = imread(
-                pred_seg_map_path,
-                backend_args=backend_args,
-                flag='color',
-                channel_order='rgb')
+        pan_gt = imread(
+            gt_seg_map_path,
+            flag='color',
+            channel_order='rgb',
+            backend_args=backend_args)
+        pan_pred = imread(
+            pred_seg_map_path,
+            backend_args=backend_args,
+            flag='color',
+            channel_order='rgb')
 
         if coco_api is None:
             pan_png = pan_gt.squeeze()
@@ -500,7 +454,7 @@ class CocoPanoptic(BaseMetric):
     def _compute_single_pq_stats(self, prediction: dict,
                                  groundtruth: dict) -> PQStat:
         """Compute single image of the Panoptic Segmentation metric. Used when
-        self.direct_compute is True.
+        `self.tmp_dir` is None.
 
         Args:
             prediction (dict): Same as :class:`CocoPanoptic.add`.
@@ -509,17 +463,12 @@ class CocoPanoptic(BaseMetric):
         Returns:
             PQStat: The metric results of Panoptic Segmentation.
         """
-        if self.classes is None:
-            self._get_classes()
-        if self.thing_classes is None:
-            self._get_thing_classes()
-        if self.categories is None:
-            self._get_categories()
+        categories = self.categories
 
         pq_stat = self._compute_pq_stats(
             prediction=prediction,
             groundtruth=groundtruth,
-            categories=self.categories,  # type: ignore
+            categories=categories,
             seg_prefix=self.seg_prefix,  # type: ignore
             outfile_prefix=self.outfile_prefix,  # type: ignore
             backend_args=self.backend_args,
@@ -543,12 +492,14 @@ class CocoPanoptic(BaseMetric):
         predictions, groundtruths = zip(*results)
         num_images = len(predictions)
 
+        categories = self.categories
+
         nproc = min(self.nproc, multiprocessing.cpu_count())
         if nproc > 1:
             pool = multiprocessing.Pool(nproc)
             pq_stat_results = pool.starmap(
                 self._compute_pq_stats,
-                zip(predictions, groundtruths, [self.categories] * num_images,
+                zip(predictions, groundtruths, [categories] * num_images,
                     [self.seg_prefix] * num_images,
                     [self.outfile_prefix] * num_images,
                     [self.backend_args] * num_images,
@@ -560,7 +511,7 @@ class CocoPanoptic(BaseMetric):
                 pq_stat = self._compute_pq_stats(
                     prediction=predictions[img_idx],
                     groundtruth=groundtruths[img_idx],
-                    categories=self.categories,  # type: ignore
+                    categories=categories,
                     seg_prefix=self.seg_prefix,  # type: ignore
                     outfile_prefix=self.outfile_prefix,  # type: ignore
                     backend_args=self.backend_args,
@@ -568,51 +519,59 @@ class CocoPanoptic(BaseMetric):
                 pq_stat_results.append(pq_stat)
         return pq_stat_results
 
-    def _get_label2cat(self) -> None:
-        """Get `label2cat` from `self._coco_api`."""
-        cat_ids = self._coco_api.get_cat_ids(cat_names=self.classes)  # type: ignore # yapf: disable # noqa: E501
-        self.label2cat = {i: cat_id for i, cat_id in enumerate(cat_ids)}  # type: ignore # yapf: disable # noqa: E501
-
-    def _get_classes(self) -> None:
+    @property
+    def classes(self) -> tuple:
         """Get classes from self.dataset_meta."""
         if self.dataset_meta and 'classes' in self.dataset_meta:
-            self.classes = self.dataset_meta['classes']
+            classes = self.dataset_meta['classes']
         elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
-            self.classes = self.dataset_meta['CLASSES']
+            classes = self.dataset_meta['CLASSES']
             warnings.warn(
                 'DeprecationWarning: The `CLASSES` in `dataset_meta` is '
                 'deprecated, use `classes` instead!')
         else:
             raise RuntimeError('Could not find `classes` in dataset_meta: '
                                f'{self.dataset_meta}')
+        return classes
 
-    def _get_thing_classes(self) -> None:
-        """Get classes from self.dataset_meta."""
+    @property
+    def thing_classes(self) -> tuple:
+        """Get thing classes from self.dataset_meta."""
         if self.dataset_meta and 'thing_classes' in self.dataset_meta:
-            self.thing_classes = self.dataset_meta['thing_classes']
+            thing_classes = self.dataset_meta['thing_classes']
         elif self.dataset_meta and 'THING_CLASSES' in self.dataset_meta:
-            self.thing_classes = self.dataset_meta['THING_CLASSES']
+            thing_classes = self.dataset_meta['THING_CLASSES']
             warnings.warn(
                 'DeprecationWarning: The `THING_CLASSES` in `dataset_meta` '
                 'is deprecated, use `thing_classes` instead!')
         else:
             raise RuntimeError('Could not find `thing_classes` in '
                                f'dataset_meta: {self.dataset_meta}')
+        return thing_classes
 
-    def _get_categories(self) -> None:
-        """Get dataset categories."""
+    @property
+    def label2cat(self) -> dict:
+        """Get `label2cat` from `self._coco_api`."""
+        assert self._coco_api is not None
+        classes = self.classes
+        cat_ids = self._coco_api.get_cat_ids(cat_names=classes)  # type: ignore
+        label2cat = {i: cat_id
+                     for i, cat_id in enumerate(cat_ids)}  # type: ignore
+        return label2cat
+
+    @property
+    def categories(self) -> dict:
+        """Get `categories`."""
         if self._coco_api is None:
-            if self.classes is None:
-                self._get_classes()
-            if self.thing_classes is None:
-                self._get_thing_classes()
+            classes = self.classes
+            thing_classes = self.thing_classes
             categories = dict()
-            for id, name in enumerate(self.classes):  # type: ignore # yapf: disable # noqa: E501
-                isthing = 1 if name in self.thing_classes else 0  # type: ignore # yapf: disable # noqa: E501
+            for id, name in enumerate(classes):
+                isthing = 1 if name in thing_classes else 0
                 categories[id] = {'id': id, 'name': name, 'isthing': isthing}
         else:
             categories = self._coco_api.cats
-        self.categories = categories
+        return categories
 
     def _print_panoptic_table(self, pq_results: dict) -> None:
         """Print the panoptic evaluation results table.
@@ -636,12 +595,13 @@ class CocoPanoptic(BaseMetric):
         if self.classwise:
             classwise_table_title = ' Classsiwe Panoptic Results'
             classwise_results = pq_results.get('classwise', None)
+            classes = self.classes
+
             assert classwise_results is not None
-            assert len(classwise_results) == len(self.classes)  # type: ignore
+            assert len(classwise_results) == len(classes)
             class_metrics = [
-                (self.classes[i], ) +  # type: ignore
-                tuple(f'{round(metrics[k] * 100, 3):0.3f}'
-                      for k in ['pq', 'sq', 'rq'])
+                (classes[i], ) + tuple(f'{round(metrics[k] * 100, 3):0.3f}'
+                                       for k in ['pq', 'sq', 'rq'])
                 for i, metrics in enumerate(classwise_results.values())
             ]
             num_columns = min(8, len(class_metrics) * 4)

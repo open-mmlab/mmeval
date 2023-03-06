@@ -5,8 +5,8 @@ import os.path as osp
 from pathlib import Path
 from typing import TYPE_CHECKING, Optional, Union
 
-from mmeval.fileio import get
-from mmeval.utils import is_filepath, try_import
+from mmeval.utils.misc import try_import
+from mmeval.utils.path import is_filepath
 
 if TYPE_CHECKING:
     import cv2
@@ -85,6 +85,8 @@ def imread(file_path: Union[str, Path],
         'grayscale_ignore_orientation':
         cv2.IMREAD_IGNORE_ORIENTATION | cv2.IMREAD_GRAYSCALE
     }
+
+    from mmeval.fileio import get
 
     assert is_filepath(file_path)
 
