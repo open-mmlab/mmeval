@@ -59,21 +59,11 @@ def _gen_fake_datasamples(seg_prefix):
     cityscapesscripts is None, reason='cityscapesscriptsr is not available!')
 def test_metric_invalid_usage():
     with pytest.raises(AssertionError):
-        CityScapesDetection(outfile_prefix=None)
-
-    with pytest.raises(AssertionError):
         CityScapesDetection(
             outfile_prefix='tmp/cityscapes/results', seg_prefix=None)
 
     with pytest.raises(AssertionError):
-        CityScapesDetection(
-            outfile_prefix='tmp/cityscapes/results', seg_prefix=None)
-
-    with pytest.raises(AssertionError):
-        CityScapesDetection(
-            outfile_prefix='tmp/cityscapes/results',
-            format_only=True,
-            keep_results=False)
+        CityScapesDetection(outfile_prefix=None, format_only=True)
 
 
 @pytest.mark.skipif(
@@ -103,7 +93,6 @@ def test_compute_metric():
     eval_results = cityscapes_det_metric(
         predictions=predictions, groundtruths=groundtruths)
     target = {'mAP': 0.5, 'AP50': 0.5}
-    eval_results.pop('results_list')
     assert eval_results == target
 
     # test classwise result evaluation
@@ -117,7 +106,6 @@ def test_compute_metric():
 
     eval_results = cityscapes_det_metric(
         predictions=predictions, groundtruths=groundtruths)
-    eval_results.pop('results_list')
     mAP = eval_results.pop('mAP')
     AP50 = eval_results.pop('AP50')
     person_ap = eval_results.pop('person_ap')
