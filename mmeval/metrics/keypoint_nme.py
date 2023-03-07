@@ -1,12 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import logging
 import numpy as np
 from typing import Dict, Optional, Sequence
 
 from mmeval.core.base_metric import BaseMetric
 from .utils import calc_distances
-
-logger = logging.getLogger(__name__)
 
 
 def keypoint_nme_accuracy(prediction: np.ndarray, groundtruth: np.ndarray,
