@@ -71,6 +71,150 @@ class CocoPanoptic(BaseMetric):
         backend_args (dict, optional): Arguments to instantiate the
             preifx of uri corresponding backend. Defaults to None.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
+
+    Examples:
+        >>> import numpy as np
+        >>> import os
+        >>> import os.path as osp
+        >>> import tempfile
+        >>> from mmeval import CocoPanoptic
+        >>> from mmeval.utils import imwrite
+        >>>
+        >>> fake_dataset_metas = {
+        ...     'classes': ('person', 'dog', 'wall'),
+        ...     'thing_classes': ('person', 'dog'),
+        ...     'stuff_classes': ('wall', )
+        ... }
+        >>> tmp_dir = tempfile.TemporaryDirectory()
+        >>> gt_json_path = osp.join(tmp_dir.name, 'gt.json')
+        >>> gt_seg_dir = osp.join(tmp_dir.name, 'gt_seg')
+        >>> os.mkdir(gt_seg_dir)
+        >>> def _create_panoptic_gt_annotations(ann_file, seg_map_dir):
+        ...     categories = [{
+        ...         'id': 0,
+        ...         'name': 'person',
+        ...         'supercategory': 'person',
+        ...         'isthing': 1
+        ...     }, {
+        ...         'id': 1,
+        ...         'name': 'cat',
+        ...         'supercategory': 'cat',
+        ...         'isthing': 1
+        ...     }, {
+        ...         'id': 2,
+        ...         'name': 'dog',
+        ...         'supercategory': 'dog',
+        ...         'isthing': 1
+        ...     }, {
+        ...         'id': 3,
+        ...         'name': 'wall',
+        ...         'supercategory': 'wall',
+        ...         'isthing': 0
+        ...     }]
+        ...
+        ...     images = [{
+        ...         'id': 0,
+        ...         'width': 80,
+        ...         'height': 60,
+        ...         'file_name': 'fake_name1.jpg',
+        ...     }]
+        ...
+        ...     annotations = [{
+        ...         'segments_info': [{
+        ...             'id': 1,
+        ...             'category_id': 0,
+        ...             'area': 400,
+        ...             'bbox': [10, 10, 10, 40],
+        ...             'iscrowd': 0
+        ...         }, {
+        ...             'id': 2,
+        ...             'category_id': 0,
+        ...             'area': 400,
+        ...             'bbox': [30, 10, 10, 40],
+        ...             'iscrowd': 0
+        ...         }, {
+        ...             'id': 3,
+        ...             'category_id': 2,
+        ...             'iscrowd': 0,
+        ...             'bbox': [50, 10, 10, 5],
+        ...             'area': 50
+        ...         }, {
+        ...             'id': 4,
+        ...             'category_id': 3,
+        ...             'iscrowd': 0,
+        ...             'bbox': [0, 0, 80, 60],
+        ...             'area': 3950
+        ...         }],
+        ...         'file_name':
+        ...         'fake_name1.png',
+        ...         'image_id':
+        ...         0
+        ...     }]
+        ...
+        ...     gt_json = {
+        ...         'images': images,
+        ...         'annotations': annotations,
+        ...         'categories': categories
+        ...     }
+        ...
+        ...     # 4 is the id of the background class annotation.
+        ...     gt = np.zeros((60, 80), dtype=np.int64) + 4
+        ...     gt_bboxes = np.array([
+        ...         [10, 10, 10, 40], [30, 10, 10, 40], [50, 10, 10, 5]],
+        ...         dtype=np.int64)
+        ...     for i in range(3):
+        ...         x, y, w, h = gt_bboxes[i]
+        ...         gt[y:y + h, x:x + w] = i + 1  # id starts from 1
+        ...
+        ...     rgb_gt_seg_map = np.zeros(gt.shape + (3, ), dtype=np.uint8)
+        ...     rgb_gt_seg_map[:, :, 2] = gt // (256 * 256)
+        ...     rgb_gt_seg_map[:, :, 1] = gt % (256 * 256) // 256
+        ...     rgb_gt_seg_map[:, :, 0] = gt % 256
+        ...     img_path = osp.join(seg_map_dir, 'fake_name1.png')
+        ...
+        ...     imwrite(rgb_gt_seg_map[:, :, ::-1], img_path)
+        ...     from json import dump
+        ...     with open(ann_file, 'w') as f:
+        ...         dump(gt_json, f)
+        ...
+        ...     return gt_json
+        >>>
+        >>> def _create_panoptic_data_samples():
+        ...     pred = np.zeros((60, 80), dtype=np.int64) + 2
+        ...     pred_bboxes = np.array([
+        ...         [11, 11, 10, 40], [38, 10, 10, 40], [51, 10, 10, 5]],
+        ...         dtype=np.int64)
+        ...     pred_labels = np.array([0, 0, 1], dtype=np.int64)
+        ...     for i in range(3):
+        ...         x, y, w, h = pred_bboxes[i]
+        ...         pred[y:y + h, x:x + w] = (i + 1) * 1000 + pred_labels[i]
+        ...     segm_file = osp.basename('fake_name1.png')
+        ...     predictions = {
+        ...         'image_id': 0, 'sem_seg': pred, 'segm_file': segm_file
+        ...     }
+        ...     groundtruths = {
+        ...         'image_id': 0,
+        ...         'width': 80,
+        ...         'height': 60,
+        ...         'segm_file': segm_file,
+        ...         'segments_info': [
+        ...             {'id': 1, 'category': 0, 'is_thing': 1},
+        ...             {'id': 2, 'category': 0, 'is_thing': 1},
+        ...             {'id': 3, 'category': 1, 'is_thing': 1},
+        ...             {'id': 4, 'category': 2, 'is_thing': 0 }]}
+        ...     return {'predictions': predictions,
+        ...             'groundtruths': groundtruths}
+        >>> _create_panoptic_gt_annotations(gt_json_path, gt_seg_dir)
+        >>> data_samples = _create_panoptic_data_samples()
+        >>> panoptic_metric = CocoPanoptic(
+        ...     ann_file=gt_json_path,
+        ...     seg_prefix=gt_seg_dir,
+        ...     dataset_meta=fake_dataset_metas
+        ... )
+        >>> predictions = data_samples['predictions']
+        >>> groundtruths = data_samples['groundtruths']
+        >>> panoptic_metric(predictions=[predictions, ], groundtruths=[groundtruths, ])  # doctest: +ELLIPSIS  # noqa: E501
+        {'PQ': ..., 'SQ': ..., 'RQ': ..., ..., ...}
     """
 
     def __init__(self,

@@ -109,7 +109,7 @@ def _create_panoptic_gt_annotations(ann_file, seg_map_dir):
     return gt_json
 
 
-def _create_panoptic_data_samples(gt_seg_dir):
+def _create_panoptic_data_samples():
     # predictions
     # TP for background class, IoU=3576/4324=0.827
     # 2 the category id of the background class
@@ -178,7 +178,7 @@ def test_panoptic_metric_interface():
     # create fake gt json.
     _create_panoptic_gt_annotations(gt_json_path, gt_seg_dir)
     # create fake predictions and groundtruths.
-    data_samples = _create_panoptic_data_samples(gt_seg_dir)
+    data_samples = _create_panoptic_data_samples()
 
     cp_data_samples = copy.deepcopy(data_samples)
     predictions = cp_data_samples['predictions']
