@@ -280,7 +280,7 @@ class CocoPanoptic(BaseMetric):
 
         Args:
             predictions (Sequence[dict]): A sequence of dict. Each dict
-                representing a detection result for an image, with the
+                represents a detection result for an image, with the
                 following keys:
 
                 - image_id (int): Image id.
