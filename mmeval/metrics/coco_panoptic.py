@@ -89,13 +89,14 @@ class CocoPanoptic(BaseMetric):
                                '"pip install git+https://github.com/'
                                'cocodataset/panopticapi.git"')
         super().__init__(**kwargs)
+
+        self.tmp_dir = None
         self.format_only = format_only
         if self.format_only:
             assert outfile_prefix is not None, 'outfile_prefix must be not'
             'None when format_only is True, otherwise the result files will'
             'be saved to a temp directory which will be cleaned up at the end.'
 
-        self.tmp_dir = None
         # outfile_prefix should be a prefix of a path which points to a shared
         # storage when train or test with multi nodes.
         self.outfile_prefix = outfile_prefix
@@ -208,6 +209,12 @@ class CocoPanoptic(BaseMetric):
             pq_results[name], classwise_results = pq_stat.pq_average(
                 categories, isthing=isthing)
             if name == 'All' and self.classwise:
+                # avoid classes is not same as categories.
+                if len(classes) < len(classwise_results):
+                    for category in categories.values():
+                        if category['name'] not in classes:
+                            class_id = category['id']
+                            classwise_results.pop(class_id)
                 pq_results['classwise'] = classwise_results
 
         # print tables
@@ -322,11 +329,7 @@ class CocoPanoptic(BaseMetric):
             flag='color',
             channel_order='rgb',
             backend_args=backend_args)
-        pan_pred = imread(
-            pred_seg_map_path,
-            backend_args=backend_args,
-            flag='color',
-            channel_order='rgb')
+        pan_pred = imread(pred_seg_map_path, flag='color', channel_order='rgb')
 
         if coco_api is None:
             pan_png = pan_gt.squeeze()
