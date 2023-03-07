@@ -1,14 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
-import logging
 from abc import ABCMeta, abstractmethod
 from logging import Logger
 from typing import Any, Dict, List, Optional
 
 from mmeval.core.dist import get_dist_backend
-
-DEFAULT_LOGGER = logging.getLogger('mmeval')
-DEFAULT_LOGGER.setLevel(logging.INFO)
+from mmeval.utils import DEFAULT_LOGGER
 
 
 class BaseMetric(metaclass=ABCMeta):
