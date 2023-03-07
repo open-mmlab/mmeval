@@ -334,6 +334,8 @@ class CocoPanoptic(BaseMetric):
         if self.format_only:
             self.logger.info('Results are saved in '    # type: ignore
                              f'{osp.dirname(self.outfile_prefix)}')  # type: ignore # yapf: disable # noqa: E501
+            return eval_results
+
         if self.tmp_dir:
             pq_stat_results = results
         else:
