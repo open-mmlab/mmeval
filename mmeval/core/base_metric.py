@@ -1,9 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 
 from abc import ABCMeta, abstractmethod
+from logging import Logger
 from typing import Any, Dict, List, Optional
 
 from mmeval.core.dist import get_dist_backend
+from mmeval.utils import DEFAULT_LOGGER
 
 
 class BaseMetric(metaclass=ABCMeta):
@@ -31,7 +33,9 @@ class BaseMetric(metaclass=ABCMeta):
         dist_backend (str, optional): The name of the distributed communication
             backend, you can get all the backend names through
             ``mmeval.core.list_all_backends()``.
-            If None, use the default backend. Defaults to None.
+            If ``None``, use the default backend. Defaults to None.
+        logger (Logger, optional): The logger used to log messages.
+            If ``None``, use the default logger of mmeval. Defaults to None.
 
     Example to implement an accuracy metric:
 
@@ -66,11 +70,13 @@ class BaseMetric(metaclass=ABCMeta):
     def __init__(self,
                  dataset_meta: Optional[Dict] = None,
                  dist_collect_mode: str = 'unzip',
-                 dist_backend: Optional[str] = None):
+                 dist_backend: Optional[str] = None,
+                 logger: Optional[Logger] = None):
         self.dataset_meta = dataset_meta
         assert dist_collect_mode in ('cat', 'unzip')
         self.dist_collect_mode = dist_collect_mode
         self.dist_comm = get_dist_backend(dist_backend)
+        self.logger = logger or DEFAULT_LOGGER
         self._results: List[Any] = []
 
     @property

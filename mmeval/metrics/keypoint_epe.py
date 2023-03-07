@@ -1,12 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import logging
 import numpy as np
 from typing import Dict, Sequence
 
 from mmeval.core.base_metric import BaseMetric
 from .utils import calc_distances
-
-logger = logging.getLogger(__name__)
 
 
 def keypoint_epe_accuracy(pred: np.ndarray, gt: np.ndarray,
@@ -108,7 +105,7 @@ class KeypointEndPointError(BaseMetric):
         # mask: [N, K]
         mask = np.concatenate([gt['mask'] for gt in gts])
 
-        logger.info(f'Evaluating {self.__class__.__name__}...')
+        self.logger.info(f'Evaluating {self.__class__.__name__}...')
 
         epe = keypoint_epe_accuracy(pred_coords, gt_coords, mask)
 
