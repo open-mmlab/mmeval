@@ -1,18 +1,15 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import logging
 import numpy as np
 from typing import Dict, List
 
 from mmeval.core.base_metric import BaseMetric
 from .pck_accuracy import keypoint_pck_accuracy
 
-logger = logging.getLogger(__name__)
-
 
 def keypoint_auc_accuracy(prediction: np.ndarray,
                           groundtruth: np.ndarray,
                           mask: np.ndarray,
-                          norm_factor: np.ndarray,
+                          norm_factor: float,
                           num_thrs: int = 20) -> float:
     """Calculate the Area under curve (AUC) of keypoint PCK accuracy.
 
@@ -140,7 +137,7 @@ class KeypointAUC(BaseMetric):
         # mask: [N, K]
         mask = np.concatenate([gt['mask'] for gt in gts])
 
-        logger.info(f'Evaluating {self.__class__.__name__}...')
+        self.logger.info(f'Evaluating {self.__class__.__name__}...')
 
         auc = keypoint_auc_accuracy(pred_coords, gt_coords, mask,
                                     self.norm_factor, self.num_thrs)
