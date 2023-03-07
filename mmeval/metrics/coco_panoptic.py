@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import itertools
-import logging
 import multiprocessing
 import numpy as np
 import os
@@ -8,7 +7,6 @@ import os.path as osp
 import tempfile
 import warnings
 from collections import OrderedDict
-from logging import Logger
 from terminaltables import AsciiTable
 from typing import Dict, Optional, Sequence
 
@@ -28,9 +26,6 @@ try:
     from mmcv import imread, imwrite
 except ImportError:
     from mmeval.utils import imread, imwrite
-
-default_logger = logging.getLogger(__name__)
-default_logger.setLevel(logging.INFO)
 
 # A custom value to distinguish instance ID and category ID; need to
 # be greater than the number of categories.
@@ -224,7 +219,6 @@ class CocoPanoptic(BaseMetric):
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  nproc: int = 32,
-                 logger: Optional[Logger] = None,
                  backend_args: Optional[dict] = None,
                  **kwargs) -> None:
         if not HAS_PANOPTICAPI:
@@ -272,8 +266,6 @@ class CocoPanoptic(BaseMetric):
             self._coco_api = None
 
         self.backend_args = backend_args
-        # TODO: update after logger is supported in BaseMetric
-        self.logger = default_logger if logger is None else logger
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to `self._results`.
