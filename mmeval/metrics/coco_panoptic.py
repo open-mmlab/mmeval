@@ -718,7 +718,7 @@ class CocoPanoptic(BaseMetric):
         """Print the panoptic evaluation results table.
 
         Args:
-            pq_results: The Panoptic Quality results.
+            pq_results (dict): The Panoptic Quality results.
         """
         table_title = ' Panoptic Results'
         headers = ['', 'PQ', 'SQ', 'RQ', 'categories']
