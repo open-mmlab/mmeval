@@ -12,13 +12,18 @@ from .end_point_error import EndPointError
 from .f1_score import F1Score
 from .gradient_error import GradientError
 from .hmean_iou import HmeanIoU
+from .keypoint_auc import KeypointAUC
+from .keypoint_epe import KeypointEndPointError
+from .keypoint_nme import KeypointNME
 from .mae import MeanAbsoluteError
 from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
 from .mse import MeanSquaredError
 from .multi_label import AveragePrecision, MultiLabelMetric
+from .niqe import NaturalImageQualityEvaluator
 from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
+from .perplexity import Perplexity
 from .proposal_recall import ProposalRecall
 from .psnr import PeakSignalNoiseRatio
 from .rouge import ROUGE
@@ -27,6 +32,7 @@ from .single_label import SingleLabelMetric
 from .snr import SignalNoiseRatio
 from .ssim import StructuralSimilarity
 from .voc_map import VOCMeanAP
+from .word_accuracy import WordAccuracy
 
 __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
@@ -36,7 +42,9 @@ __all__ = [
     'StructuralSimilarity', 'SignalNoiseRatio', 'MultiLabelMetric',
     'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
-    'ConnectivityError', 'ROUGE'
+    'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
+    'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
+    'WordAccuracy'
 ]
 
 _deprecated_msg = (
