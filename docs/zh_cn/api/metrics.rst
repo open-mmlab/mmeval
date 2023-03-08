@@ -48,4 +48,10 @@ Metrics
    ConnectivityError
    DOTAMeanAP
    ROUGE
+   NaturalImageQualityEvaluator
+   Perplexity
+   KeypointEndPointError
+   KeypointAUC
+   KeypointNME
+   WordAccuracy
    COCOKeyPointDetection

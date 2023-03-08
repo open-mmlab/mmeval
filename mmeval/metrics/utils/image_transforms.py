@@ -1,4 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import cv2
 import numpy as np
 from typing import Optional, Union
 
@@ -129,6 +130,40 @@ def bgr2ycbcr(img: np.ndarray, y_only: bool = False) -> np.ndarray:
     return out_img
 
 
+def bgr2gray(img: np.ndarray, keepdim: bool = False) -> np.ndarray:
+    """Convert a BGR image to grayscale image.
+
+    Args:
+        img (ndarray): The input image.
+        keepdim (bool): If False (by default), then return the grayscale image
+            with 2 dims, otherwise 3 dims.
+
+    Returns:
+        ndarray: The converted grayscale image.
+    """
+    out_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    if keepdim:
+        out_img = out_img[..., None]
+    return out_img
+
+
+def rgb2gray(img: np.ndarray, keepdim: bool = False) -> np.ndarray:
+    """Convert a RGB image to grayscale image.
+
+    Args:
+        img (ndarray): The input image.
+        keepdim (bool): If False (by default), then return the grayscale image
+            with 2 dims, otherwise 3 dims.
+
+    Returns:
+        ndarray: The converted grayscale image.
+    """
+    out_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
+    if keepdim:
+        out_img = out_img[..., None]
+    return out_img
+
+
 def reorder_image(img: np.array, input_order='HWC'):
     """Reorder images to 'HWC' order.
 
@@ -183,6 +218,14 @@ def reorder_and_crop(img: np.ndarray,
         np.array: The transformation results.
     """
 
+    if len(img.shape) == 4:
+        result = []
+        for i in range(img.shape[0]):
+            result.append(
+                reorder_and_crop(img[i], crop_border, input_order, convert_to,
+                                 channel_order))
+        return np.array(result).astype(np.float64)
+
     img = reorder_image(img, input_order=input_order)
     img = img.astype(np.float32)
 
@@ -193,8 +236,18 @@ def reorder_and_crop(img: np.ndarray,
             img = bgr2ycbcr(img / 255., y_only=True) * 255.
         else:
             raise ValueError(
-                'Only support `rgb2y` and `bgr2y`, but the channel_order '
-                f'is {channel_order}')
+                'Only support `rgb2y` and `bgr2y`, but the channel_order'
+                f' is {channel_order}')
+        img = np.expand_dims(img, axis=2)
+    elif isinstance(convert_to, str) and convert_to.lower() == 'gray':
+        if channel_order == 'rgb':
+            img = rgb2gray(img / 255., keepdim=False) * 255.
+        elif channel_order == 'bgr':
+            img = bgr2gray(img / 255., keepdim=False) * 255.
+        else:
+            raise ValueError(
+                'Only support `rgb2gray` and `bgr2gray`, but the channel_order'
+                f' is {channel_order}')
         img = np.expand_dims(img, axis=2)
     elif convert_to is not None:
         raise ValueError('Wrong color model. Supported values are '
