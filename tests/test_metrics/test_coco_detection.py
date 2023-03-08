@@ -135,7 +135,6 @@ def _create_dummy_gts():
         masks=dummy_mask)
 
 
-# TODO: move necessary function to somewhere
 def _gen_bboxes(num_bboxes, img_w=256, img_h=256):
     # random generate bounding boxes in 'xyxy' formart.
     x = np.random.rand(num_bboxes, ) * img_w
