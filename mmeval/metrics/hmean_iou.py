@@ -1,6 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-import scipy.sparse
+from scipy import sparse
 from typing import TYPE_CHECKING, Dict, List, Sequence, Tuple, Union
 
 from mmeval.core import BaseMetric
@@ -260,8 +260,8 @@ class HmeanIoU(BaseMetric):
         Returns:
             int: The hits by max matching policy.
         """
-        csr_matched_metric = scipy.sparse.csr_matrix(iou_metric)
-        matched_preds = scipy.sparse.csgraph.maximum_bipartite_matching(
+        csr_matched_metric = sparse.csr_matrix(iou_metric)
+        matched_preds = sparse.csgraph.maximum_bipartite_matching(
             csr_matched_metric, perm_type='row')
         # -1 denotes unmatched pred polygons
         return np.sum(matched_preds != -1).item()
