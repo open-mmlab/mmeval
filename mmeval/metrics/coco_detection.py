@@ -650,8 +650,8 @@ class COCODetection(BaseMetric):
                         results_per_category
         if tmp_dir is not None:
             tmp_dir.cleanup()
-
-        self._print_results(table_results)
+        if len(table_results) > 0:
+            self._print_results(table_results)
         return eval_results
 
     def _print_results(self, table_results: dict) -> None:
