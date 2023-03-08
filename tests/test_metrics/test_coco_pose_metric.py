@@ -19,7 +19,7 @@ except ImportError:
 
 @pytest.mark.skipif(
     HAS_XTCOCOTOOLS is False, reason='xtcocotools is not available!')
-class TestCOCOPoseMetric(TestCase):
+class TestCOCOKeyPointDetection(TestCase):
 
     def setUp(self):
         """Setup some variables which are used in every test method.

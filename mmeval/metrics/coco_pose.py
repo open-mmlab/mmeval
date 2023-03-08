@@ -60,7 +60,7 @@ class COCOKeyPointDetection(BaseMetric):
         keypoint_score_thr (float): The threshold of keypoint score. The
             keypoints with score lower than it will not be included to
             rescore the prediction results. Valid only when ``score_mode`` is
-            ``bbox_keypoint``. Defaults to 0.2.
+            ``'bbox_keypoint'``. Defaults to 0.2.
         nms_mode (str): The mode to perform Non-Maximum Suppression (NMS),
             which should be one of the following options:
 
@@ -71,7 +71,7 @@ class COCOKeyPointDetection(BaseMetric):
             - ``'none'``: Do not perform NMS. Typically for bottomup mode
               output.
 
-            Defaults to ``'oks_nms'``
+            Defaults to ``'oks_nms'``.
         nms_thr (float): The Object Keypoint Similarity (OKS) threshold
             used in NMS when ``nms_mode`` is ``'oks_nms'`` or
             ``'soft_oks_nms'``. Will retain the prediction results with OKS
@@ -154,16 +154,16 @@ class COCOKeyPointDetection(BaseMetric):
         DONE (t=0.00s).
         Accumulating evaluation results...
         DONE (t=0.00s).
-        Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  1.000  # noqa: E501
-        Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  1.000
-        Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  1.000
-        Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  1.000
-        Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  1.000
+         Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  1.000  # noqa: E501
+         Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  1.000
+         Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  1.000
+         Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  1.000
+         Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  1.000
         OrderedDict([('AP', 1.0), ('AP .5', 1.0), ('AP .75', 1.0),
         ('AP (M)', 1.0), ('AP (L)', 1.0), ('AR', 1.0), ('AR .5', 1.0),
         ('AR .75', 1.0), ('AR (M)', 1.0), ('AR (L)', 1.0)])
@@ -179,16 +179,16 @@ class COCOKeyPointDetection(BaseMetric):
         DONE (t=0.00s).
         Accumulating evaluation results...
         DONE (t=0.00s).
-        Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  1.000  # noqa: E501
-        Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  1.000
-        Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  1.000
-        Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  1.000
-        Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  1.000
-        Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  1.000
+         Average Precision  (AP) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  1.000  # noqa: E501
+         Average Precision  (AP) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  1.000
+         Average Precision  (AP) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  1.000
+         Average Precision  (AP) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  1.000
+         Average Precision  (AP) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.50:0.95 | area=   all | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.50      | area=   all | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.75      | area=   all | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.50:0.95 | area=medium | maxDets= 20 ] =  1.000
+         Average Recall     (AR) @[ IoU=0.50:0.95 | area= large | maxDets= 20 ] =  1.000
         OrderedDict([('AP', 1.0), ('AP .5', 1.0), ('AP .75', 1.0),
         ('AP (M)', 1.0), ('AP (L)', 1.0), ('AR', 1.0), ('AR .5', 1.0),
         ('AR .75', 1.0), ('AR (M)', 1.0), ('AR (L)', 1.0)])
