@@ -189,7 +189,7 @@ class CityScapesDetection(BaseMetric):
             the metrics, and the values are corresponding results.
         """
         eval_results: OrderedDict = OrderedDict()
-
+        table_results: OrderedDict = OrderedDict()
         if self.format_only:
             self.logger.info('Results are saved in '    # type: ignore
                              f'{osp.dirname(self.outfile_prefix)}')  # type: ignore # yapf: disable # noqa: E501
@@ -229,11 +229,11 @@ class CityScapesDetection(BaseMetric):
                     (f'{category}', f'{round(float(aps["ap"]) * 100, 2):0.2f}',
                      f'{round(float(aps["ap50%"]) * 100, 2):0.2f}'))
             results_per_category.append(results_list)
-            eval_results['results_list'] = results_per_category
+            table_results['results_list'] = results_per_category
         else:
-            eval_results['results_list'] = [results_list]
+            table_results['results_list'] = [results_list]
 
-        self._print_panoptic_table(eval_results)
+        self._print_results(table_results)
         return eval_results
 
     def __del__(self) -> None:
@@ -296,13 +296,13 @@ class CityScapesDetection(BaseMetric):
                                f'{self.dataset_meta}')
         return classes
 
-    def _print_panoptic_table(self, eval_results: dict) -> None:
+    def _print_results(self, table_results: dict) -> None:
         """Print the evaluation results table.
 
         Args:
-            eval_results (dict): The computed metric.
+            table_results (dict): The computed metric.
         """
-        result = eval_results.pop('results_list')
+        result = table_results['results_list']
 
         header = ['class', 'AP(%)', 'AP50(%)']
         table_title = ' Cityscapes Results'

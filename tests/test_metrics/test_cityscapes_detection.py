@@ -86,8 +86,6 @@ def test_compute_metric():
         dataset_meta=dataset_metas,
         outfile_prefix=osp.join(tmp_dir.name, 'test'),
         seg_prefix=seg_prefix,
-        keep_results=False,
-        keep_gt_json=False,
         classwise=False)
 
     eval_results = cityscapes_det_metric(
@@ -100,8 +98,6 @@ def test_compute_metric():
         dataset_meta=dataset_metas,
         outfile_prefix=osp.join(tmp_dir.name, 'test'),
         seg_prefix=seg_prefix,
-        keep_results=False,
-        keep_gt_json=False,
         classwise=True)
 
     eval_results = cityscapes_det_metric(
@@ -124,8 +120,6 @@ def test_compute_metric():
         format_only=True,
         outfile_prefix=osp.join(tmp_dir.name, 'test'),
         seg_prefix=seg_prefix,
-        keep_results=True,
-        keep_gt_json=True,
         classwise=True)
 
     eval_results = cityscapes_det_metric(
