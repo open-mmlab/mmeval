@@ -2,14 +2,14 @@
 import contextlib
 import datetime
 import io
-import logging
+import itertools
 import numpy as np
 import os.path as osp
 import tempfile
 import warnings
 from collections import OrderedDict
 from json import dump
-from logging import Logger
+from terminaltables import AsciiTable
 from typing import Dict, List, Optional, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
@@ -21,9 +21,6 @@ try:
     HAS_COCOAPI = True
 except ImportError:
     HAS_COCOAPI = False
-
-default_logger = logging.getLogger(__name__)
-default_logger.setLevel(logging.INFO)
 
 
 class COCODetection(BaseMetric):
@@ -162,7 +159,6 @@ class COCODetection(BaseMetric):
                  outfile_prefix: Optional[str] = None,
                  gt_mask_area: bool = True,
                  backend_args: Optional[dict] = None,
-                 logger: Optional[Logger] = None,
                  **kwargs) -> None:
         if not HAS_COCOAPI:
             raise RuntimeError('Failed to import `COCO` and `COCOeval` from '
@@ -222,9 +218,6 @@ class COCODetection(BaseMetric):
         # handle dataset lazy init
         self.cat_ids: list = []
         self.img_ids: list = []
-
-        self.classes = None
-        self.logger = default_logger if logger is None else logger
 
     def xyxy2xywh(self, bbox: np.ndarray) -> list:
         """Convert ``xyxy`` style bounding boxes to ``xywh`` style for COCO
@@ -337,9 +330,9 @@ class COCODetection(BaseMetric):
             'not affect the overall AP, but leads to different '
             'small/medium/large AP results.')
 
+        classes = self.classes
         categories = [
-            dict(id=id, name=name)  # type: ignore # yapf: disable # noqa: E501
-            for id, name in enumerate(self.classes)  # type:ignore
+            dict(id=id, name=name) for id, name in enumerate(classes)
         ]
         image_infos: list = []
         annotations: list = []
@@ -504,11 +497,7 @@ class COCODetection(BaseMetric):
         else:
             outfile_prefix = self.outfile_prefix
 
-        # get classes from self.dataset_meta, self.dataset_meta may
-        # be updated after initialization, so it is not recommended
-        # to handle it in initialization
-        if self.classes is None:
-            self._get_classes()
+        classes = self.classes
         # split gt and prediction list
         preds, gts = zip(*results)
 
@@ -522,7 +511,7 @@ class COCODetection(BaseMetric):
         # handle lazy init
         if len(self.cat_ids) == 0:
             self.cat_ids = self._coco_api.get_cat_ids(
-                cat_names=self.classes)  # type: ignore
+                cat_names=classes)  # type: ignore
         if len(self.img_ids) == 0:
             self.img_ids = self._coco_api.get_img_ids()
 
@@ -530,6 +519,7 @@ class COCODetection(BaseMetric):
         result_files = self.results2json(preds, outfile_prefix)
 
         eval_results: OrderedDict = OrderedDict()
+        table_results: OrderedDict = OrderedDict()
         if self.format_only:
             self.logger.info(
                 f'Results are saved in {osp.dirname(outfile_prefix)}')
@@ -612,7 +602,7 @@ class COCODetection(BaseMetric):
                     val = float(coco_eval.stats[coco_metric_names[item]])
                     results_list.append(f'{round(val * 100, 2)}')
                     eval_results[item] = val
-                eval_results[f'{metric}_result'] = results_list
+                table_results[f'{metric}_result'] = results_list
             else:
                 coco_eval.evaluate()
                 coco_eval.accumulate()
@@ -632,7 +622,7 @@ class COCODetection(BaseMetric):
                     val = coco_eval.stats[coco_metric_names[metric_item]]
                     results_list.append(f'{round(val * 100, 2)}')
                     eval_results[key] = float(val)
-                eval_results[f'{metric}_result'] = results_list
+                table_results[f'{metric}_result'] = results_list
 
                 if self.classwise:  # Compute per-category AP
                     # Compute per-category AP
@@ -656,24 +646,87 @@ class COCODetection(BaseMetric):
                             (f'{nm["name"]}', f'{round(ap * 100, 2)}'))
                         eval_results[f'{metric}_{nm["name"]}_precision'] = ap
 
-                    eval_results[f'{metric}_classwise_result'] = \
+                    table_results[f'{metric}_classwise_result'] = \
                         results_per_category
         if tmp_dir is not None:
             tmp_dir.cleanup()
+
+        self._print_results(table_results)
         return eval_results
 
-    def _get_classes(self) -> None:
+    def _print_results(self, table_results: dict) -> None:
+        """Print the evaluation results table.
+
+        Args:
+            table_results (dict): The computed metric.
+        """
+        for metric in self.metrics:
+            result = table_results[f'{metric}_result']
+
+            if metric == 'proposal':
+                table_title = ' Recall Results (%)'
+                if self.metric_items is None:
+                    assert len(result) == 6
+                    headers = [
+                        f'AR@{self.proposal_nums[0]}',
+                        f'AR@{self.proposal_nums[1]}',
+                        f'AR@{self.proposal_nums[2]}',
+                        f'AR_s@{self.proposal_nums[2]}',
+                        f'AR_m@{self.proposal_nums[2]}',
+                        f'AR_l@{self.proposal_nums[2]}'
+                    ]
+                else:
+                    assert len(result) == len(self.metric_items)  # type: ignore # yapf: disable # noqa: E501
+                    headers = self.metric_items  # type: ignore
+            else:
+                table_title = f' {metric} Results (%)'
+                if self.metric_items is None:
+                    assert len(result) == 6
+                    headers = [
+                        f'{metric}_mAP', f'{metric}_mAP_50',
+                        f'{metric}_mAP_75', f'{metric}_mAP_s',
+                        f'{metric}_mAP_m', f'{metric}_mAP_l'
+                    ]
+                else:
+                    assert len(result) == len(self.metric_items)
+                    headers = [
+                        f'{metric}_{item}' for item in self.metric_items
+                    ]
+            table_data = [headers, result]
+            table = AsciiTable(table_data, title=table_title)
+            self.logger.info(f'\n {table.table}')
+
+            if self.classwise:
+                self.logger.info(
+                    f'Evaluating {metric} metric of each category...')
+                classwise_table_title = f' {metric} Classwise Results (%)'
+                classwise_result = table_results[f'{metric}_classwise_result']
+
+                num_columns = min(6, len(classwise_result) * 2)
+                results_flatten = list(itertools.chain(*classwise_result))
+                headers = ['category', f'{metric}_AP'] * (num_columns // 2)
+                results_2d = itertools.zip_longest(*[
+                    results_flatten[i::num_columns] for i in range(num_columns)
+                ])
+                table_data = [headers]
+                table_data += [result for result in results_2d]
+                table = AsciiTable(table_data, title=classwise_table_title)
+                self.logger.info(f'\n {table.table}')
+
+    @property
+    def classes(self) -> list:
         """Get classes from self.dataset_meta."""
         if self.dataset_meta and 'classes' in self.dataset_meta:
-            self.classes = self.dataset_meta['classes']
+            classes = self.dataset_meta['classes']
         elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
-            self.classes = self.dataset_meta['CLASSES']
+            classes = self.dataset_meta['CLASSES']
             warnings.warn(
                 'DeprecationWarning: The `CLASSES` in `dataset_meta` is '
                 'deprecated, use `classes` instead!')
         else:
             raise RuntimeError('Could not find `classes` in dataset_meta: '
                                f'{self.dataset_meta}')
+        return classes
 
 
 # Keep the deprecated metric name as an alias.

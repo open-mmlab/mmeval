@@ -2,6 +2,7 @@
 import numpy as np
 from collections import OrderedDict
 from multiprocessing.pool import Pool
+from terminaltables import AsciiTable
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
@@ -280,10 +281,34 @@ class ProposalRecall(BaseMetric):
         if pool is not None:
             pool.close()
 
-        eval_results = OrderedDict()
+        eval_results: OrderedDict = OrderedDict()
+        table_results: OrderedDict = OrderedDict()
         results_list = []
         for i, num in enumerate(self.proposal_nums):  # type:ignore
             eval_results[f'AR@{num}'] = ar[i]
             results_list.append(np.concatenate([recalls[i], ar[None, i]]))
-        eval_results['proposal_result'] = results_list
+        table_results['proposal_result'] = results_list
+
+        self._print_results(table_results)
         return eval_results
+
+    def _print_results(self, table_results: dict) -> None:
+        """Print the evaluation results table.
+
+        Args:
+            table_results (dict): The computed metric.
+        """
+        tabel_title = ' Recall Results (%)'
+        result = table_results['proposal_result']
+        headers = [''] + [
+            f'AR_{iou_thr * 100:.0f}'
+            for iou_thr in self.iou_thrs  # type: ignore
+        ] + ['AR']
+        table_data = [headers]
+        for i in range(len(self.proposal_nums)):  # type: ignore
+            row = [f'{self.proposal_nums[i]}']  # type: ignore
+            row += [f'{round(100 * val, 2)}' for val in result[i].tolist()]
+            table_data.append(row)
+
+        table = AsciiTable(table_data, title=tabel_title)
+        self.logger.info(f'\n {table.table}')
