@@ -18,24 +18,39 @@ def test_ms_ssim_init():
 
 
 @pytest.mark.parametrize(
-    argnames=['init_kwargs', 'inputs', 'results'],
+    argnames=['init_kwargs', 'preds', 'gts', 'results'],
     argvalues=[
-        ({'input_order': 'CHW'}, [np.ones((3, 64, 64)) * 255.] * 4, 1),
-        ({'input_order': 'HWC'}, [np.zeros((64, 64, 3)) * 255.] * 4, 1),
+        ({'input_order': 'CHW'}, [np.ones((3, 64, 64)) * 255.] * 4, None, 1),
+        ({'input_order': 'HWC'}, [np.zeros((64, 64, 3)) * 255.] * 4, None, 1),
         ({'input_order': 'HWC', 'filter_size': 0},
-         [np.zeros((64, 64, 3)) * 255.] * 4, 1),
-        ({}, [np.ones((3, 64, 64)) * 255, np.zeros((3, 64, 64))],
+         [np.zeros((64, 64, 3)) * 255.] * 4, None, 1),
+        ({}, [np.ones((3, 64, 64)) * 255, np.zeros((3, 64, 64))], None,
          0.2929473249689634),
         ({'input_order': 'HWC'},
-         [np.ones((64, 64, 3)) * 255, np.zeros((64, 64, 3))],
+         [np.ones((64, 64, 3)) * 255, np.zeros((64, 64, 3))], None,
          0.2929473249689634),
         ({'input_order': 'HWC', 'filter_size': 0},
-         [np.ones((64, 64, 3)) * 255, np.zeros((64, 64, 3))],
+         [np.ones((64, 64, 3)) * 255, np.zeros((64, 64, 3))], None,
+         0.29295045137405396),
+        ({'input_order': 'CHW'}, [np.ones((3, 64, 64)) * 255.] * 2,
+         [np.ones((3, 64, 64)) * 255.] * 2, 1),
+        ({'input_order': 'HWC'}, [np.zeros((64, 64, 3)) * 255.] * 2,
+         [np.zeros((64, 64, 3)) * 255.] * 2, 1),
+        ({'input_order': 'HWC', 'filter_size': 0},
+         [np.zeros((64, 64, 3)) * 255.] * 2,
+         [np.zeros((64, 64, 3)) * 255.] * 2, 1),
+        ({}, [np.ones((3, 64, 64)) * 255], [np.zeros((3, 64, 64))],
+         0.2929473249689634),
+        ({'input_order': 'HWC'},
+         [np.ones((64, 64, 3)) * 255], [np.zeros((64, 64, 3))],
+         0.2929473249689634),
+        ({'input_order': 'HWC', 'filter_size': 0},
+         [np.ones((64, 64, 3)) * 255], [np.zeros((64, 64, 3))],
          0.29295045137405396)]
     )
-def test_ms_ssim(init_kwargs, inputs, results):
+def test_ms_ssim(init_kwargs, preds, gts, results):
     ms_ssim = MS_SSIM(**init_kwargs)
-    ms_ssim_results = ms_ssim(inputs)
+    ms_ssim_results = ms_ssim(preds, gts)
     np.testing.assert_allclose(
         ms_ssim_results['ms-ssim'], results)
 
