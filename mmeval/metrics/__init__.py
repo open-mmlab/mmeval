@@ -63,7 +63,9 @@ __deprecated_metric_names__ = {
     'SNR': 'SignalNoiseRatio',
     'SSIM': 'StructuralSimilarity',
     'SAD': 'SumAbsoluteDifferences',
-    'MattingMSE': 'MattingMeanSquaredError'
+    'MattingMSE': 'MattingMeanSquaredError',
+    'SingleLabelMetric': 'SingleLabelPrecisionRecallF1score',
+    'MultiLabelMetric': 'MultiLabelPrecisionRecallF1score'
 }
 
 

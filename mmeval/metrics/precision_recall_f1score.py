@@ -872,3 +872,9 @@ class MultiLabelPrecisionRecallF1score(MultiLabelMixin, BaseMetric):
         labels = [res[1] for res in results]
         metric_results = self._compute_metric(preds, labels)
         return self._format_metric_results(metric_results)
+
+
+# Keep the deprecated metric name as an alias.
+# The deprecated Metric names will be removed in 1.0.0!
+SingleLabelMetric = SingleLabelPrecisionRecallF1score
+MultiLabelMetric = MultiLabelPrecisionRecallF1score
