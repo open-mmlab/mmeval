@@ -1,5 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
+import scipy.sparse
 from typing import TYPE_CHECKING, Dict, List, Sequence, Tuple, Union
 
 from mmeval.core import BaseMetric
@@ -7,11 +8,9 @@ from mmeval.metrics.utils import poly_intersection, poly_iou, polys2shapely
 from mmeval.utils import try_import
 
 if TYPE_CHECKING:
-    import scipy.sparse as scipy_sparse
     import shapely.geometry as geometry
     from shapely.geometry import Polygon
 else:
-    scipy_sparse = try_import('scipy.sparse')
     geometry = try_import('shapely.geometry')
     if geometry is not None:
         Polygon = geometry.Polygon
@@ -143,10 +142,6 @@ class HmeanIoU(BaseMetric):
         strategy: str = 'vanilla',
         **kwargs,
     ) -> None:
-        if strategy == 'max_matching' and scipy_sparse is None:
-            raise RuntimeError(
-                'scipy is not installed, please run "pip install scipy" to use'
-                ' HmeanIoUMetric with "max_matching" strategy.')
         if geometry is None:
             raise RuntimeError(
                 'shapely is not installed, please run "pip install shapely" to'
@@ -265,8 +260,8 @@ class HmeanIoU(BaseMetric):
         Returns:
             int: The hits by max matching policy.
         """
-        csr_matched_metric = scipy_sparse.csr_matrix(iou_metric)
-        matched_preds = scipy_sparse.csgraph.maximum_bipartite_matching(
+        csr_matched_metric = scipy.sparse.csr_matrix(iou_metric)
+        matched_preds = scipy.sparse.csgraph.maximum_bipartite_matching(
             csr_matched_metric, perm_type='row')
         # -1 denotes unmatched pred polygons
         return np.sum(matched_preds != -1).item()
