@@ -2,3 +2,4 @@ opencv-python!=4.5.5.62,!=4.5.5.64
 pycocotools
 scipy
 shapely
+terminaltables
