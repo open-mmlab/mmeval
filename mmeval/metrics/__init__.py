@@ -5,6 +5,7 @@ import warnings
 from .accuracy import Accuracy
 from .ava_map import AVAMeanAP
 from .bleu import BLEU
+from .cityscapes_detection import CityScapesDetection
 from .coco_detection import COCODetection
 from .connectivity_error import ConnectivityError
 from .dota_map import DOTAMeanAP
@@ -44,7 +45,7 @@ __all__ = [
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
     'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
-    'WordAccuracy'
+    'WordAccuracy', 'CityScapesDetection'
 ]
 
 _deprecated_msg = (
