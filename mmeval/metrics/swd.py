@@ -1,14 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-from typing import TYPE_CHECKING, Any, Dict, List, Sequence
+from scipy import ndimage
+from typing import Any, Dict, List, Sequence
 
 from mmeval.core import BaseMetric
-from mmeval.utils import try_import
-
-if TYPE_CHECKING:
-    from scipy import ndimage
-else:
-    ndimage = try_import('scipy.ndimage')
 
 
 class SlicedWassersteinDistance(BaseMetric):

@@ -58,3 +58,7 @@ def test_raise_error():
             np.random.randint(0, 255, (64, 64, 3)),
             np.random.randint(0, 255, (64, 64, 3))
         )
+
+    with pytest.raises(AssertionError):
+        inputs = [np.random.randint(0, 255, (3, 32, 32))] * 3
+        ms_ssim(inputs)
