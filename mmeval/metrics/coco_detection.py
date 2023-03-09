@@ -9,7 +9,8 @@ import tempfile
 import warnings
 from collections import OrderedDict
 from json import dump
-from terminaltables import AsciiTable
+from rich.console import Console
+from rich.table import Table
 from typing import Dict, List, Optional, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
@@ -600,7 +601,7 @@ class COCODetection(BaseMetric):
                 results_list = []
                 for item in metric_items:
                     val = float(coco_eval.stats[coco_metric_names[item]])
-                    results_list.append(f'{round(val * 100, 2)}')
+                    results_list.append(f'{round(val * 100, 2):0.2f}')
                     eval_results[item] = val
                 table_results[f'{metric}_result'] = results_list
             else:
@@ -620,7 +621,7 @@ class COCODetection(BaseMetric):
                 for metric_item in metric_items:
                     key = f'{metric}_{metric_item}'
                     val = coco_eval.stats[coco_metric_names[metric_item]]
-                    results_list.append(f'{round(val * 100, 2)}')
+                    results_list.append(f'{round(val * 100, 2):0.2f}')
                     eval_results[key] = float(val)
                 table_results[f'{metric}_result'] = results_list
 
@@ -643,13 +644,15 @@ class COCODetection(BaseMetric):
                         else:
                             ap = float('nan')
                         results_per_category.append(
-                            (f'{nm["name"]}', f'{round(ap * 100, 2)}'))
+                            (f'{nm["name"]}', f'{round(ap * 100, 2):0.2f}'))
                         eval_results[f'{metric}_{nm["name"]}_precision'] = ap
 
                     table_results[f'{metric}_classwise_result'] = \
                         results_per_category
         if tmp_dir is not None:
             tmp_dir.cleanup()
+        # if the testing results of the whole dataset is empty,
+        # does not print tables.
         if len(table_results) > 0:
             self._print_results(table_results)
         return eval_results
@@ -692,11 +695,17 @@ class COCODetection(BaseMetric):
                     headers = [
                         f'{metric}_{item}' for item in self.metric_items
                     ]
-            table_data = [headers, result]
-            table = AsciiTable(table_data, title=table_title)
-            self.logger.info(f'\n {table.table}')
+            table = Table(title=table_title)
+            console = Console()
+            for name in headers:
+                table.add_column(name, justify='left')
+            table.add_row(*result)
+            redirect_string = io.StringIO()
+            with contextlib.redirect_stdout(redirect_string):
+                console.print(table, end='')
+            self.logger.info('\n' + redirect_string.getvalue())
 
-            if self.classwise:
+            if self.classwise and metric != 'proposal':
                 self.logger.info(
                     f'Evaluating {metric} metric of each category...')
                 classwise_table_title = f' {metric} Classwise Results (%)'
@@ -708,14 +717,24 @@ class COCODetection(BaseMetric):
                 results_2d = itertools.zip_longest(*[
                     results_flatten[i::num_columns] for i in range(num_columns)
                 ])
-                table_data = [headers]
-                table_data += [result for result in results_2d]
-                table = AsciiTable(table_data, title=classwise_table_title)
-                self.logger.info(f'\n {table.table}')
+
+                table = Table(title=classwise_table_title)
+                console = Console()
+                for name in headers:
+                    table.add_column(name, justify='left')
+                for _result in results_2d:
+                    table.add_row(*_result)
+                redirect_string = io.StringIO()
+                with contextlib.redirect_stdout(redirect_string):
+                    console.print(table, end='')
+                self.logger.info('\n' + redirect_string.getvalue())
 
     @property
     def classes(self) -> list:
         """Get classes from self.dataset_meta."""
+        if hasattr(self, '_classes'):
+            return self._classes  # type: ignore
+
         if self.dataset_meta and 'classes' in self.dataset_meta:
             classes = self.dataset_meta['classes']
         elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
@@ -726,6 +745,7 @@ class COCODetection(BaseMetric):
         else:
             raise RuntimeError('Could not find `classes` in dataset_meta: '
                                f'{self.dataset_meta}')
+        self._classes = classes  # type: ignore
         return classes
 
 

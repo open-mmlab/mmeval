@@ -1,8 +1,11 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import contextlib
+import io
 import numpy as np
 from collections import OrderedDict
 from multiprocessing.pool import Pool
-from terminaltables import AsciiTable
+from rich.console import Console
+from rich.table import Table
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
@@ -301,14 +304,23 @@ class ProposalRecall(BaseMetric):
         tabel_title = ' Recall Results (%)'
         result = table_results['proposal_result']
         headers = [''] + [
-            f'AR_{iou_thr * 100:.0f}'
+            f'AR_{round(iou_thr * 100, 0):.0f}'
             for iou_thr in self.iou_thrs  # type: ignore
         ] + ['AR']
-        table_data = [headers]
+
+        table = Table(title=tabel_title)
+        console = Console(width=150)
+        for name in headers:
+            table.add_column(name, justify='left')
+
         for i in range(len(self.proposal_nums)):  # type: ignore
             row = [f'{self.proposal_nums[i]}']  # type: ignore
-            row += [f'{round(100 * val, 2)}' for val in result[i].tolist()]
-            table_data.append(row)
+            row += [
+                f'{round(100 * val, 2):0.2f}' for val in result[i].tolist()
+            ]
+            table.add_row(*row)
 
-        table = AsciiTable(table_data, title=tabel_title)
-        self.logger.info(f'\n {table.table}')
+        redirect_string = io.StringIO()
+        with contextlib.redirect_stdout(redirect_string):
+            console.print(table, end='')
+        self.logger.info('\n' + redirect_string.getvalue())
