@@ -54,3 +54,4 @@ Metrics
    KeypointAUC
    KeypointNME
    WordAccuracy
+   COCOKeyPointDetection
