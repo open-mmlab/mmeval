@@ -12,9 +12,9 @@ from mmeval.metrics import SlicedWassersteinDistance as SWD
     argnames=['init_kwargs', 'preds', 'gts', 'results'],
     argvalues=[
         ({'resolution': 32},
-         [np.random.rand(3, 32, 32) for _ in range(100)],
-         [np.random.rand(3, 32, 32) for _ in range(100)],
-         [16.495922580361366, 24.15413036942482, 20.325026474893093])]
+         [np.ones((3, 32, 32)) * i for i in range(100)],
+         [np.ones((3, 32, 32)) * 2 * i for i in range(100)],
+         [198.67430960025712, 33.72058904027052, 116.19744932026381])]
 )
 def test_swd(init_kwargs, preds, gts, results):
     swd = SWD(**init_kwargs)
