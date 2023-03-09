@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
 from scipy import signal
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Dict, List, Sequence, Tuple
 
 from mmeval.core import BaseMetric
 from .utils.image_transforms import reorder_image
@@ -78,19 +78,13 @@ class MultiScaleStructureSimilarity(BaseMetric):
         self.k2 = k2
         self.weights = np.array(weights)
 
-    def add(self, predictions: Sequence[np.ndarray], groundtruths: Optional[Sequence[np.ndarray]] = None) -> None:  # type: ignore # yapf: disable # noqa: E501
-        """Add a bunch of images to calculate metric result. If only
-        `predictions` is passed, this metric evaluate the diversity of the
-        input images. If both ``predictions`` and ``groundtruths`` are passed,
-        this metric evaluate the similarity between the predicted images and
-        the groundtruth.
+    def add(self, predictions: Sequence[np.ndarray], groundtruths: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
+        """Add a bunch of images to calculate metric result.
 
         Args:
             predictions (Sequence[np.ndarray]): Predictions of the model.
-                If groundtruths is None, the number of elements in the
-                Sequence must be divisible by 2. Otherwise the length of
-                `predictions` must be same as `groundtruths`. The width
-                and height of each element must be divisible by 2 **
+                The length of `predictions` must be same as `groundtruths`.
+                The width and height of each element must be divisible by 2 **
                 num_scale (`self.weights.size`). The channel order of each
                 element should align with `self.input_order` and the range
                 should be [0, 255].
@@ -102,17 +96,10 @@ class MultiScaleStructureSimilarity(BaseMetric):
                 `self.input_order` and the range should be [0, 255].
                 Defaults to None.
         """
-        if groundtruths is None:
-            num_samples = len(predictions)
-            assert num_samples % 2 == 0, (
-                'Number of \'predictions\' must be divided by 2.')
-            half1 = predictions[0::2]
-            half2 = predictions[1::2]
-        else:
-            assert len(predictions) == len(groundtruths), (
-                'The length of \'predictions\' and \'groundtruths\' must be '
-                'same.')
-            half1, half2 = predictions, groundtruths
+        assert len(predictions) == len(groundtruths), (
+            'The length of \'predictions\' and \'groundtruths\' must be '
+            'same.')
+        half1, half2 = predictions, groundtruths
 
         half1 = [reorder_image(samp, self.input_order) for samp in half1]
         half2 = [reorder_image(samp, self.input_order) for samp in half2]

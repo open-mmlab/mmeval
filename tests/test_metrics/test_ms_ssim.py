@@ -20,18 +20,6 @@ def test_ms_ssim_init():
 @pytest.mark.parametrize(
     argnames=['init_kwargs', 'preds', 'gts', 'results'],
     argvalues=[
-        ({'input_order': 'CHW'}, [np.ones((3, 64, 64)) * 255.] * 4, None, 1),
-        ({'input_order': 'HWC'}, [np.zeros((64, 64, 3)) * 255.] * 4, None, 1),
-        ({'input_order': 'HWC', 'filter_size': 0},
-         [np.zeros((64, 64, 3)) * 255.] * 4, None, 1),
-        ({}, [np.ones((3, 64, 64)) * 255, np.zeros((3, 64, 64))], None,
-         0.2929473249689634),
-        ({'input_order': 'HWC'},
-         [np.ones((64, 64, 3)) * 255, np.zeros((64, 64, 3))], None,
-         0.2929473249689634),
-        ({'input_order': 'HWC', 'filter_size': 0},
-         [np.ones((64, 64, 3)) * 255, np.zeros((64, 64, 3))], None,
-         0.29295045137405396),
         ({'input_order': 'CHW'}, [np.ones((3, 64, 64)) * 255.] * 2,
          [np.ones((3, 64, 64)) * 255.] * 2, 1),
         ({'input_order': 'HWC'}, [np.zeros((64, 64, 3)) * 255.] * 2,
@@ -57,9 +45,10 @@ def test_ms_ssim(init_kwargs, preds, gts, results):
 
 def test_raise_error():
     ms_ssim = MS_SSIM()
-    inputs = [np.random.randint(0, 255, (3, 64, 64))] * 3
+    preds = [np.random.randint(0, 255, (3, 64, 64))]
+    gts = [np.random.randint(0, 255, (3, 64, 64))] * 2
     with pytest.raises(AssertionError):
-        ms_ssim(inputs)
+        ms_ssim(preds, gts)
 
     # shape checking
     with pytest.raises(RuntimeError):
@@ -75,5 +64,6 @@ def test_raise_error():
         )
 
     with pytest.raises(AssertionError):
-        inputs = [np.random.randint(0, 255, (3, 32, 32))] * 3
-        ms_ssim(inputs)
+        preds = [np.random.randint(0, 255, (3, 16, 16))] * 3
+        gts = [np.random.randint(0, 255, (3, 16, 16))] * 3
+        ms_ssim(preds, gts)
