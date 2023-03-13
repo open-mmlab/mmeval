@@ -2,3 +2,4 @@ numpy
 plum-dispatch<2.0.0
 pyyaml
 rich
+scipy
