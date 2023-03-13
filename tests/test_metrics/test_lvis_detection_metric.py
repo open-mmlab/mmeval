@@ -339,7 +339,6 @@ def test_compute_metric():
         'bbox_APl': 1.0,
     }
 
-    eval_results.pop('bbox_result')
     results = {k: round(v, 4) for k, v in eval_results.items()}
     assert results == target
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))
@@ -372,8 +371,7 @@ def test_compute_metric():
         'segm_APm': 1.0,
         'segm_APl': 1.0,
     }
-    eval_results.pop('bbox_result')
-    eval_results.pop('segm_result')
+
     results = {k: round(v, 4) for k, v in eval_results.items()}
     assert results == target
     assert osp.isfile(osp.join(tmp_dir.name, 'test.bbox.json'))

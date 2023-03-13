@@ -330,7 +330,7 @@ class LVISDetection(COCODetection):
             else:
                 table_title = f' {metric} Results (%)'
                 if self.metric_items is None:
-                    assert len(result) == 6
+                    assert len(result) == 9
                     headers = [
                         f'{metric}_AP', f'{metric}_AP50', f'{metric}_AP75',
                         f'{metric}_APs', f'{metric}_APm', f'{metric}_APl',
