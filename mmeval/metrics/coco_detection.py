@@ -700,10 +700,9 @@ class COCODetection(BaseMetric):
             for name in headers:
                 table.add_column(name, justify='left')
             table.add_row(*result)
-            redirect_string = io.StringIO()
-            with contextlib.redirect_stdout(redirect_string):
+            with console.capture() as capture:
                 console.print(table, end='')
-            self.logger.info('\n' + redirect_string.getvalue())
+            self.logger.info('\n' + capture.get())
 
             if self.classwise and metric != 'proposal':
                 self.logger.info(

@@ -1,6 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import contextlib
-import io
 import numpy as np
 from collections import OrderedDict
 from multiprocessing.pool import Pool
@@ -320,7 +318,6 @@ class ProposalRecall(BaseMetric):
             ]
             table.add_row(*row)
 
-        redirect_string = io.StringIO()
-        with contextlib.redirect_stdout(redirect_string):
+        with console.capture() as capture:
             console.print(table, end='')
-        self.logger.info('\n' + redirect_string.getvalue())
+        self.logger.info('\n' + capture.get())
