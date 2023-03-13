@@ -724,10 +724,9 @@ class COCODetection(BaseMetric):
                     table.add_column(name, justify='left')
                 for _result in results_2d:
                     table.add_row(*_result)
-                redirect_string = io.StringIO()
-                with contextlib.redirect_stdout(redirect_string):
+                with console.capture() as capture:
                     console.print(table, end='')
-                self.logger.info('\n' + redirect_string.getvalue())
+                self.logger.info('\n' + capture.get())
 
     @property
     def classes(self) -> list:
