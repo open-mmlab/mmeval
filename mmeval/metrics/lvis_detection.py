@@ -1,12 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import contextlib
 import io
-import logging
+import itertools
 import numpy as np
 import os.path as osp
 import tempfile
 from collections import OrderedDict
-from logging import Logger
+from rich.console import Console
+from rich.table import Table
 from typing import Dict, List, Optional, Sequence, Union
 
 from mmeval.fileio import get_local_path
@@ -48,6 +49,9 @@ class LVISDetection(COCODetection):
             If not specified, a temp file will be created. Defaults to None.
         backend_args (dict, optional): Arguments to instantiate the
             preifx of uri corresponding backend. Defaults to None.
+        logger (Logger, optional): logger used to record messages. When set to
+            ``None``, the default logger will be used.
+            Defaults to None.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -83,7 +87,6 @@ class LVISDetection(COCODetection):
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  backend_args: Optional[dict] = None,
-                 logger: Optional[Logger] = None,
                  **kwargs) -> None:
         if not HAS_LVISAPI:
             raise RuntimeError(
@@ -103,8 +106,6 @@ class LVISDetection(COCODetection):
         with get_local_path(
                 filepath=ann_file, backend_args=backend_args) as local_path:
             self._lvis_api = LVIS(local_path)
-
-        self.logger = logging.getLogger(__name__) if logger is None else logger
 
     def add_predictions(self, predictions: Sequence[Dict]) -> None:
         """Add predictions to `self._results`.
@@ -202,6 +203,7 @@ class LVISDetection(COCODetection):
         result_files = self.results2json(results, outfile_prefix)
 
         eval_results: OrderedDict = OrderedDict()
+        table_results: OrderedDict = OrderedDict()
         if self.format_only:
             self.logger.info('results are saved in '
                              f'{osp.dirname(outfile_prefix)}')
@@ -235,10 +237,13 @@ class LVISDetection(COCODetection):
                         f'ARm@{self.proposal_nums}',
                         f'ARl@{self.proposal_nums}'
                     ]
+                results_list = []
                 for k, v in lvis_eval.get_results().items():
                     if k in metric_items:
-                        val = float(f'{float(v):.3f}')
+                        val = float(v)
+                        results_list.append(f'{round(val * 100, 2):0.2f}')
                         eval_results[k] = val
+                table_results[f'{metric}_result'] = results_list
 
             else:
                 lvis_eval.evaluate()
@@ -259,7 +264,7 @@ class LVISDetection(COCODetection):
                         val = float(v)
                         results_list.append(f'{round(val * 100, 2)}')
                         eval_results[key] = val
-                eval_results[f'{metric}_result'] = results_list
+                table_results[f'{metric}_result'] = results_list
 
                 if self.classwise:  # Compute per-category AP
                     # Compute per-category AP
@@ -285,7 +290,7 @@ class LVISDetection(COCODetection):
                             (f'{nm["name"]}', f'{round(ap * 100, 2)}'))
                         eval_results[f'{metric}_{nm["name"]}_precision'] = ap
 
-                    eval_results[f'{metric}_classwise_result'] = \
+                    table_results[f'{metric}_classwise_result'] = \
                         results_per_category
             # Save lvis summarize print information to logger
             redirect_string = io.StringIO()
@@ -294,4 +299,76 @@ class LVISDetection(COCODetection):
             self.logger.info('\n' + redirect_string.getvalue())
         if tmp_dir is not None:
             tmp_dir.cleanup()
+        # if the testing results of the whole dataset is empty,
+        # does not print tables.
+        if len(table_results) > 0:
+            self._print_results(table_results)
         return eval_results
+
+    def _print_results(self, table_results: dict) -> None:
+        """Print the evaluation results table.
+
+        Args:
+            table_results (dict): The computed metric.
+        """
+        for metric in self.metrics:
+            result = table_results[f'{metric}_result']
+
+            if metric == 'proposal':
+                table_title = ' Recall Results (%)'
+                if self.metric_items is None:
+                    assert len(result) == 4
+                    headers = [
+                        f'AR@{self.proposal_nums}',
+                        f'ARs@{self.proposal_nums}',
+                        f'ARm@{self.proposal_nums}',
+                        f'ARl@{self.proposal_nums}'
+                    ]
+                else:
+                    assert len(result) == len(self.metric_items)  # type: ignore # yapf: disable # noqa: E501
+                    headers = self.metric_items  # type: ignore
+            else:
+                table_title = f' {metric} Results (%)'
+                if self.metric_items is None:
+                    assert len(result) == 6
+                    headers = [
+                        f'{metric}_AP', f'{metric}_AP50', f'{metric}_AP75',
+                        f'{metric}_APs', f'{metric}_APm', f'{metric}_APl',
+                        f'{metric}_APr', f'{metric}_APc', f'{metric}_APf'
+                    ]
+                else:
+                    assert len(result) == len(self.metric_items)
+                    headers = [
+                        f'{metric}_{item}' for item in self.metric_items
+                    ]
+            table = Table(title=table_title)
+            console = Console()
+            for name in headers:
+                table.add_column(name, justify='left')
+            table.add_row(*result)
+            with console.capture() as capture:
+                console.print(table, end='')
+            self.logger.info('\n' + capture.get())
+
+            if self.classwise and metric != 'proposal':
+                self.logger.info(
+                    f'Evaluating {metric} metric of each category...')
+                classwise_table_title = f' {metric} Classwise Results (%)'
+                classwise_result = table_results[f'{metric}_classwise_result']
+
+                num_columns = min(6, len(classwise_result) * 2)
+                results_flatten = list(itertools.chain(*classwise_result))
+                headers = ['category', f'{metric}_AP'] * (num_columns // 2)
+                results_2d = itertools.zip_longest(*[
+                    results_flatten[i::num_columns] for i in range(num_columns)
+                ])
+
+                table = Table(title=classwise_table_title)
+                console = Console()
+                for name in headers:
+                    table.add_column(name, justify='left')
+                for _result in results_2d:
+                    table.add_row(*_result)
+                with console.capture() as capture:
+                    console.print(table, end='')
+                self.logger.info('\n' + capture.get())
