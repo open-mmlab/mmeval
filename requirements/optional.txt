@@ -1,4 +1,4 @@
-git+https://github.com/lvis-dataset/lvis-api.git
+-e git+https://github.com/lvis-dataset/lvis-api.git#egg=lvis
 opencv-python!=4.5.5.62,!=4.5.5.64
 pycocotools
 shapely
