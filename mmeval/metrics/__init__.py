@@ -4,6 +4,7 @@ import warnings
 
 from .accuracy import Accuracy
 from .ava_map import AVAMeanAP
+from .average_precision import AveragePrecision
 from .bleu import BLEU
 from .coco_detection import COCODetection
 from .connectivity_error import ConnectivityError
@@ -20,29 +21,33 @@ from .mae import MeanAbsoluteError
 from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
 from .mse import MeanSquaredError
-from .multi_label import AveragePrecision, MultiLabelMetric
+from .niqe import NaturalImageQualityEvaluator
 from .oid_map import OIDMeanAP
 from .pck_accuracy import JhmdbPCKAccuracy, MpiiPCKAccuracy, PCKAccuracy
 from .perplexity import Perplexity
+from .precision_recall_f1score import (MultiLabelPrecisionRecallF1score,
+                                       PrecisionRecallF1score,
+                                       SingleLabelPrecisionRecallF1score)
 from .proposal_recall import ProposalRecall
 from .psnr import PeakSignalNoiseRatio
 from .rouge import ROUGE
 from .sad import SumAbsoluteDifferences
-from .single_label import SingleLabelMetric
 from .snr import SignalNoiseRatio
 from .ssim import StructuralSimilarity
 from .voc_map import VOCMeanAP
+from .word_accuracy import WordAccuracy
 
 __all__ = [
     'Accuracy', 'MeanIoU', 'VOCMeanAP', 'OIDMeanAP', 'EndPointError',
-    'F1Score', 'HmeanIoU', 'SingleLabelMetric', 'COCODetection', 'PCKAccuracy',
-    'MpiiPCKAccuracy', 'JhmdbPCKAccuracy', 'ProposalRecall',
-    'PeakSignalNoiseRatio', 'MeanAbsoluteError', 'MeanSquaredError',
-    'StructuralSimilarity', 'SignalNoiseRatio', 'MultiLabelMetric',
-    'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
+    'F1Score', 'HmeanIoU', 'COCODetection', 'PCKAccuracy', 'MpiiPCKAccuracy',
+    'JhmdbPCKAccuracy', 'ProposalRecall', 'PeakSignalNoiseRatio',
+    'MeanAbsoluteError', 'MeanSquaredError', 'StructuralSimilarity',
+    'SignalNoiseRatio', 'AveragePrecision', 'AVAMeanAP', 'BLEU', 'DOTAMeanAP',
     'SumAbsoluteDifferences', 'GradientError', 'MattingMeanSquaredError',
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
-    'KeypointAUC', 'KeypointNME', 'LVISDetection'
+    'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
+    'WordAccuracy', 'PrecisionRecallF1score',
+    'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score'
 ]
 
 _deprecated_msg = (
@@ -59,7 +64,9 @@ __deprecated_metric_names__ = {
     'SNR': 'SignalNoiseRatio',
     'SSIM': 'StructuralSimilarity',
     'SAD': 'SumAbsoluteDifferences',
-    'MattingMSE': 'MattingMeanSquaredError'
+    'MattingMSE': 'MattingMeanSquaredError',
+    'SingleLabelMetric': 'SingleLabelPrecisionRecallF1score',
+    'MultiLabelMetric': 'MultiLabelPrecisionRecallF1score'
 }
 
 

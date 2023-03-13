@@ -1,5 +1,4 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import logging
 import numpy as np
 from collections import OrderedDict
 from typing import Dict, List, Sequence, Union
@@ -7,11 +6,9 @@ from typing import Dict, List, Sequence, Union
 from mmeval.core.base_metric import BaseMetric
 from .utils import calc_distances, distance_acc
 
-logger = logging.getLogger(__name__)
-
 
 def keypoint_pck_accuracy(pred: np.ndarray, gt: np.ndarray, mask: np.ndarray,
-                          thr: np.ndarray, norm_factor: np.ndarray) -> tuple:
+                          thr: float, norm_factor: np.ndarray) -> tuple:
     """Calculate the pose accuracy of PCK for each individual keypoint and the
     averaged accuracy across all keypoints for coordinates.
 
@@ -161,8 +158,8 @@ class PCKAccuracy(BaseMetric):
         if 'bbox' in self.norm_item:
             norm_size_bbox = np.concatenate([gt['bbox_size'] for gt in gts])
 
-            logger.info(f'Evaluating {self.__class__.__name__} '
-                        f'(normalized by ``"bbox_size"``)...')
+            self.logger.info(f'Evaluating {self.__class__.__name__} '
+                             f'(normalized by ``"bbox_size"``)...')
 
             _, pck, _ = keypoint_pck_accuracy(pred_coords, gt_coords, mask,
                                               self.thr, norm_size_bbox)
@@ -171,8 +168,8 @@ class PCKAccuracy(BaseMetric):
         if 'head' in self.norm_item:
             norm_size_head = np.concatenate([gt['head_size'] for gt in gts])
 
-            logger.info(f'Evaluating {self.__class__.__name__} '
-                        f'(normalized by ``"head_size"``)...')
+            self.logger.info(f'Evaluating {self.__class__.__name__} '
+                             f'(normalized by ``"head_size"``)...')
 
             _, pckh, _ = keypoint_pck_accuracy(pred_coords, gt_coords, mask,
                                                self.thr, norm_size_head)
@@ -181,8 +178,8 @@ class PCKAccuracy(BaseMetric):
         if 'torso' in self.norm_item:
             norm_size_torso = np.concatenate([gt['torso_size'] for gt in gts])
 
-            logger.info(f'Evaluating {self.__class__.__name__} '
-                        f'(normalized by ``"torso_size"``)...')
+            self.logger.info(f'Evaluating {self.__class__.__name__} '
+                             f'(normalized by ``"torso_size"``)...')
 
             _, tpck, _ = keypoint_pck_accuracy(pred_coords, gt_coords, mask,
                                                self.thr, norm_size_torso)
@@ -270,8 +267,8 @@ class MpiiPCKAccuracy(PCKAccuracy):
         if 'head' in self.norm_item:
             norm_size_head = np.concatenate([gt['head_size'] for gt in gts])
 
-            logger.info(f'Evaluating {self.__class__.__name__} '
-                        f'(normalized by ``"head_size"``)...')
+            self.logger.info(f'Evaluating {self.__class__.__name__} '
+                             f'(normalized by ``"head_size"``)...')
 
             pck_p, _, _ = keypoint_pck_accuracy(pred_coords, gt_coords, mask,
                                                 self.thr, norm_size_head)
@@ -397,8 +394,8 @@ class JhmdbPCKAccuracy(PCKAccuracy):
         if 'bbox' in self.norm_item:
             norm_size_bbox = np.concatenate([gt['bbox_size'] for gt in gts])
 
-            logger.info(f'Evaluating {self.__class__.__name__} '
-                        f'(normalized by ``"bbox_size"``)...')
+            self.logger.info(f'Evaluating {self.__class__.__name__} '
+                             f'(normalized by ``"bbox_size"``)...')
 
             pck_p, pck, _ = keypoint_pck_accuracy(pred_coords, gt_coords, mask,
                                                   self.thr, norm_size_bbox)
@@ -421,8 +418,8 @@ class JhmdbPCKAccuracy(PCKAccuracy):
         if 'torso' in self.norm_item:
             norm_size_torso = np.concatenate([gt['torso_size'] for gt in gts])
 
-            logger.info(f'Evaluating {self.__class__.__name__} '
-                        f'(normalized by ``"torso_size"``)...')
+            self.logger.info(f'Evaluating {self.__class__.__name__} '
+                             f'(normalized by ``"torso_size"``)...')
 
             pck_p, pck, _ = keypoint_pck_accuracy(pred_coords, gt_coords, mask,
                                                   self.thr, norm_size_torso)
