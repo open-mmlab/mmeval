@@ -47,7 +47,8 @@ __all__ = [
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
     'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
     'WordAccuracy', 'PrecisionRecallF1score',
-    'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score'
+    'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score',
+    'LVISDetection'
 ]
 
 _deprecated_msg = (
