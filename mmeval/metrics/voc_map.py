@@ -204,8 +204,8 @@ class VOCMeanAP(BaseMetric):
         elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
             self._num_classes = len(self.dataset_meta['CLASSES'])
             warnings.warn(
-                'DeprecationWarning: The `CLASSES` in `dataset_meta` is '
-                'deprecated, use `classes` instead!')
+                'The `CLASSES` in `dataset_meta` is deprecated, '
+                'use `classes` instead!', DeprecationWarning)
         else:
             raise RuntimeError(
                 "The `num_claases` is required, and also not found 'classes' "
