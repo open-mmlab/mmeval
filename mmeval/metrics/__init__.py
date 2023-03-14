@@ -8,6 +8,7 @@ from .average_precision import AveragePrecision
 from .bleu import BLEU
 from .coco_detection import COCODetection
 from .connectivity_error import ConnectivityError
+from .crowdhuman import CrowdHuman
 from .dota_map import DOTAMeanAP
 from .end_point_error import EndPointError
 from .f1_score import F1Score
@@ -46,7 +47,8 @@ __all__ = [
     'ConnectivityError', 'ROUGE', 'Perplexity', 'KeypointEndPointError',
     'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
     'WordAccuracy', 'PrecisionRecallF1score',
-    'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score'
+    'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score',
+    'CrowdHuman'
 ]
 
 _deprecated_msg = (
