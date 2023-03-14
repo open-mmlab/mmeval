@@ -26,7 +26,7 @@ class MultiScaleStructureSimilarity(BaseMetric):
         input_order (str): Whether the input order is 'HWC' or 'CHW'.
             Defaults to 'HWC'.
         max_val (int): the dynamic range of the images (i.e., the difference
-            between the maximum the and minimum allowed values).
+            between the maximum and the minimum allowed values).
             Defaults to 255.
         filter_size (int): Size of blur kernel to use (will be reduced for
             small images). Defaults to 11.
@@ -48,7 +48,8 @@ class MultiScaleStructureSimilarity(BaseMetric):
         >>>
         >>> ms_ssim = MS_SSIM()
         >>> preds = [np.random.randint(0, 255, size=(3, 32, 32)) for _ in range(4)]  # noqa
-        >>> ms_ssim(preds)  # doctest: +ELLIPSIS
+        >>> gts = [np.random.randint(0, 255, size=(3, 32, 32)) for _ in range(4)]  # noqa
+        >>> ms_ssim(preds, gts)  # doctest: +ELLIPSIS
         {'ms_ssim': ...}
     """
 
@@ -97,7 +98,7 @@ class MultiScaleStructureSimilarity(BaseMetric):
                 Defaults to None.
         """
         assert len(predictions) == len(groundtruths), (
-            'The length of \'predictions\' and \'groundtruths\' must be '
+            'The length of "predictions" and "groundtruths" must be '
             'same.')
         half1, half2 = predictions, groundtruths
 
