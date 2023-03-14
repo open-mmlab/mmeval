@@ -201,8 +201,8 @@ class OIDMeanAP(VOCMeanAP):
         elif self.dataset_meta and 'RELATION_MATRIX' in self.dataset_meta:
             self._class_relation_matrix = self.dataset_meta['RELATION_MATRIX']
             warnings.warn(
-                'DeprecationWarning: The `RELATION_MATRIX` in `dataset_meta` '
-                'is deprecated, use `relation_matrix` instead!')
+                'The `RELATION_MATRIX` in `dataset_meta` is deprecated, '
+                'use `relation_matrix` instead!', DeprecationWarning)
         else:
             raise RuntimeError(
                 'The `class_relation_matrix` is required, and also not found'
