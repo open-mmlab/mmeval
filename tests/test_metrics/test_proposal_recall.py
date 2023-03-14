@@ -69,7 +69,6 @@ def test_metric_interface(metric_kwargs):
     )
     assert isinstance(metric_results, dict)
     assert 'AR@100' in metric_results
-    assert 'proposal_result' in metric_results
 
 
 def test_metric_invalid_usage():
@@ -88,15 +87,13 @@ def test_metric_accurate():
     # test default proposal nums
     proposal_recall = ProposalRecall()
     metric_results = proposal_recall(predictions, groundtruths)
-    metric_results.pop('proposal_result')
-    target = {'AR@100': 1.0, 'AR@300': 1.0, 'AR@1000': 1.0}
+    target = {'AR@1': 0.25, 'AR@10': 1.0, 'AR@100': 1.0, 'AR@1000': 1.0}
     assert metric_results == target
 
     # test manually set proposal nums
     proposal_recall = ProposalRecall(proposal_nums=(2, 4))
     metric_results = proposal_recall(predictions, groundtruths)
     target = {'AR@2': 0.5, 'AR@4': 1.0}
-    metric_results.pop('proposal_result')
     assert metric_results == target
 
 

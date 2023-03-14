@@ -2,6 +2,8 @@
 import numpy as np
 from collections import OrderedDict
 from multiprocessing.pool import Pool
+from rich.console import Console
+from rich.table import Table
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
@@ -19,7 +21,7 @@ class ProposalRecall(BaseMetric):
             If not specified, IoUs from 0.5 to 0.95 will be used.
             Defaults to None.
         proposal_nums (Sequence[int]): Numbers of proposals to be evaluated.
-            Defaults to (100, 300, 1000).
+            Defaults to (1, 10, 100, 1000).
         use_legacy_coordinate (bool): Whether to use coordinate
             system in mmdet v1.x. which means width, height should be
             calculated as 'x2 - x1 + 1` and 'y2 - y1 + 1' respectively.
@@ -27,6 +29,7 @@ class ProposalRecall(BaseMetric):
         nproc (int): Processes used for computing TP and FP. If nproc
             is less than or equal to 1, multiprocessing will not be used.
             Defaults to 4.
+        print_results (bool): Whether to print the results. Defaults to True.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -50,14 +53,15 @@ class ProposalRecall(BaseMetric):
         ...     'bboxes': _gen_bboxes(10),
         ... }
         >>> proposal_recall(predictions=[prediction, ], groundtruths=[groundtruth, ])  # doctest: +ELLIPSIS  # noqa: E501
-        {'AR@100': ..., 'AR@300': ..., 'AR@1000': ...}
+        {'AR@1': ..., 'AR@10': ..., 'AR@100': ..., 'AR@1000': ...}
     """
 
     def __init__(self,
                  iou_thrs: Union[float, Sequence[float], None] = None,
-                 proposal_nums: Union[int, Sequence[int]] = (100, 300, 1000),
+                 proposal_nums: Union[int, Sequence[int]] = (1, 10, 100, 1000),
                  use_legacy_coordinate: bool = False,
                  nproc: int = 4,
+                 print_results: bool = True,
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -85,6 +89,7 @@ class ProposalRecall(BaseMetric):
 
         self.nproc = nproc
         self.use_legacy_coordinate = use_legacy_coordinate
+        self.print_results = print_results
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
@@ -280,10 +285,43 @@ class ProposalRecall(BaseMetric):
         if pool is not None:
             pool.close()
 
-        eval_results = OrderedDict()
+        eval_results: OrderedDict = OrderedDict()
+        table_results: OrderedDict = OrderedDict()
         results_list = []
         for i, num in enumerate(self.proposal_nums):  # type:ignore
             eval_results[f'AR@{num}'] = ar[i]
             results_list.append(np.concatenate([recalls[i], ar[None, i]]))
-        eval_results['proposal_result'] = results_list
+        table_results['proposal_result'] = results_list
+
+        if self.print_results:
+            self._print_results(table_results)
         return eval_results
+
+    def _print_results(self, table_results: dict) -> None:
+        """Print the evaluation results table.
+
+        Args:
+            table_results (dict): The computed metric.
+        """
+        tabel_title = ' Recall Results (%)'
+        result = table_results['proposal_result']
+        headers = [''] + [
+            f'AR_{round(iou_thr * 100, 0):.0f}'
+            for iou_thr in self.iou_thrs  # type: ignore
+        ] + ['AR']
+
+        table = Table(title=tabel_title)
+        console = Console(width=150)
+        for name in headers:
+            table.add_column(name, justify='left')
+
+        for i in range(len(self.proposal_nums)):  # type: ignore
+            row = [f'{self.proposal_nums[i]}']  # type: ignore
+            row += [
+                f'{round(100 * val, 2):0.2f}' for val in result[i].tolist()
+            ]
+            table.add_row(*row)
+
+        with console.capture() as capture:
+            console.print(table, end='')
+        self.logger.info('\n' + capture.get())
