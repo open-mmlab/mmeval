@@ -481,7 +481,7 @@ class COCODetection(BaseMetric):
 
         return metric_result
 
-    def compute_metric(self, results: list) -> Dict[str, Union[float, list]]:
+    def compute_metric(self, results: list) -> dict:
         """Compute the COCO metrics.
 
         Args:
