@@ -349,8 +349,7 @@ class OIDMeanAP(VOCMeanAP):
                 instances.extend(supercat_instances)
             gt_ann = self._stack_gt_instances(instances)
 
-            image_level_labels = groundtruth.get('image_level_labels', None)
-            if image_level_labels is None:
+            if 'image_level_labels' not in groundtruth:
                 allowed_labels = np.unique(gt_ann['labels'])
             else:
                 allowed_labels = np.unique(

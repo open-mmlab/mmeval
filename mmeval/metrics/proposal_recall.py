@@ -29,6 +29,7 @@ class ProposalRecall(BaseMetric):
         nproc (int): Processes used for computing TP and FP. If nproc
             is less than or equal to 1, multiprocessing will not be used.
             Defaults to 4.
+        print_results (bool): Whether to print the results. Defaults to True.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -60,6 +61,7 @@ class ProposalRecall(BaseMetric):
                  proposal_nums: Union[int, Sequence[int]] = (1, 10, 100, 1000),
                  use_legacy_coordinate: bool = False,
                  nproc: int = 4,
+                 print_results: bool = True,
                  **kwargs) -> None:
         super().__init__(**kwargs)
 
@@ -87,6 +89,7 @@ class ProposalRecall(BaseMetric):
 
         self.nproc = nproc
         self.use_legacy_coordinate = use_legacy_coordinate
+        self.print_results = print_results
 
     def add(self, predictions: Sequence[Dict], groundtruths: Sequence[Dict]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add the intermediate results to ``self._results``.
@@ -290,7 +293,8 @@ class ProposalRecall(BaseMetric):
             results_list.append(np.concatenate([recalls[i], ar[None, i]]))
         table_results['proposal_result'] = results_list
 
-        self._print_results(table_results)
+        if self.print_results:
+            self._print_results(table_results)
         return eval_results
 
     def _print_results(self, table_results: dict) -> None:

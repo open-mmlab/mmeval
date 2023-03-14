@@ -59,6 +59,7 @@ class COCODetection(BaseMetric):
             ann_file. Defaults to True.
         backend_args (dict, optional): Arguments to instantiate the
             preifx of uri corresponding backend. Defaults to None.
+        print_results (bool): Whether to print the results. Defaults to True.
         logger (Logger, optional): logger used to record messages. When set to
             ``None``, the default logger will be used.
             Defaults to None.
@@ -160,6 +161,7 @@ class COCODetection(BaseMetric):
                  outfile_prefix: Optional[str] = None,
                  gt_mask_area: bool = True,
                  backend_args: Optional[dict] = None,
+                 print_results: bool = True,
                  **kwargs) -> None:
         if not HAS_COCOAPI:
             raise RuntimeError('Failed to import `COCO` and `COCOeval` from '
@@ -196,6 +198,7 @@ class COCODetection(BaseMetric):
 
         self.iou_thrs = iou_thrs
         self.metric_items = metric_items
+        self.print_results = print_results
         self.format_only = format_only
         if self.format_only:
             assert outfile_prefix is not None, 'outfile_prefix must be not'
@@ -653,7 +656,7 @@ class COCODetection(BaseMetric):
             tmp_dir.cleanup()
         # if the testing results of the whole dataset is empty,
         # does not print tables.
-        if len(table_results) > 0:
+        if self.print_results and len(table_results) > 0:
             self._print_results(table_results)
         return eval_results
 
