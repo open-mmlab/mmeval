@@ -1,14 +1,9 @@
 # Copyright (c) OpenMMLab. All rights reserved.Dict
+import cv2
 import numpy as np
-from typing import TYPE_CHECKING, Dict, List, Sequence
+from typing import Dict, List, Sequence
 
 from mmeval.core import BaseMetric
-from mmeval.utils import try_import
-
-if TYPE_CHECKING:
-    import cv2
-else:
-    cv2 = try_import('cv2')
 
 
 class ConnectivityError(BaseMetric):
@@ -55,10 +50,6 @@ class ConnectivityError(BaseMetric):
         super().__init__(**kwargs)
         self.step = step
         self.norm_const = norm_const
-
-        if cv2 is None:
-            raise ImportError(f'For availability of {self.__class__.__name__},'
-                              ' please pip install opencv-python first.')
 
     def add(self, pred_alphas: Sequence[np.ndarray], gt_alphas: Sequence[np.ndarray], trimaps: Sequence[np.ndarray]) -> None:  # type: ignore # yapf: disable # noqa: E501
         """Add ConnectivityError score of batch to ``self._results``
