@@ -1,7 +1,13 @@
 # Copyright (c) OpenMMLab. All rights reserved.
-import cv2
 import numpy as np
-from typing import Optional, Union
+from typing import TYPE_CHECKING, Optional, Union
+
+from mmeval.utils import try_import
+
+if TYPE_CHECKING:
+    import cv2
+else:
+    cv2 = try_import('cv2')
 
 
 def _convert_input_type_range(img: np.ndarray) -> np.ndarray:
@@ -141,6 +147,10 @@ def bgr2gray(img: np.ndarray, keepdim: bool = False) -> np.ndarray:
     Returns:
         ndarray: The converted grayscale image.
     """
+    if cv2 is None:
+        raise TypeError('To use `bgr2gray` function, please '
+                        'install opencv-python first')
+
     out_img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     if keepdim:
         out_img = out_img[..., None]
@@ -158,6 +168,10 @@ def rgb2gray(img: np.ndarray, keepdim: bool = False) -> np.ndarray:
     Returns:
         ndarray: The converted grayscale image.
     """
+    if cv2 is None:
+        raise TypeError('To use `rgb2gray` function, please '
+                        'install opencv-python first')
+
     out_img = cv2.cvtColor(img, cv2.COLOR_RGB2GRAY)
     if keepdim:
         out_img = out_img[..., None]
