@@ -1,8 +1,5 @@
 from setuptools import find_packages, setup  # type: ignore
 
-import re
-from pkg_resources import DistributionNotFound, get_distribution
-
 
 def readme():
     with open('README.md', encoding='utf-8') as f:
@@ -11,18 +8,6 @@ def readme():
 
 
 version_file = 'mmeval/version.py'
-
-
-def choose_requirement(primary, secondary):
-    """If some version of primary requirement installed, return primary, else
-    return secondary."""
-    try:
-        name = re.split(r'[!<>=]', primary)[0]
-        get_distribution(name)
-    except DistributionNotFound:
-        return secondary
-
-    return str(primary)
 
 
 def get_version():
@@ -104,21 +89,6 @@ def parse_requirements(fname='requirements/runtime.txt', with_version=True):
     return packages
 
 
-install_requires = parse_requirements()
-try:
-    # OpenCV installed via conda.
-    import cv2  # NOQA: F401
-    major, minor, *rest = cv2.__version__.split('.')
-    if int(major) < 3:
-        raise RuntimeError(
-            f'OpenCV >=3 is required but {cv2.__version__} is installed')
-except ImportError:
-    # If first not installed install second package
-    CHOOSE_INSTALL_REQUIRES = [('opencv-python-headless>=3',
-                                'opencv-python>=3')]
-    for main, secondary in CHOOSE_INSTALL_REQUIRES:
-        install_requires.append(choose_requirement(main, secondary))
-
 setup(
     name='mmeval',
     version=get_version(),
@@ -141,7 +111,7 @@ setup(
         'Topic :: Scientific/Engineering :: Artificial Intelligence',
     ],
     python_requires='>=3.6',
-    install_requires=install_requires,
+    install_requires=parse_requirements('requirements/runtime.txt'),
     extras_require={
         'all': parse_requirements('requirements/optional.txt'),
     },
