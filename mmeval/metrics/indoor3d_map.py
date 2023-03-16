@@ -58,7 +58,7 @@ class Indoor3DMeanAP(BaseMetric):
                 f'sequence of dict, but got a sequence of {type(groundtruth)}.'
             self._results.append((prediction, groundtruth))
 
-    def compute_metric(self, results: list) -> dict:
+    def compute_metric(self, results: Sequence) -> dict:
         """Compute the Indoor 3D meanAP.
 
         Args:
