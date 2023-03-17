@@ -49,7 +49,7 @@ class DOTAMeanAP(VOCMeanAP):
     scale ranges.
 
     Args:
-        iou_thrs (float ｜ List[float]): IoU thresholds. Defaults to 0.5.
+        iou_thrs (float | List[float]): IoU thresholds. Defaults to 0.5.
         scale_ranges (List[tuple], optional): Scale ranges for evaluating
             mAP. If not specified, all bounding boxes would be included in
             evaluation. Defaults to None.

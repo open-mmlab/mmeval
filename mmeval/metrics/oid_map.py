@@ -3,6 +3,7 @@ import copy
 import csv
 import json
 import numpy as np
+import warnings
 from multiprocessing.pool import Pool
 from typing import Dict, List, Optional, Sequence, Tuple, Union
 
@@ -116,7 +117,7 @@ class OIDMeanAP(VOCMeanAP):
             Defaults to True.
         class_relation_matrix (numpy.ndarray, optional): The matrix of the
             corresponding relationship between the parent class and the child
-            class. If None, it will be obtained from the 'RELATION_MATRIX'
+            class. If None, it will be obtained from the 'relation_matrix'
             field in ``self.dataset_meta``. Defaults to None.
         **kwargs: Keyword parameters passed to :class:`VOCMeanAP`.
 
@@ -154,7 +155,7 @@ class OIDMeanAP(VOCMeanAP):
         ...     'image_level_labels': np.random.randint(0, num_classes, size=(10, )),  # noqa: E501
         ... }
         >>> oid_map(predictions=[prediction, ], groundtruths=[groundtruth, ])  # doctest: +ELLIPSIS  # noqa: E501
-        {'mAP@0.5': ..., 'mAP': ...}
+        {'AP@50': ..., 'mAP': ...}
     """
 
     def __init__(self,
@@ -184,7 +185,7 @@ class OIDMeanAP(VOCMeanAP):
         """Returns the class relation matrix.
 
         The class relation matrix should be set during initialization,
-        otherwise it will be obtained from the 'RELATION_MATRIX' field in
+        otherwise it will be obtained from the 'relation_matrix' field in
         ``self.dataset_meta``.
 
         Returns:
@@ -195,12 +196,17 @@ class OIDMeanAP(VOCMeanAP):
         """
         if self._class_relation_matrix is not None:
             return self._class_relation_matrix
-        if self.dataset_meta and 'RELATION_MATRIX' in self.dataset_meta:
+        if self.dataset_meta and 'relation_matrix' in self.dataset_meta:
+            self._class_relation_matrix = self.dataset_meta['relation_matrix']
+        elif self.dataset_meta and 'RELATION_MATRIX' in self.dataset_meta:
             self._class_relation_matrix = self.dataset_meta['RELATION_MATRIX']
+            warnings.warn(
+                'The `RELATION_MATRIX` in `dataset_meta` is deprecated, '
+                'use `relation_matrix` instead!', DeprecationWarning)
         else:
             raise RuntimeError(
                 'The `class_relation_matrix` is required, and also not found'
-                f" 'RELATION_MATRIX' in dataset_meta: {self.dataset_meta}")
+                f" 'relation_matrix' in dataset_meta: {self.dataset_meta}")
         return self._class_relation_matrix
 
     def _extend_supercategory_ann(self, instances: List[dict]) -> List[dict]:

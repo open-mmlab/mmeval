@@ -1,11 +1,16 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import contextlib
 import datetime
+import io
+import itertools
 import numpy as np
 import os.path as osp
 import tempfile
 import warnings
 from collections import OrderedDict
 from json import dump
+from rich.console import Console
+from rich.table import Table
 from typing import Dict, List, Optional, Sequence, Union
 
 from mmeval.core.base_metric import BaseMetric
@@ -38,7 +43,7 @@ class COCODetection(BaseMetric):
         classwise (bool): Whether to return the computed  results of each
             class. Defaults to False.
         proposal_nums (Sequence[int]): Numbers of proposals to be evaluated.
-            Defaults to (100, 300, 1000).
+            Defaults to (1, 10, 100).
         metric_items (List[str], optional): Metric result names to be
             recorded in the evaluation result. Defaults to None.
         format_only (bool): Format the output results without perform
@@ -54,6 +59,10 @@ class COCODetection(BaseMetric):
             ann_file. Defaults to True.
         backend_args (dict, optional): Arguments to instantiate the
             preifx of uri corresponding backend. Defaults to None.
+        print_results (bool): Whether to print the results. Defaults to True.
+        logger (Logger, optional): logger used to record messages. When set to
+            ``None``, the default logger will be used.
+            Defaults to None.
         **kwargs: Keyword parameters passed to :class:`BaseMetric`.
 
     Examples:
@@ -66,7 +75,7 @@ class COCODetection(BaseMetric):
         >>>
         >>> num_classes = 4
         >>> fake_dataset_metas = {
-        ...     'CLASSES': tuple([str(i) for i in range(num_classes)])
+        ...     'classes': tuple([str(i) for i in range(num_classes)])
         ... }
         >>>
         >>> coco_det_metric = COCODetection(
@@ -146,12 +155,13 @@ class COCODetection(BaseMetric):
                  metric: Union[str, List[str]] = 'bbox',
                  iou_thrs: Union[float, Sequence[float], None] = None,
                  classwise: bool = False,
-                 proposal_nums: Sequence[int] = (100, 300, 1000),
+                 proposal_nums: Sequence[int] = (1, 10, 100),
                  metric_items: Optional[Sequence[str]] = None,
                  format_only: bool = False,
                  outfile_prefix: Optional[str] = None,
                  gt_mask_area: bool = True,
                  backend_args: Optional[dict] = None,
+                 print_results: bool = True,
                  **kwargs) -> None:
         if not HAS_COCOAPI:
             raise RuntimeError('Failed to import `COCO` and `COCOeval` from '
@@ -165,8 +175,8 @@ class COCODetection(BaseMetric):
         for metric in self.metrics:
             if metric not in allowed_metrics:
                 raise KeyError(
-                    "metric should be one of 'bbox', 'segm', 'proposal', "
-                    f"'proposal_fast', but got {metric}.")
+                    "metric should be one of 'bbox', 'segm', and 'proposal', "
+                    f'but got {metric}.')
 
         # do class wise evaluation, default False
         self.classwise = classwise
@@ -188,6 +198,7 @@ class COCODetection(BaseMetric):
 
         self.iou_thrs = iou_thrs
         self.metric_items = metric_items
+        self.print_results = print_results
         self.format_only = format_only
         if self.format_only:
             assert outfile_prefix is not None, 'outfile_prefix must be not'
@@ -323,9 +334,9 @@ class COCODetection(BaseMetric):
             'not affect the overall AP, but leads to different '
             'small/medium/large AP results.')
 
+        classes = self.classes
         categories = [
-            dict(id=id, name=name) for id, name in enumerate(
-                self.dataset_meta['classes'])  # type:ignore
+            dict(id=id, name=name) for id, name in enumerate(classes)
         ]
         image_infos: list = []
         annotations: list = []
@@ -470,7 +481,7 @@ class COCODetection(BaseMetric):
 
         return metric_result
 
-    def compute_metric(self, results: list) -> Dict[str, float]:
+    def compute_metric(self, results: list) -> dict:
         """Compute the COCO metrics.
 
         Args:
@@ -479,8 +490,9 @@ class COCODetection(BaseMetric):
                 been synced across all ranks.
 
         Returns:
-            dict: The computed metric. The keys are the names of
-            the metrics, and the values are corresponding results.
+            dict: The computed metric.
+            The keys are the names of the metrics, and the values are
+            corresponding results.
         """
         tmp_dir = None
         if self.outfile_prefix is None:
@@ -489,12 +501,13 @@ class COCODetection(BaseMetric):
         else:
             outfile_prefix = self.outfile_prefix
 
+        classes = self.classes
         # split gt and prediction list
         preds, gts = zip(*results)
 
         if self._coco_api is None:
             # use converted gt json file to initialize coco api
-            print('Converting ground truth to coco format...')
+            self.logger.info('Converting ground truth to coco format...')
             coco_json_path = self.gt_to_coco_json(
                 gt_dicts=gts, outfile_prefix=outfile_prefix)
             self._coco_api = COCO(coco_json_path)
@@ -502,7 +515,7 @@ class COCODetection(BaseMetric):
         # handle lazy init
         if len(self.cat_ids) == 0:
             self.cat_ids = self._coco_api.get_cat_ids(
-                cat_names=self.dataset_meta['classes'])  # type: ignore
+                cat_names=classes)  # type: ignore
         if len(self.img_ids) == 0:
             self.img_ids = self._coco_api.get_img_ids()
 
@@ -510,13 +523,14 @@ class COCODetection(BaseMetric):
         result_files = self.results2json(preds, outfile_prefix)
 
         eval_results: OrderedDict = OrderedDict()
+        table_results: OrderedDict = OrderedDict()
         if self.format_only:
-            print('results are saved in '
-                  f'{osp.dirname(outfile_prefix)}')
+            self.logger.info(
+                f'Results are saved in {osp.dirname(outfile_prefix)}')
             return eval_results
 
         for metric in self.metrics:
-            print(f'Evaluating {metric}...')
+            self.logger.info(f'Evaluating {metric}...')
 
             # evaluate proposal, bbox and segm
             iou_type = 'bbox' if metric == 'proposal' else metric
@@ -536,7 +550,8 @@ class COCODetection(BaseMetric):
                 coco_dt = self._coco_api.loadRes(predictions)
 
             except IndexError:
-                print('The testing results of the whole dataset is empty.')
+                self.logger.warning('The testing results of the '
+                                    'whole dataset is empty.')
                 break
 
             coco_eval = COCOeval(self._coco_api, coco_dt, iou_type)
@@ -554,12 +569,12 @@ class COCODetection(BaseMetric):
                 'mAP_s': 3,
                 'mAP_m': 4,
                 'mAP_l': 5,
-                'AR@100': 6,
-                'AR@300': 7,
-                'AR@1000': 8,
-                'AR_s@1000': 9,
-                'AR_m@1000': 10,
-                'AR_l@1000': 11
+                f'AR@{self.proposal_nums[0]}': 6,
+                f'AR@{self.proposal_nums[1]}': 7,
+                f'AR@{self.proposal_nums[2]}': 8,
+                f'AR_s@{self.proposal_nums[2]}': 9,
+                f'AR_m@{self.proposal_nums[2]}': 10,
+                f'AR_l@{self.proposal_nums[2]}': 11
             }
             metric_items = self.metric_items
             if metric_items is not None:
@@ -572,24 +587,47 @@ class COCODetection(BaseMetric):
                 coco_eval.params.useCats = 0
                 coco_eval.evaluate()
                 coco_eval.accumulate()
-                coco_eval.summarize()
+                redirect_string = io.StringIO()
+                with contextlib.redirect_stdout(redirect_string):
+                    coco_eval.summarize()
+                self.logger.info('\n' + redirect_string.getvalue())
                 if metric_items is None:
                     metric_items = [
-                        'AR@100', 'AR@300', 'AR@1000', 'AR_s@1000',
-                        'AR_m@1000', 'AR_l@1000'
+                        f'AR@{self.proposal_nums[0]}',
+                        f'AR@{self.proposal_nums[1]}',
+                        f'AR@{self.proposal_nums[2]}',
+                        f'AR_s@{self.proposal_nums[2]}',
+                        f'AR_m@{self.proposal_nums[2]}',
+                        f'AR_l@{self.proposal_nums[2]}'
                     ]
 
                 results_list = []
                 for item in metric_items:
-                    val = float(
-                        f'{coco_eval.stats[coco_metric_names[item]]:.3f}')
-                    results_list.append(f'{val * 100:.1f}')
+                    val = float(coco_eval.stats[coco_metric_names[item]])
+                    results_list.append(f'{round(val * 100, 2):0.2f}')
                     eval_results[item] = val
-                eval_results[f'{metric}_result'] = results_list
+                table_results[f'{metric}_result'] = results_list
             else:
                 coco_eval.evaluate()
                 coco_eval.accumulate()
-                coco_eval.summarize()
+                # Save coco summarize print information to logger
+                redirect_string = io.StringIO()
+                with contextlib.redirect_stdout(redirect_string):
+                    coco_eval.summarize()
+                self.logger.info('\n' + redirect_string.getvalue())
+                if metric_items is None:
+                    metric_items = [
+                        'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
+                    ]
+
+                results_list = []
+                for metric_item in metric_items:
+                    key = f'{metric}_{metric_item}'
+                    val = coco_eval.stats[coco_metric_names[metric_item]]
+                    results_list.append(f'{round(val * 100, 2):0.2f}')
+                    eval_results[key] = float(val)
+                table_results[f'{metric}_result'] = results_list
+
                 if self.classwise:  # Compute per-category AP
                     # Compute per-category AP
                     # from https://github.com/facebookresearch/detectron2/
@@ -609,27 +647,107 @@ class COCODetection(BaseMetric):
                         else:
                             ap = float('nan')
                         results_per_category.append(
-                            (f'{nm["name"]}', f'{round(ap, 3)}'))
-                        eval_results[f'{metric}_{nm["name"]}_precision'] = \
-                            round(ap, 3)
+                            (f'{nm["name"]}', f'{round(ap * 100, 2):0.2f}'))
+                        eval_results[f'{metric}_{nm["name"]}_precision'] = ap
 
-                    eval_results[f'{metric}_classwise_result'] = \
+                    table_results[f'{metric}_classwise_result'] = \
                         results_per_category
-                if metric_items is None:
-                    metric_items = [
-                        'mAP', 'mAP_50', 'mAP_75', 'mAP_s', 'mAP_m', 'mAP_l'
-                    ]
-
-                results_list = []
-                for metric_item in metric_items:
-                    key = f'{metric}_{metric_item}'
-                    val = coco_eval.stats[coco_metric_names[metric_item]]
-                    results_list.append(f'{round(val, 3) * 100:.1f}')
-                    eval_results[key] = float(f'{round(val, 3)}')
-                eval_results[f'{metric}_result'] = results_list
         if tmp_dir is not None:
             tmp_dir.cleanup()
+        # if the testing results of the whole dataset is empty,
+        # does not print tables.
+        if self.print_results and len(table_results) > 0:
+            self._print_results(table_results)
         return eval_results
+
+    def _print_results(self, table_results: dict) -> None:
+        """Print the evaluation results table.
+
+        Args:
+            table_results (dict): The computed metric.
+        """
+        for metric in self.metrics:
+            result = table_results[f'{metric}_result']
+
+            if metric == 'proposal':
+                table_title = ' Recall Results (%)'
+                if self.metric_items is None:
+                    assert len(result) == 6
+                    headers = [
+                        f'AR@{self.proposal_nums[0]}',
+                        f'AR@{self.proposal_nums[1]}',
+                        f'AR@{self.proposal_nums[2]}',
+                        f'AR_s@{self.proposal_nums[2]}',
+                        f'AR_m@{self.proposal_nums[2]}',
+                        f'AR_l@{self.proposal_nums[2]}'
+                    ]
+                else:
+                    assert len(result) == len(self.metric_items)  # type: ignore # yapf: disable # noqa: E501
+                    headers = self.metric_items  # type: ignore
+            else:
+                table_title = f' {metric} Results (%)'
+                if self.metric_items is None:
+                    assert len(result) == 6
+                    headers = [
+                        f'{metric}_mAP', f'{metric}_mAP_50',
+                        f'{metric}_mAP_75', f'{metric}_mAP_s',
+                        f'{metric}_mAP_m', f'{metric}_mAP_l'
+                    ]
+                else:
+                    assert len(result) == len(self.metric_items)
+                    headers = [
+                        f'{metric}_{item}' for item in self.metric_items
+                    ]
+            table = Table(title=table_title)
+            console = Console()
+            for name in headers:
+                table.add_column(name, justify='left')
+            table.add_row(*result)
+            with console.capture() as capture:
+                console.print(table, end='')
+            self.logger.info('\n' + capture.get())
+
+            if self.classwise and metric != 'proposal':
+                self.logger.info(
+                    f'Evaluating {metric} metric of each category...')
+                classwise_table_title = f' {metric} Classwise Results (%)'
+                classwise_result = table_results[f'{metric}_classwise_result']
+
+                num_columns = min(6, len(classwise_result) * 2)
+                results_flatten = list(itertools.chain(*classwise_result))
+                headers = ['category', f'{metric}_AP'] * (num_columns // 2)
+                results_2d = itertools.zip_longest(*[
+                    results_flatten[i::num_columns] for i in range(num_columns)
+                ])
+
+                table = Table(title=classwise_table_title)
+                console = Console()
+                for name in headers:
+                    table.add_column(name, justify='left')
+                for _result in results_2d:
+                    table.add_row(*_result)
+                with console.capture() as capture:
+                    console.print(table, end='')
+                self.logger.info('\n' + capture.get())
+
+    @property
+    def classes(self) -> list:
+        """Get classes from self.dataset_meta."""
+        if hasattr(self, '_classes'):
+            return self._classes  # type: ignore
+
+        if self.dataset_meta and 'classes' in self.dataset_meta:
+            classes = self.dataset_meta['classes']
+        elif self.dataset_meta and 'CLASSES' in self.dataset_meta:
+            classes = self.dataset_meta['CLASSES']
+            warnings.warn(
+                'The `CLASSES` in `dataset_meta` is deprecated, '
+                'use `classes` instead!', DeprecationWarning)
+        else:
+            raise RuntimeError('Could not find `classes` in dataset_meta: '
+                               f'{self.dataset_meta}')
+        self._classes = classes  # type: ignore
+        return classes
 
 
 # Keep the deprecated metric name as an alias.

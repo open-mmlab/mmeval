@@ -1,13 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
+import cv2
 import numpy as np
-from typing import TYPE_CHECKING
-
-from mmeval.utils import try_import
-
-if TYPE_CHECKING:
-    import cv2
-else:
-    cv2 = try_import('cv2')
 
 
 def qbox_to_rbox(boxes: np.ndarray) -> np.ndarray:
@@ -19,10 +12,6 @@ def qbox_to_rbox(boxes: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Rotated box array with shape of (N, 5).
     """
-    if cv2 is None:
-        raise ImportError('To use `qbox_to_rbox` function, '
-                          'please install opencv-python first.')
-
     assert boxes.ndim == 2 and boxes.shape[-1] == 8, \
         'The boxes shape should be (N, 8)'
     original_shape = boxes.shape[:-1]
@@ -102,10 +91,6 @@ def calculate_overlaps_rotated(bboxes1: np.ndarray,
     Returns:
         np.ndarray: IoUs with shape (n, k).
     """
-    if cv2 is None:
-        raise ImportError('To use `calculate_overlaps_rotated` function, '
-                          'please install opencv-python first.')
-
     assert bboxes1.ndim == 2 and bboxes1.shape[-1] == 5, \
         'The shape of bboxes1 should be (N, 5)'
     assert bboxes2.ndim == 2 and bboxes2.shape[-1] == 5, \

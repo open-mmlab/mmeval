@@ -50,6 +50,7 @@ Metrics
    ROUGE
    NaturalImageQualityEvaluator
    Perplexity
+   CharRecallPrecision
    KeypointEndPointError
    KeypointAUC
    KeypointNME
