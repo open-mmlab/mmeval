@@ -32,9 +32,9 @@ class TestIndoorMetric(unittest.TestCase):
         }
 
         pred_dict = dict()
-        pred_dict['scores_3d'] = torch.ones(len(gt_dict['gt_bboxes_3d']))
+        pred_dict['scores_3d'] = np.ones(len(gt_dict['gt_bboxes_3d']))
         pred_dict['bboxes_3d'] = gt_dict['gt_bboxes_3d']
-        pred_dict['labels_3d'] = torch.Tensor(gt_dict['gt_labels_3d'])
+        pred_dict['labels_3d'] = gt_dict['gt_labels_3d']
 
         indoor_metric.dataset_meta = {
             'classes': ('cabinet', 'bed', 'chair', 'sofa', 'table', 'door',
