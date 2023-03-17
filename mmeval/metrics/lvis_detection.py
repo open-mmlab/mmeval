@@ -49,6 +49,7 @@ class LVISDetection(COCODetection):
             If not specified, a temp file will be created. Defaults to None.
         backend_args (dict, optional): Arguments to instantiate the
             preifx of uri corresponding backend. Defaults to None.
+        print_results (bool): Whether to print the results. Defaults to True.
         logger (Logger, optional): logger used to record messages. When set to
             ``None``, the default logger will be used.
             Defaults to None.
@@ -301,7 +302,7 @@ class LVISDetection(COCODetection):
             tmp_dir.cleanup()
         # if the testing results of the whole dataset is empty,
         # does not print tables.
-        if len(table_results) > 0:
+        if self.print_results and len(table_results) > 0:
             self._print_results(table_results)
         return eval_results
 
