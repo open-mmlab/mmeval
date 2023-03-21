@@ -1,7 +1,11 @@
 import numpy as np
 import torch
 import unittest
-from mmdet3d.structures import DepthInstance3DBoxes
+import pytest
+try:
+    from mmdet3d.structures import DepthInstance3DBoxes
+except:
+    pytest.skip('mmdet3d is not installed')
 
 from mmeval.metrics import Indoor3DMeanAP
 
