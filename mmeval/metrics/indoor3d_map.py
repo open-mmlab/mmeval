@@ -4,6 +4,7 @@ import torch
 from numpy import ndarray
 from rich.console import Console
 from rich.table import Table
+from rich.box import MARKDOWN
 from typing import Dict, List, Sequence, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
@@ -169,7 +170,7 @@ class Indoor3DMeanAP(BaseMetric):
             table_columns[-1] += [eval_results[f'AR_{iou_thresh:.2f}']]
             table_columns[-1] = [f'{x:.4f}' for x in table_columns[-1]]
 
-        console = Console()
+        console = Console(color_system=None)
         table = Table(*header)
         for i, table_rows in enumerate(list(zip(*table_columns))):
             if i == len(table_columns[0]) - 1:
