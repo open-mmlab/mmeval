@@ -1,11 +1,7 @@
 import numpy as np
+import pytest
 import torch
 import unittest
-import pytest
-try:
-    from mmdet3d.structures import DepthInstance3DBoxes
-except:
-    pytest.skip('mmdet3d is not installed')
 
 from mmeval.metrics import Indoor3DMeanAP
 
@@ -14,6 +10,11 @@ class TestIndoorMetric(unittest.TestCase):
 
     def test_indoor3d_map_elvaluate(self):
         indoor_metric = Indoor3DMeanAP()
+
+        try:
+            from mmdet3d.structures import DepthInstance3DBoxes
+        except ImportError:
+            pytest.skip('mmdet3d is not installed')
         gt_dict = {
             'gt_bboxes_3d':
             DepthInstance3DBoxes(

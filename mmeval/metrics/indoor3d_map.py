@@ -4,7 +4,6 @@ import torch
 from numpy import ndarray
 from rich.console import Console
 from rich.table import Table
-from rich.box import MARKDOWN
 from typing import Dict, List, Sequence, Tuple, Union
 
 from mmeval.core.base_metric import BaseMetric
