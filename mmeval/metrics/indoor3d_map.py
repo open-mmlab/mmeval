@@ -1,6 +1,5 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import numpy as np
-import torch
 from numpy import ndarray
 from rich.console import Console
 from rich.table import Table
@@ -234,6 +233,8 @@ class Indoor3DMeanAP(BaseMetric):
             tuple (np.ndarray, np.ndarray, float): Recalls, precisions and
                 average precision.
         """
+
+        import torch
 
         class_recs = {}
         npos = 0
