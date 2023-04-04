@@ -7,7 +7,7 @@ from .ava_map import AVAMeanAP
 from .average_precision import AveragePrecision
 from .bleu import BLEU
 from .char_recall_precision import CharRecallPrecision
-from .coco_detection import COCODetection
+from .coco_detection import COCODetection, CocoOccludedSeparated
 from .connectivity_error import ConnectivityError
 from .dota_map import DOTAMeanAP
 from .end_point_error import EndPointError
@@ -48,7 +48,7 @@ __all__ = [
     'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
     'WordAccuracy', 'PrecisionRecallF1score',
     'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score',
-    'CharRecallPrecision'
+    'CharRecallPrecision', 'CocoOccludedSeparated'
 ]
 
 _deprecated_msg = (
