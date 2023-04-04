@@ -14,6 +14,7 @@ from .end_point_error import EndPointError
 from .f1_score import F1Score
 from .gradient_error import GradientError
 from .hmean_iou import HmeanIoU
+from .indoor3d_map import Indoor3DMeanAP
 from .keypoint_auc import KeypointAUC
 from .keypoint_epe import KeypointEndPointError
 from .keypoint_nme import KeypointNME
@@ -48,7 +49,7 @@ __all__ = [
     'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
     'WordAccuracy', 'PrecisionRecallF1score',
     'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score',
-    'CharRecallPrecision'
+    'CharRecallPrecision', 'Indoor3DMeanAP'
 ]
 
 _deprecated_msg = (
