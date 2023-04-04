@@ -17,6 +17,7 @@ from .hmean_iou import HmeanIoU
 from .keypoint_auc import KeypointAUC
 from .keypoint_epe import KeypointEndPointError
 from .keypoint_nme import KeypointNME
+from .lvis_detection import LVISDetection
 from .mae import MeanAbsoluteError
 from .matting_mse import MattingMeanSquaredError
 from .mean_iou import MeanIoU
@@ -48,7 +49,7 @@ __all__ = [
     'KeypointAUC', 'KeypointNME', 'NaturalImageQualityEvaluator',
     'WordAccuracy', 'PrecisionRecallF1score',
     'SingleLabelPrecisionRecallF1score', 'MultiLabelPrecisionRecallF1score',
-    'CharRecallPrecision'
+    'LVISDetection', 'CharRecallPrecision'
 ]
 
 _deprecated_msg = (
