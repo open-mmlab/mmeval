@@ -25,6 +25,8 @@ else:
     jax = try_import('jax')
     flow = try_import('oneflow')
 
+torch = try_import('torch')
+
 
 @overload
 @dispatch

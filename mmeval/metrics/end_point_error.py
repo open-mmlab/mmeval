@@ -15,6 +15,8 @@ else:
     torch = try_import('torch')
     flow = try_import('oneflow')
 
+torch_npu = try_import('torch_npu')
+
 
 class EndPointError(BaseMetric):
     """EndPointError evaluation metric.

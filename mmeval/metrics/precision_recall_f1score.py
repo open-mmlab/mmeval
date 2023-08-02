@@ -21,6 +21,8 @@ else:
     flow = try_import('oneflow')
     of_F = try_import('oneflow.nn.functional')
 
+torch_npu = try_import('torch_npu')
+
 NUMPY_IMPL_HINTS = Tuple[Union[np.ndarray, np.number], Union[np.ndarray,
                                                              np.number]]
 TORCH_IMPL_HINTS = Tuple['torch.Tensor', 'torch.Tensor']
