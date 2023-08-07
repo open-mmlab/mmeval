@@ -14,6 +14,8 @@ else:
     torch = try_import('torch')
     flow = try_import('oneflow')
 
+torch_npu = try_import('torch_npu')
+
 
 class F1Score(BaseMetric):
     """Compute F1 scores.

@@ -21,6 +21,8 @@ else:
     tf = try_import('tensorflow')
     flow = try_import('oneflow')
 
+torch_npu = try_import('torch_npu')
+
 
 def softmax(x: np.ndarray) -> np.ndarray:
     """Compute the softmax function.

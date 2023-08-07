@@ -2,9 +2,9 @@
 
 from typing import List, Optional, no_type_check
 
-from .dist_backends import (BaseDistBackend, MPI4PyDist, NonDist, OneFlowDist,
-                            PaddleDist, TFHorovodDist, TorchCPUDist,
-                            TorchCUDADist)
+from .dist_backends import (BaseDistBackend, MPI4PyDist, NonDist, NPUDist,
+                            OneFlowDist, PaddleDist, TFHorovodDist,
+                            TorchCPUDist, TorchCUDADist)
 
 _DIST_BACKENDS = {
     'non_dist': NonDist,
@@ -14,6 +14,7 @@ _DIST_BACKENDS = {
     'torch_cpu': TorchCPUDist,
     'torch_cuda': TorchCUDADist,
     'paddle_dist': PaddleDist,
+    'npu_dist': NPUDist
 }
 
 _DEFAULT_BACKEND = 'non_dist'
