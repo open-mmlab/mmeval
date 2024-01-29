@@ -23,6 +23,12 @@ try:
 except ImportError:
     HAS_COCOAPI = False
 
+try:
+    from mmeval.metrics.utils.faster_coco_wrapper import FasterCOCO, FasterCOCOeval
+    HAS_FasterCOCOAPI = True
+except ImportError:
+    HAS_FasterCOCOAPI = False
+
 
 class COCODetection(BaseMetric):
     """COCO object detection task evaluation metric.
@@ -60,6 +66,7 @@ class COCODetection(BaseMetric):
         backend_args (dict, optional): Arguments to instantiate the
             preifx of uri corresponding backend. Defaults to None.
         print_results (bool): Whether to print the results. Defaults to True.
+        faster (bool): Use faster-coco-eval for faster calculations. Defaults to True.
         logger (Logger, optional): logger used to record messages. When set to
             ``None``, the default logger will be used.
             Defaults to None.
@@ -162,12 +169,21 @@ class COCODetection(BaseMetric):
                  gt_mask_area: bool = True,
                  backend_args: Optional[dict] = None,
                  print_results: bool = True,
+                 faster: bool = True,
                  **kwargs) -> None:
         if not HAS_COCOAPI:
             raise RuntimeError('Failed to import `COCO` and `COCOeval` from '
                                '`mmeval.utils.coco_wrapper`. '
                                'Please try to install official pycocotools by '
                                '"pip install pycocotools"')
+        
+        if faster and not HAS_FasterCOCOAPI:
+            warnings.warn('Failed to import `FasterCOCO` and `FasterCOCOeval` from '
+                               '`mmeval.utils.faster_coco_wrapper`. '
+                               'Please try to install official faster-coco-eval by '
+                               '"pip install faster-coco-eval"')
+            faster = False
+        
         super().__init__(**kwargs)
         # coco evaluation metrics
         self.metrics = metric if isinstance(metric, list) else [metric]
@@ -199,6 +215,7 @@ class COCODetection(BaseMetric):
         self.iou_thrs = iou_thrs
         self.metric_items = metric_items
         self.print_results = print_results
+        self.faster = faster
         self.format_only = format_only
         if self.format_only:
             assert outfile_prefix is not None, 'outfile_prefix must be not'
@@ -209,12 +226,15 @@ class COCODetection(BaseMetric):
 
         # if ann_file is not specified,
         # initialize coco api with the converted dataset
-        self._coco_api: Optional[COCO]  # type: ignore
+        self._coco_api: Optional[Union[COCO, FasterCOCO]]  # type: ignore
         if ann_file is not None:
             with get_local_path(
                     filepath=ann_file,
                     backend_args=backend_args) as local_path:
-                self._coco_api = COCO(annotation_file=local_path)
+                if self.faster:
+                    self._coco_api = FasterCOCO(annotation_file=local_path)
+                else:
+                    self._coco_api = COCO(annotation_file=local_path)
         else:
             self._coco_api = None
 
@@ -510,7 +530,11 @@ class COCODetection(BaseMetric):
             self.logger.info('Converting ground truth to coco format...')
             coco_json_path = self.gt_to_coco_json(
                 gt_dicts=gts, outfile_prefix=outfile_prefix)
-            self._coco_api = COCO(coco_json_path)
+            
+            if self.faster:
+                self._coco_api = FasterCOCO(coco_json_path)
+            else:
+                self._coco_api = COCO(coco_json_path)
 
         # handle lazy init
         if len(self.cat_ids) == 0:
@@ -553,8 +577,10 @@ class COCODetection(BaseMetric):
                 self.logger.warning('The testing results of the '
                                     'whole dataset is empty.')
                 break
-
-            coco_eval = COCOeval(self._coco_api, coco_dt, iou_type)
+            if self.faster:
+                coco_eval = FasterCOCOeval(self._coco_api, coco_dt, iou_type)
+            else:
+                coco_eval = COCOeval(self._coco_api, coco_dt, iou_type)
 
             coco_eval.params.catIds = self.cat_ids
             coco_eval.params.imgIds = self.img_ids

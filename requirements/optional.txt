@@ -1,2 +1,3 @@
 pycocotools
+faster-coco-eval
 shapely
