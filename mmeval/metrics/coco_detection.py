@@ -24,7 +24,8 @@ except ImportError:
     HAS_COCOAPI = False
 
 try:
-    from mmeval.metrics.utils.faster_coco_wrapper import FasterCOCO, FasterCOCOeval
+    from mmeval.metrics.utils.faster_coco_wrapper import (FasterCOCO,
+                                                          FasterCOCOeval)
     HAS_FasterCOCOAPI = True
 except ImportError:
     HAS_FasterCOCOAPI = False
