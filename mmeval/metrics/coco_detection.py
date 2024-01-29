@@ -177,14 +177,15 @@ class COCODetection(BaseMetric):
                                '`mmeval.utils.coco_wrapper`. '
                                'Please try to install official pycocotools by '
                                '"pip install pycocotools"')
-        
+
         if faster and not HAS_FasterCOCOAPI:
-            warnings.warn('Failed to import `FasterCOCO` and `FasterCOCOeval` from '
-                               '`mmeval.utils.faster_coco_wrapper`. '
-                               'Please try to install official faster-coco-eval by '
-                               '"pip install faster-coco-eval"')
+            warnings.warn(
+                'Failed to import `FasterCOCO` and `FasterCOCOeval` from '
+                '`mmeval.utils.faster_coco_wrapper`. '
+                'Please try to install official faster-coco-eval by '
+                '"pip install faster-coco-eval"')
             faster = False
-        
+
         super().__init__(**kwargs)
         # coco evaluation metrics
         self.metrics = metric if isinstance(metric, list) else [metric]
@@ -531,7 +532,7 @@ class COCODetection(BaseMetric):
             self.logger.info('Converting ground truth to coco format...')
             coco_json_path = self.gt_to_coco_json(
                 gt_dicts=gts, outfile_prefix=outfile_prefix)
-            
+
             if self.faster:
                 self._coco_api = FasterCOCO(coco_json_path)
             else:
