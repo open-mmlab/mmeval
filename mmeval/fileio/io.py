@@ -424,7 +424,7 @@ def load(file, file_format=None, backend_args=None, **kwargs):
         file = str(file)
     if file_format is None and isinstance(file, str):
         file_format = file.split('.')[-1]
-    if file_handlers.get(file_format) is None:
+    if file_format not in file_handlers:
         raise TypeError(f'Unsupported format: {file_format}')
 
     handler = file_handlers[file_format]
