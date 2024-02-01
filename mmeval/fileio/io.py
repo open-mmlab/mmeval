@@ -431,8 +431,11 @@ def load(file, file_format=None, backend_args=None, **kwargs):
     if isinstance(file, str):
         file_backend = get_file_backend(file, backend_args=backend_args)
         if handler.str_like:
-            with StringIO(file_backend.get_text(file)) as f:
-                obj = handler.load_from_fileobj(f, **kwargs)
+            try:
+                with StringIO(file_backend.get_text(file)) as f:
+                    obj = handler.load_from_fileobj(f, **kwargs)
+            except FileNotFoundError as e:
+                raise FileNotFoundError(f"{file=} {handler=} {file_format=} {e=}")
         else:
             with BytesIO(file_backend.get(file)) as f:
                 obj = handler.load_from_fileobj(f, **kwargs)
