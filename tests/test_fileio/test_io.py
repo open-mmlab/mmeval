@@ -315,7 +315,7 @@ def test_list_dir_or_file():
 def test_load():
     # invalid file format
     with pytest.raises(TypeError, match='Unsupported format'):
-        fileio.load('filename.txt')
+        fileio.load('filename.ttx')
 
     # file is not a valid input
     with pytest.raises(
