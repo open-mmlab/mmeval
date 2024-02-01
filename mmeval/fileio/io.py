@@ -435,8 +435,8 @@ def load(file, file_format=None, backend_args=None, **kwargs):
                 with StringIO(file_backend.get_text(file)) as f:
                     obj = handler.load_from_fileobj(f, **kwargs)
             except FileNotFoundError as e:
-                raise FileNotFoundError(
-                    f'{file=} {handler=} {file_format=} {e=}')
+                raise FileNotFoundError('{} {} {} {}'.format(
+                    file, handler, file_format, e))
         else:
             with BytesIO(file_backend.get(file)) as f:
                 obj = handler.load_from_fileobj(f, **kwargs)
