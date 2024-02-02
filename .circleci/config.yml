@@ -121,7 +121,7 @@ jobs:
     machine:
       image: linux-cuda-11:default
       # docker_layer_caching: true
-    resource_class: gpu.nvidia.small.multi
+    resource_class: gpu.nvidia.small
     steps:
       - checkout
       - run:
@@ -208,3 +208,5 @@ workflows:
           name: build_cuda117_torch1.8_paddle2.3
           torch: 1.8.1
           cuda: "11.7"
+          requires:
+            - lint
