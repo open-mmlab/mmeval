@@ -54,9 +54,10 @@ repos:
       - id: check-copyright
         args: ["mmeval"]
   - repo: https://gitee.com/openmmlab/mirrors-mypy
-    rev: v0.812
+    rev: v0.981
     hooks:
       - id: mypy
+        additional_dependencies: ["types-setuptools", "types-PyYAML"] # error: Library stubs not installed for "yaml" (or incompatible with Python 3.10)
         exclude: |-
           (?x)(
               ^test
